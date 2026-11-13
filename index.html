@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pill for Windows</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      html, body, #root {
+        background: transparent;
+        overflow: hidden;
+        user-select: none;
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+        font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      }
+      body.settings-surface,
+      body.settings-surface #root {
+        background-color: #090b10 !important;
+      }
+    </style>
+    <script>
+      if (
+        window.location.hash.includes('settings') ||
+        window.location.search.includes('settings')
+      ) {
+        document.documentElement.classList.add('settings-surface');
+        document.body && document.body.classList.add('settings-surface');
+      }
+      window.addEventListener('DOMContentLoaded', function() {
+        if (
+          window.location.hash.includes('settings') ||
+          window.location.search.includes('settings')
+        ) {
+          document.body.classList.add('settings-surface');
+        }
+      });
+      window.addEventListener('error', function(e) {
+        console.error('GLOBAL JS ERROR:', e.message, e.filename, e.lineno);
+      });
+      window.addEventListener('unhandledrejection', function(e) {
+        console.error('UNHANDLED PROMISE REJECTION:', e.reason);
+      });
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
