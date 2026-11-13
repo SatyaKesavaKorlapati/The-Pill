@@ -1,0 +1,24 @@
+# Dependencies
+node_modules/
+
+# Rust target builds
+src-tauri/target/
+target/
+
+# Distribution bundles
+dist/
+
+# Logs and runtime artifacts
+events.log
+panic.log
+*.log
+*.tmp
+
+# Operating System files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Environment and sensitive keys
+.env
+.env.local

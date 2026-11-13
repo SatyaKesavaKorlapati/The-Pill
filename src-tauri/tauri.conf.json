@@ -1,0 +1,48 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Pill",
+  "version": "3.0.0",
+  "identifier": "com.pillforwindows.desktop",
+  "build": {
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "label": "main-pill",
+        "title": "Pill",
+        "url": "index.html",
+        "width": 720,
+        "height": 520,
+        "x": 600,
+        "y": 0,
+        "resizable": false,
+        "decorations": false,
+        "transparent": true,
+        "shadow": false,
+        "alwaysOnTop": true,
+        "skipTaskbar": true,
+        "focus": false,
+        "visible": true
+      },
+      {
+        "label": "settings-window",
+        "title": "Pill Settings",
+        "url": "index.html#settings",
+        "width": 880,
+        "height": 640,
+        "center": true,
+        "resizable": true,
+        "decorations": false,
+        "transparent": true,
+        "shadow": true,
+        "alwaysOnTop": false,
+        "skipTaskbar": false,
+        "visible": false
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  }
+}
