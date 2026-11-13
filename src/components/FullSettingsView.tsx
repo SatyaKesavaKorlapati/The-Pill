@@ -753,11 +753,11 @@ export const FullSettingsView: React.FC<FullSettingsViewProps> = ({
                     <span className="text-xs font-semibold text-white tracking-wide uppercase">
                       {section === 'themes_icons' && 'Live Preview: Color Themes, Icons & Foundations'}
                       {section === 'sliders_music' && 'Live Preview: Fused Wave Sliders & Visualizers'}
-                      {section === 'control_designer' && `Live Preview: Control Center (${(preferences.controlLayoutMode ?? 'squarish_blocks').replace(/_/g, ' ')})`}
-                      {section === 'island_geometry' && `Live Preview: Geometry & Spring Physics (${preferences.springPreset})`}
-                      {section === 'edge_sounds' && `Live Preview: Edge Lighting (${preferences.edgeLightProfile}) & Audio`}
+                      {section === 'control_designer' && `Live Preview: Control Center (${String(preferences.controlLayoutMode || 'squarish_blocks').replace(/_/g, ' ')})`}
+                      {section === 'island_geometry' && `Live Preview: Geometry & Spring Physics (${preferences.springPreset || 'liquid_silk'})`}
+                      {section === 'edge_sounds' && `Live Preview: Edge Lighting (${preferences.edgeLightProfile || 'accent_flow'}) & Audio`}
                       {section === 'tabs_manager' && 'Live Preview: App Navigation & Tabs Strip'}
-                      {section === 'ai_astra' && `Live Preview: Astra Voice Orb (${(preferences.astraOrbStyle || 'siri_rainbow').replace(/_/g, ' ')})`}
+                      {section === 'ai_astra' && `Live Preview: Astra Voice Orb (${String(preferences.astraOrbStyle || 'siri_rainbow').replace(/_/g, ' ')})`}
                     </span>
                   </div>
 
@@ -937,7 +937,7 @@ export const FullSettingsView: React.FC<FullSettingsViewProps> = ({
                       </div>
 
                       <span className="text-[11px] font-mono text-slate-400 bg-white/5 px-2 py-1 rounded border border-white/10 shrink-0">
-                        Layout: {(preferences.controlLayoutMode ?? 'squarish_blocks').replace(/_/g, ' ')}
+                        Layout: {String(preferences.controlLayoutMode || 'squarish_blocks').replace(/_/g, ' ')}
                       </span>
                     </div>
                   )}
@@ -1039,7 +1039,7 @@ export const FullSettingsView: React.FC<FullSettingsViewProps> = ({
                             {preferences.sizeScale === LedgeSizeScale.Small ? '193 × 33 px (Compact)' : preferences.sizeScale === LedgeSizeScale.Large ? '229 × 39 px (Roomy)' : '210 × 36 px (Normal)'}
                           </span>
                           <span className="text-slate-300">
-                            Anchor: <strong className="text-white capitalize">{(preferences.anchorPosition ?? 'top_center').replace(/_/g, ' ')}</strong>
+                            Anchor: <strong className="text-white capitalize">{String(preferences.anchorPosition || 'top_center').replace(/_/g, ' ')}</strong>
                           </span>
                         </div>
 
@@ -1063,7 +1063,7 @@ export const FullSettingsView: React.FC<FullSettingsViewProps> = ({
                     <div className="flex items-center justify-between gap-3">
                       <div className="flex items-center gap-2">
                         <Volume2 className="w-4 h-4 text-emerald-400" />
-                        <span className="text-xs font-semibold text-white">Audio Pack: {(preferences.soundProfile ?? 'wooden_marimba').replace(/_/g, ' ')}</span>
+                        <span className="text-xs font-semibold text-white">Audio Pack: {String(preferences.soundProfile || 'wooden_marimba').replace(/_/g, ' ')}</span>
                       </div>
 
                       <div className="flex items-center gap-1.5">
@@ -1093,7 +1093,7 @@ export const FullSettingsView: React.FC<FullSettingsViewProps> = ({
                               t === 'home' ? 'font-semibold' : 'bg-white/5 border-white/10 text-slate-300'
                             }`}
                           >
-                            <span>{String(preferences.customTabNames?.[t] || t).replace(/_/g, ' ')}</span>
+                            <span>{String(preferences.customTabNames?.[t] || t || '').replace(/_/g, ' ')}</span>
                           </span>
                         ))}
                       </div>
@@ -1156,7 +1156,7 @@ export const FullSettingsView: React.FC<FullSettingsViewProps> = ({
 
                         <div className="w-full flex items-center justify-between text-[9px] font-mono text-slate-500 border-t border-white/5 pt-1">
                           <span>Tap: Speak · Long Press: Chat</span>
-                          <span className="text-cyan-400 capitalize">{(preferences.astraOrbStyle || 'siri_rainbow').replace(/_/g, ' ')}</span>
+                          <span className="text-cyan-400 capitalize">{String(preferences.astraOrbStyle || 'siri_rainbow').replace(/_/g, ' ')}</span>
                         </div>
                       </div>
 

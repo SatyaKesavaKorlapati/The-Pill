@@ -195,7 +195,7 @@ export function matchesShortcutCombo(
  * Checks whether a specific tab is enabled in current preferences.
  */
 export function isTabEnabledInPrefs(tab: LedgeTab, prefs: LedgePreferences): boolean {
-  if (!prefs) return true;
+  if (!prefs || !tab || typeof tab !== 'string') return false;
   if (tab.startsWith('custom_')) {
     return Boolean(prefs.customWidgetTabs?.some((ct) => ct.id === tab && ct.enabled));
   }
