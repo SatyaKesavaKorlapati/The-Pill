@@ -1127,14 +1127,14 @@ export const FullSettingsView: React.FC<FullSettingsViewProps> = ({
                         </div>
                       </div>
 
-                      {/* Live Icon Pack Showcase */}
+                      {/* Live Icon Pack Showcase (Reflecting the active drawing style) */}
                       <div className="flex items-center gap-2.5 px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 shrink-0">
                         <span className="text-[10px] text-slate-400 uppercase font-mono mr-1">Icons:</span>
-                        <Wifi className="w-4 h-4 text-sky-400" strokeWidth={iconMetrics.strokeWidth} />
-                        <Bluetooth className="w-4 h-4 text-indigo-400" strokeWidth={iconMetrics.strokeWidth} />
-                        <Sun className="w-4 h-4 text-amber-400" strokeWidth={iconMetrics.strokeWidth} />
-                        <Volume2 className="w-4 h-4 text-emerald-400" strokeWidth={iconMetrics.strokeWidth} />
-                        <Mic className="w-4 h-4 text-rose-400" strokeWidth={iconMetrics.strokeWidth} />
+                        <ThemedIcon name="wifi" packStyle={preferences.iconPack} size={16} color="#38bdf8" />
+                        <ThemedIcon name="bluetooth" packStyle={preferences.iconPack} size={16} color="#818cf8" />
+                        <ThemedIcon name="sun" packStyle={preferences.iconPack} size={16} color="#fbbf24" />
+                        <ThemedIcon name="volume" packStyle={preferences.iconPack} size={16} color="#34d399" />
+                        <ThemedIcon name="mic" packStyle={preferences.iconPack} size={16} color="#f43f5e" />
                       </div>
 
                       {/* Active Pill Tile Preview */}
@@ -1204,7 +1204,7 @@ export const FullSettingsView: React.FC<FullSettingsViewProps> = ({
                             }}
                             className="flex items-center gap-2 text-xs font-medium"
                           >
-                            <Wifi className="w-3.5 h-3.5" strokeWidth={iconMetrics.strokeWidth} />
+                            <ThemedIcon name="wifi" packStyle={preferences.iconPack} size={15} />
                             <span>{previewWifiOn ? 'IIT-Mandi-WiFi' : 'Wi-Fi Off'}</span>
                           </button>
                           <ChevronRight className="w-3.5 h-3.5 opacity-60" />
@@ -1224,7 +1224,7 @@ export const FullSettingsView: React.FC<FullSettingsViewProps> = ({
                             }}
                             className="flex items-center gap-2 text-xs font-medium"
                           >
-                            <Bluetooth className="w-3.5 h-3.5" strokeWidth={iconMetrics.strokeWidth} />
+                            <ThemedIcon name="bluetooth" packStyle={preferences.iconPack} size={15} />
                             <span>{previewBtOn ? 'AirPods Pro' : 'Bluetooth Off'}</span>
                           </button>
                           <ChevronRight className="w-3.5 h-3.5 opacity-60" />
@@ -1793,19 +1793,33 @@ export const FullSettingsView: React.FC<FullSettingsViewProps> = ({
                               : 'bg-white/[0.02] border-white/10 text-slate-300 hover:bg-white/[0.05]'
                           }`}
                         >
-                          <div className="flex items-center gap-2.5 mb-2">
+                          <div className="flex items-center gap-2 mb-2">
                             <ThemedIcon
                               name="wifi"
                               packStyle={pk.id}
-                              size={18}
+                              size={16}
                               color={active ? palette.primaryHex : undefined}
                               strokeWidth={m.strokeWidth}
                             />
                             <ThemedIcon
                               name="bluetooth"
                               packStyle={pk.id}
-                              size={18}
+                              size={16}
                               color={active ? '#38bdf8' : undefined}
+                              strokeWidth={m.strokeWidth}
+                            />
+                            <ThemedIcon
+                              name="mic"
+                              packStyle={pk.id}
+                              size={16}
+                              color={active ? '#34d399' : undefined}
+                              strokeWidth={m.strokeWidth}
+                            />
+                            <ThemedIcon
+                              name="sun"
+                              packStyle={pk.id}
+                              size={16}
+                              color={active ? '#fbbf24' : undefined}
                               strokeWidth={m.strokeWidth}
                             />
                           </div>
@@ -3148,55 +3162,128 @@ export const FullSettingsView: React.FC<FullSettingsViewProps> = ({
                     })}
                   </div>
 
-                  {/* 3-Column Avatar Cards Grid */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
-                    {ALL_ASTRA_ORB_DEFINITIONS.filter(
-                      (o) => astraCategoryFilter === 'all' || o.category === astraCategoryFilter
-                    ).map((orb) => {
-                      const isSel = (preferences.astraOrbStyle || 'siri_rainbow') === orb.id;
-                      return (
-                        <button
-                          key={orb.id}
-                          type="button"
-                          onClick={() => {
-                            playTactilePop('tab');
-                            onUpdatePreferences({ astraOrbStyle: orb.id });
-                          }}
-                          style={isSel ? { borderColor: orb.hex, backgroundColor: `${orb.hex}18` } : undefined}
-                          className={`p-3 rounded-xl border text-left transition-all flex items-center gap-3 relative ${
-                            isSel
-                              ? 'border-cyan-400 text-white shadow-lg ring-1 ring-cyan-400/40'
-                              : 'bg-white/[0.02] border-white/10 text-slate-300 hover:bg-white/[0.05]'
-                          }`}
-                        >
-                          <div className="shrink-0 flex items-center justify-center w-11 h-11">
-                            <AstraSiriOrbCanvas
-                              size={42}
-                              state="listening"
-                              audioLevel={0.46}
-                              style={orb.id}
-                              lowPowerEco={preferences.featureFlags.lowRamEcoMode}
-                            />
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <div className="flex items-center justify-between gap-1">
-                              <span className="text-xs font-semibold truncate flex items-center gap-1.5">
-                                <span style={{ backgroundColor: orb.hex }} className="w-2 h-2 rounded-full shrink-0" />
-                                <span className="truncate">{orb.name}</span>
-                              </span>
-                              {orb.tag && (
-                                <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-white/10 text-slate-300 shrink-0">
-                                  {orb.tag}
-                                </span>
-                              )}
+                  {/* Structured Astra Manifestations Grouped by Family */}
+                  <div className="space-y-6 pt-1">
+                    {(
+                      [
+                        {
+                          id: 'naruto' as AstraCategory,
+                          label: 'Shinobi Jutsu & Dojutsu',
+                          icon: '🍥',
+                          desc: 'Swirling high-velocity chakra spirals, iconic Dojutsu oculary seals, ethereal Susanoo armor, and Akatsuki crimson clouds.',
+                          accent: '#ef4444',
+                        },
+                        {
+                          id: 'motorsport' as AstraCategory,
+                          label: 'Formula 1 & Motorsport GT',
+                          icon: '🏎️',
+                          desc: 'High-rev telemetry rev-match tachometer and authentic official Pirelli compound tyre specifications (Soft, Medium, Hard, Inter, Wet).',
+                          accent: '#f59e0b',
+                        },
+                        {
+                          id: 'cosmos' as AstraCategory,
+                          label: 'Celestial Planetary Cosmos',
+                          icon: '🪐',
+                          desc: 'Thermonuclear solar prominence plasma loops, 3D rotating lunar basalt maria with craters, blue marble Earth, Mars, and galactic arms.',
+                          accent: '#38bdf8',
+                        },
+                        {
+                          id: 'style_kits' as AstraCategory,
+                          label: 'Designer Theme Kits',
+                          icon: '🎨',
+                          desc: 'Cyberpunk HUDs, 80s CRT retro amber phosphor synths, Japanese sumi-e calligraphy, botanical sakura, and liquid silk.',
+                          accent: '#ec4899',
+                        },
+                        {
+                          id: 'siri_orbs' as AstraCategory,
+                          label: 'Studio Siri Spheres & Shaders',
+                          icon: '🔮',
+                          desc: 'Apple Siri rainbow waves, fluid volumetric shaders, plasma arcing, and luminous electric neon aura.',
+                          accent: '#a855f7',
+                        },
+                      ]
+                    )
+                      .filter((f) => astraCategoryFilter === 'all' || f.id === astraCategoryFilter)
+                      .map((family) => {
+                        const familyOrbs = ALL_ASTRA_ORB_DEFINITIONS.filter((o) => o.category === family.id);
+                        return (
+                          <div key={family.id} className="space-y-2.5">
+                            {/* Family Section Header */}
+                            <div className="flex items-center justify-between px-3.5 py-2 rounded-xl bg-white/[0.04] border border-white/10 shadow-sm">
+                              <div className="flex items-center gap-2.5 min-w-0">
+                                <span className="text-base select-none">{family.icon}</span>
+                                <div className="min-w-0">
+                                  <div className="text-xs font-bold text-white flex items-center gap-2">
+                                    <span>{family.label}</span>
+                                    <span
+                                      style={{ color: family.accent, backgroundColor: `${family.accent}18`, borderColor: `${family.accent}40` }}
+                                      className="text-[9px] font-mono px-2 py-0.5 rounded-full font-semibold border"
+                                    >
+                                      {familyOrbs.length} Avatars
+                                    </span>
+                                  </div>
+                                  <div className="text-[10px] text-slate-400 truncate max-w-xl">
+                                    {family.desc}
+                                  </div>
+                                </div>
+                              </div>
+                              <span
+                                style={{ backgroundColor: family.accent }}
+                                className="w-2 h-2 rounded-full shrink-0 shadow-sm opacity-80"
+                              />
                             </div>
-                            <div className="text-[10.5px] text-slate-400 leading-tight mt-1 line-clamp-2">
-                              {orb.desc}
+
+                            {/* Family Cards Grid */}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
+                              {familyOrbs.map((orb) => {
+                                const isSel = (preferences.astraOrbStyle || 'siri_rainbow') === orb.id;
+                                return (
+                                  <button
+                                    key={orb.id}
+                                    type="button"
+                                    onClick={() => {
+                                      playTactilePop('tab');
+                                      onUpdatePreferences({ astraOrbStyle: orb.id });
+                                    }}
+                                    style={isSel ? { borderColor: orb.hex, backgroundColor: `${orb.hex}18` } : undefined}
+                                    className={`p-3 rounded-xl border text-left transition-all flex items-center gap-3 relative ${
+                                      isSel
+                                        ? 'border-cyan-400 text-white shadow-lg ring-1 ring-cyan-400/40'
+                                        : 'bg-white/[0.02] border-white/10 text-slate-300 hover:bg-white/[0.05]'
+                                    }`}
+                                  >
+                                    <div className="shrink-0 flex items-center justify-center w-11 h-11">
+                                      <AstraSiriOrbCanvas
+                                        size={42}
+                                        state="listening"
+                                        audioLevel={0.46}
+                                        style={orb.id}
+                                        lowPowerEco={preferences.featureFlags.lowRamEcoMode}
+                                      />
+                                    </div>
+                                    <div className="min-w-0 flex-1">
+                                      <div className="flex items-center justify-between gap-1">
+                                        <span className="text-xs font-semibold truncate flex items-center gap-1.5">
+                                          <span style={{ backgroundColor: orb.hex }} className="w-2 h-2 rounded-full shrink-0" />
+                                          <span className="truncate">{orb.name}</span>
+                                        </span>
+                                        {orb.tag && (
+                                          <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-white/10 text-slate-300 shrink-0">
+                                            {orb.tag}
+                                          </span>
+                                        )}
+                                      </div>
+                                      <div className="text-[10.5px] text-slate-400 leading-tight mt-1 line-clamp-2">
+                                        {orb.desc}
+                                      </div>
+                                    </div>
+                                  </button>
+                                );
+                              })}
                             </div>
                           </div>
-                        </button>
-                      );
-                    })}
+                        );
+                      })}
                   </div>
                 </div>
               </section>

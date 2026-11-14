@@ -48,6 +48,7 @@ import {
 import { resolveEdgeGlowCss, resolveThemePalette } from '../utils/themeAndSliders';
 import { AnimatedBatterySymbol } from './AnimatedBatterySymbol';
 import { FluidEffectSlider } from './FluidEffectSlider';
+import { ThemedIcon } from './ThemedIcon';
 import { FluidMusicVisualizer } from './FluidMusicVisualizer';
 import { PillExpandedContent } from './PillExpandedContent';
 import { ResilientThumb } from './ResilientThumb';
@@ -1062,11 +1063,12 @@ export const PillCapsule: React.FC<PillCapsuleProps> = ({
                         : 'bg-white/12 text-slate-200 hover:bg-white/20'
                     }`}
                   >
-                    {callSession.isMuted ? (
-                      <MicOff className="w-3.5 h-3.5" />
-                    ) : (
-                      <Mic className="w-3.5 h-3.5" />
-                    )}
+                    <ThemedIcon
+                      name="mic"
+                      packStyle={preferences.iconPack}
+                      size={14}
+                      color={callSession.isMuted ? '#f87171' : undefined}
+                    />
                   </button>
                   {!callSession.isAccepted && (
                     <button
@@ -1133,9 +1135,9 @@ export const PillCapsule: React.FC<PillCapsuleProps> = ({
                   }`}
                 >
                   {transientHud === 'volume' ? (
-                    <Volume2 className="w-4 h-4" style={{ color: palette.primaryHex }} />
+                    <ThemedIcon name="volume" packStyle={preferences.iconPack} size={16} color={palette.primaryHex} />
                   ) : (
-                    <Sun className="w-4 h-4 text-amber-500" />
+                    <ThemedIcon name="sun" packStyle={preferences.iconPack} size={16} color="#f59e0b" />
                   )}
                   <span className="text-xs font-medium">
                     {transientHud === 'volume' ? 'Volume' : 'Brightness'}

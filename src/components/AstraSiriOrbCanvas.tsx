@@ -1,5 +1,16 @@
 import React, { useEffect, useRef } from 'react';
 import { AstraOrbStyle } from '../types/ledge';
+import { AKATSUKI_CLOUD_DATA_URL } from '../assets/akatsuki_cloud_b64';
+
+let akatsukiImgCache: HTMLImageElement | null = null;
+function getAkatsukiImage(): HTMLImageElement | null {
+  if (typeof window === 'undefined') return null;
+  if (!akatsukiImgCache) {
+    akatsukiImgCache = new Image();
+    akatsukiImgCache.src = AKATSUKI_CLOUD_DATA_URL;
+  }
+  return akatsukiImgCache;
+}
 
 export type SiriOrbVisualState = 'idle' | 'listening' | 'thinking' | 'speaking';
 
@@ -452,61 +463,64 @@ function drawNarutoAkatsukiCloud(
 ) {
   ctx.save();
 
-  // Crimson Aura
-  const aura = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius * 1.15);
-  aura.addColorStop(0, `rgba(220, 38, 38, ${(0.32 + smoothEnergy * 0.25).toFixed(3)})`);
-  aura.addColorStop(0.7, 'rgba(153, 27, 27, 0.15)');
+  // Pulsing Crimson Shinobi Aura
+  const aura = ctx.createRadialGradient(cx, cy, radius * 0.15, cx, cy, radius * 1.25);
+  aura.addColorStop(0, `rgba(239, 68, 68, ${(0.4 + smoothEnergy * 0.3).toFixed(3)})`);
+  aura.addColorStop(0.55, 'rgba(153, 27, 27, 0.22)');
   aura.addColorStop(1, 'rgba(220, 38, 38, 0)');
   ctx.fillStyle = aura;
   ctx.beginPath();
-  ctx.arc(cx, cy, radius * 1.15, 0, Math.PI * 2);
+  ctx.arc(cx, cy, radius * 1.25, 0, Math.PI * 2);
   ctx.fill();
 
-  // Scale and translate for centered cloud
-  ctx.save();
-  ctx.translate(cx, cy);
-  const sc = (radius * 0.85 * (1 + Math.sin(phase * 1.5) * 0.04)) / 36;
-  ctx.scale(sc, sc);
+  // Authentic Official Akatsuki Crimson Cloud (Rendered with 100% fidelity to source)
+  const akatsukiImg = getAkatsukiImage();
+  const breathe = 1 + Math.sin(phase * 1.6) * 0.045 + smoothEnergy * 0.08;
+  const targetW = radius * 1.7 * breathe;
+  const targetH = targetW * (148 / 212); // authentic aspect ratio
 
-  // Path of the classic Akatsuki cloud
-  ctx.beginPath();
-  ctx.moveTo(-18, 8);
-  ctx.bezierCurveTo(-26, 8, -26, -4, -14, -6);
-  ctx.bezierCurveTo(-14, -16, 2, -18, 10, -8);
-  ctx.bezierCurveTo(22, -10, 24, 4, 16, 10);
-  ctx.bezierCurveTo(14, 16, -2, 16, -6, 12);
-  ctx.bezierCurveTo(-10, 16, -16, 14, -18, 8);
-  ctx.closePath();
+  if (akatsukiImg && akatsukiImg.complete && akatsukiImg.naturalWidth > 0) {
+    ctx.save();
+    ctx.shadowColor = 'rgba(239, 68, 68, 0.65)';
+    ctx.shadowBlur = 12;
+    ctx.drawImage(akatsukiImg, cx - targetW / 2, cy - targetH / 2, targetW, targetH);
+    ctx.restore();
+  } else {
+    // Fallback high-fidelity vector path with inward swirl hooks
+    ctx.save();
+    ctx.translate(cx, cy);
+    const sc = (radius * 0.9 * breathe) / 36;
+    ctx.scale(sc, sc);
 
-  // Crimson Red Fill with Gradient
-  const cloudGrad = ctx.createLinearGradient(0, -18, 0, 16);
-  cloudGrad.addColorStop(0, '#ef4444');
-  cloudGrad.addColorStop(0.5, '#dc2626');
-  cloudGrad.addColorStop(1, '#991b1b');
-  ctx.fillStyle = cloudGrad;
-  ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(-18, 8);
+    ctx.bezierCurveTo(-26, 8, -26, -4, -14, -6);
+    ctx.bezierCurveTo(-14, -16, 2, -18, 10, -8);
+    ctx.bezierCurveTo(22, -10, 24, 4, 16, 10);
+    ctx.bezierCurveTo(14, 16, -2, 16, -6, 12);
+    ctx.bezierCurveTo(-10, 16, -16, 14, -18, 8);
+    ctx.closePath();
 
-  // Crisp White Outer Outline
-  ctx.strokeStyle = '#ffffff';
-  ctx.lineWidth = 2.4 / sc;
-  ctx.shadowColor = '#ffffff';
-  ctx.shadowBlur = 8;
-  ctx.stroke();
+    ctx.fillStyle = '#9b1136';
+    ctx.fill();
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 2.4 / sc;
+    ctx.stroke();
 
-  // Internal Stylized Cloud Swirl
-  ctx.beginPath();
-  ctx.arc(-2, 2, 5, 0.4, Math.PI * 1.6);
-  ctx.strokeStyle = '#ffffff';
-  ctx.lineWidth = 1.8 / sc;
-  ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(-2, 2, 5, 0.4, Math.PI * 1.6);
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 1.8 / sc;
+    ctx.stroke();
 
-  ctx.restore();
+    ctx.restore();
+  }
 
-  // Drifting Crimson Embers
-  for (let e = 0; e < 5; e++) {
-    const ePhase = phase * 2 + e * 1.4;
+  // Drifting Crimson Shinobi Embers
+  for (let e = 0; e < 6; e++) {
+    const ePhase = phase * 2.2 + e * 1.3;
     const ex = cx + Math.sin(ePhase) * radius * 0.65;
-    const ey = cy + radius * 0.5 - ((ePhase * 18) % (radius * 1.2));
+    const ey = cy + radius * 0.55 - ((ePhase * 20) % (radius * 1.3));
     ctx.beginPath();
     ctx.arc(ex, ey, 1.8, 0, Math.PI * 2);
     ctx.fillStyle = '#ef4444';
@@ -750,7 +764,7 @@ function drawF1Tyre(
  * ======================================================================== */
 
 /**
- * S1. SUN: Blazing Solar Sphere with Coronal Flares and Magnetic Loops
+ * S1. SUN: Blazing Photospheric Star with Magnetic Loops & Coronal Prominences
  */
 function drawSpaceSun(
   ctx: CanvasRenderingContext2D,
@@ -762,48 +776,78 @@ function drawSpaceSun(
 ) {
   ctx.save();
 
-  // Solar Corona Glow
-  const corona = ctx.createRadialGradient(cx, cy, radius * 0.4, cx, cy, radius * 1.2);
-  corona.addColorStop(0, `rgba(254, 240, 138, ${(0.5 + smoothEnergy * 0.3).toFixed(3)})`);
-  corona.addColorStop(0.55, `rgba(249, 115, 22, ${(0.35 + smoothEnergy * 0.25).toFixed(3)})`);
-  corona.addColorStop(1, 'rgba(239, 68, 68, 0)');
+  // Multi-tier Thermonuclear Corona Plasma Glow
+  const corona = ctx.createRadialGradient(cx, cy, radius * 0.35, cx, cy, radius * 1.3);
+  corona.addColorStop(0, `rgba(254, 240, 138, ${(0.75 + smoothEnergy * 0.25).toFixed(3)})`);
+  corona.addColorStop(0.35, `rgba(249, 115, 22, ${(0.55 + smoothEnergy * 0.3).toFixed(3)})`);
+  corona.addColorStop(0.7, `rgba(220, 38, 38, ${(0.3 + smoothEnergy * 0.25).toFixed(3)})`);
+  corona.addColorStop(1, 'rgba(153, 27, 27, 0)');
   ctx.fillStyle = corona;
   ctx.beginPath();
-  ctx.arc(cx, cy, radius * 1.2, 0, Math.PI * 2);
+  ctx.arc(cx, cy, radius * 1.3, 0, Math.PI * 2);
   ctx.fill();
 
-  // Coronal Prominence Flares pulsing outwards
-  const flares = 8;
-  for (let f = 0; f < flares; f++) {
-    const fAngle = phase * 1.2 + (f * Math.PI * 2) / flares;
-    const fLen = radius * (0.8 + Math.sin(phase * 4 + f) * 0.25 * (1 + smoothEnergy));
+  // Arched Magnetic Prominence Loops (Coronal Mass Ejection Arches that erupt & loop back)
+  const loops = 8;
+  for (let f = 0; f < loops; f++) {
+    const baseAngle = (f * Math.PI * 2) / loops + phase * 0.25;
+    const span = 0.32 + Math.sin(phase * 2.5 + f) * 0.08;
+    const a1 = baseAngle - span;
+    const a2 = baseAngle + span;
+    const loopH = radius * (0.8 + Math.sin(phase * 3 + f * 1.8) * 0.28 * (1 + smoothEnergy));
+
+    const x1 = cx + Math.cos(a1) * (radius * 0.6);
+    const y1 = cy + Math.sin(a1) * (radius * 0.6);
+    const x2 = cx + Math.cos(a2) * (radius * 0.6);
+    const y2 = cy + Math.sin(a2) * (radius * 0.6);
+    const peakX = cx + Math.cos(baseAngle) * loopH;
+    const peakY = cy + Math.sin(baseAngle) * loopH;
+
     ctx.beginPath();
-    ctx.moveTo(cx + Math.cos(fAngle) * (radius * 0.6), cy + Math.sin(fAngle) * (radius * 0.6));
-    ctx.lineTo(cx + Math.cos(fAngle) * fLen, cy + Math.sin(fAngle) * fLen);
-    ctx.strokeStyle = f % 2 === 0 ? '#facc15' : '#ef4444';
-    ctx.lineWidth = 2.5;
+    ctx.moveTo(x1, y1);
+    ctx.quadraticCurveTo(peakX, peakY, x2, y2);
+    ctx.strokeStyle = f % 2 === 0 ? 'rgba(254, 240, 138, 0.9)' : 'rgba(249, 115, 22, 0.95)';
+    ctx.lineWidth = 2.4;
     ctx.shadowColor = '#f97316';
     ctx.shadowBlur = 10;
     ctx.stroke();
   }
 
-  // Brilliant Yellow Solar Core
-  const sunR = radius * 0.62;
-  const sunGrad = ctx.createRadialGradient(cx - sunR * 0.2, cy - sunR * 0.25, 0, cx, cy, sunR);
+  // Brilliant Yellow/White Photospheric Core
+  const sunR = radius * 0.64;
+  const sunGrad = ctx.createRadialGradient(cx - sunR * 0.15, cy - sunR * 0.2, 0, cx, cy, sunR);
   sunGrad.addColorStop(0, '#ffffff');
-  sunGrad.addColorStop(0.4, '#fde047');
-  sunGrad.addColorStop(0.8, '#f59e0b');
-  sunGrad.addColorStop(1, '#ea580c');
+  sunGrad.addColorStop(0.35, '#fef08a');
+  sunGrad.addColorStop(0.65, '#f59e0b');
+  sunGrad.addColorStop(0.9, '#ea580c');
+  sunGrad.addColorStop(1, '#991b1b');
   ctx.fillStyle = sunGrad;
   ctx.beginPath();
   ctx.arc(cx, cy, sunR, 0, Math.PI * 2);
   ctx.fill();
 
+  // Convective Granulation Cells (Boiling Solar Surface Noise)
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(cx, cy, sunR, 0, Math.PI * 2);
+  ctx.clip();
+  for (let g = 0; g < 12; g++) {
+    const gAngle = g * 1.8 + phase * 0.6;
+    const gDist = (Math.sin(g * 2.3 + phase) * 0.45 + 0.45) * sunR * 0.85;
+    const gx = cx + Math.cos(gAngle) * gDist;
+    const gy = cy + Math.sin(gAngle) * gDist;
+    ctx.beginPath();
+    ctx.arc(gx, gy, sunR * 0.22, 0, Math.PI * 2);
+    ctx.fillStyle = g % 2 === 0 ? 'rgba(254, 240, 138, 0.35)' : 'rgba(234, 88, 12, 0.25)';
+    ctx.fill();
+  }
+  ctx.restore();
+
   ctx.restore();
 }
 
 /**
- * S2. EARTH: Blue Marble with Atmospheric Limb and Weather Clouds
+ * S2. EARTH: Hyper-Realistic 3D Rotating Blue Marble with Parallax Weather Clouds
  */
 function drawSpaceEarth(
   ctx: CanvasRenderingContext2D,
@@ -814,49 +858,117 @@ function drawSpaceEarth(
   smoothEnergy: number
 ) {
   ctx.save();
-
   const earthR = radius * 0.72;
 
-  // Atmospheric Blue Limb Ring
-  const atmo = ctx.createRadialGradient(cx, cy, earthR * 0.85, cx, cy, earthR * 1.15);
-  atmo.addColorStop(0, 'rgba(56, 189, 248, 0.45)');
-  atmo.addColorStop(1, 'rgba(56, 189, 248, 0)');
+  // Luminous Rayleigh Scattering Atmospheric Ring
+  const atmo = ctx.createRadialGradient(cx, cy, earthR * 0.85, cx, cy, earthR * 1.22);
+  atmo.addColorStop(0, 'rgba(56, 189, 248, 0.65)');
+  atmo.addColorStop(0.4, 'rgba(37, 99, 235, 0.35)');
+  atmo.addColorStop(1, 'rgba(2, 6, 23, 0)');
   ctx.fillStyle = atmo;
   ctx.beginPath();
-  ctx.arc(cx, cy, earthR * 1.15, 0, Math.PI * 2);
+  ctx.arc(cx, cy, earthR * 1.22, 0, Math.PI * 2);
   ctx.fill();
 
-  // Azure Ocean Sphere
-  const ocean = ctx.createRadialGradient(cx - earthR * 0.25, cy - earthR * 0.25, 0, cx, cy, earthR);
+  // Deep Azure Ocean Sphere with 3D Specular Curvature
+  const ocean = ctx.createRadialGradient(cx - earthR * 0.3, cy - earthR * 0.35, 0, cx, cy, earthR);
   ocean.addColorStop(0, '#38bdf8');
-  ocean.addColorStop(0.5, '#1d4ed8');
-  ocean.addColorStop(1, '#0f172a');
+  ocean.addColorStop(0.28, '#1d4ed8');
+  ocean.addColorStop(0.7, '#1e3a8a');
+  ocean.addColorStop(1, '#020617');
   ctx.fillStyle = ocean;
   ctx.beginPath();
   ctx.arc(cx, cy, earthR, 0, Math.PI * 2);
   ctx.fill();
 
-  // Continents (Green/Amber landmasses moving slowly)
+  // Clip to Earth Disc for Rotating Continents & Weather Clouds
   ctx.save();
   ctx.beginPath();
   ctx.arc(cx, cy, earthR, 0, Math.PI * 2);
   ctx.clip();
 
-  const rotX = (phase * 8) % (earthR * 2);
-  ctx.fillStyle = '#10b981';
-  ctx.beginPath();
-  // Landmass 1
-  ctx.ellipse(cx - earthR + rotX, cy, earthR * 0.45, earthR * 0.28, 0.3, 0, Math.PI * 2);
-  ctx.fill();
-  // Landmass 2
-  ctx.beginPath();
-  ctx.ellipse(cx - earthR * 2 + rotX, cy + earthR * 0.15, earthR * 0.35, earthR * 0.22, -0.2, 0, Math.PI * 2);
-  ctx.fill();
+  // 3D Rotating Continents (Africa, Europe, Americas, Asia, Australia)
+  const earthRot = phase * 0.35;
+  const continents = [
+    // Africa & Sahara
+    { lon: 0.2, lat: 0.05, rx: 0.38, ry: 0.52, color: '#10b981', desert: '#f59e0b' },
+    // Europe & Mediterranean
+    { lon: 0.25, lat: 0.55, rx: 0.3, ry: 0.22, color: '#059669' },
+    // Asia & Himalayas
+    { lon: 1.1, lat: 0.42, rx: 0.58, ry: 0.38, color: '#10b981', desert: '#d97706' },
+    // Australia & Pacific Islands
+    { lon: 1.8, lat: -0.38, rx: 0.26, ry: 0.22, color: '#d97706' },
+    // North America
+    { lon: -1.4, lat: 0.5, rx: 0.45, ry: 0.34, color: '#10b981' },
+    // South America & Amazon Rainforest
+    { lon: -0.9, lat: -0.22, rx: 0.32, ry: 0.48, color: '#059669' },
+  ];
 
-  // Weather Cloud Swirls
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.72)';
+  for (const land of continents) {
+    const curLon = (((land.lon + earthRot) % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2) - Math.PI;
+    if (Math.cos(curLon) > 0) {
+      const cosLat = Math.cos(land.lat);
+      const projX = cx + Math.sin(curLon) * cosLat * earthR;
+      const projY = cy - Math.sin(land.lat) * earthR;
+      const foreshortenX = Math.max(0.12, Math.cos(curLon));
+      const radX = land.rx * earthR * foreshortenX;
+      const radY = land.ry * earthR;
+
+      ctx.beginPath();
+      ctx.ellipse(projX, projY, Math.max(1, radX), Math.max(1, radY), 0.15, 0, Math.PI * 2);
+      ctx.fillStyle = land.color;
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.35)';
+      ctx.shadowBlur = 4;
+      ctx.fill();
+
+      // Desert biome accent
+      if (land.desert) {
+        ctx.beginPath();
+        ctx.ellipse(
+          projX,
+          projY - radY * 0.2,
+          Math.max(1, radX * 0.65),
+          Math.max(1, radY * 0.4),
+          0.1,
+          0,
+          Math.PI * 2
+        );
+        ctx.fillStyle = land.desert;
+        ctx.fill();
+      }
+    }
+  }
+
+  // 3D Rotating Weather Clouds (Swirling Cyclones & Trade-Wind Bands with Parallax)
+  const cloudRot = phase * 0.48; // moves slightly faster than ground
+  for (let c = 0; c < 5; c++) {
+    const cLonBase = c * 1.25 + cloudRot;
+    const curLon = ((cLonBase % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2) - Math.PI;
+    if (Math.cos(curLon) > 0) {
+      const cLat = Math.sin(c * 1.7) * 0.45;
+      const projX = cx + Math.sin(curLon) * Math.cos(cLat) * earthR;
+      const projY = cy - Math.sin(cLat) * earthR;
+      const foreshortenX = Math.max(0.15, Math.cos(curLon));
+
+      // Swirling Cloud Band
+      ctx.beginPath();
+      ctx.ellipse(projX, projY, earthR * 0.42 * foreshortenX, earthR * 0.12, 0.25, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.78)';
+      ctx.shadowColor = 'rgba(255, 255, 255, 0.5)';
+      ctx.shadowBlur = 6;
+      ctx.fill();
+    }
+  }
+
+  // Atmospheric Day/Night Twilight Terminator Shadow
+  const term = ctx.createLinearGradient(cx - earthR, cy, cx + earthR, cy);
+  term.addColorStop(0, 'rgba(0, 0, 0, 0)');
+  term.addColorStop(0.55, 'rgba(2, 6, 23, 0.1)');
+  term.addColorStop(0.85, 'rgba(180, 83, 9, 0.22)'); // sunset twilight rim
+  term.addColorStop(1, 'rgba(2, 6, 23, 0.85)');
+  ctx.fillStyle = term;
   ctx.beginPath();
-  ctx.ellipse(cx - earthR * 0.8 + rotX * 1.2, cy - earthR * 0.3, earthR * 0.5, earthR * 0.12, 0.1, 0, Math.PI * 2);
+  ctx.arc(cx, cy, earthR, 0, Math.PI * 2);
   ctx.fill();
 
   ctx.restore();
@@ -864,7 +976,7 @@ function drawSpaceEarth(
 }
 
 /**
- * S3. MOON: Silver Pearl Orb with Crater Mare Topography
+ * S3. MOON: True 3D Rotating Lunar Sphere with Foreshortened Craters & Maria
  */
 function drawSpaceMoon(
   ctx: CanvasRenderingContext2D,
@@ -877,46 +989,105 @@ function drawSpaceMoon(
   ctx.save();
   const moonR = radius * 0.72;
 
-  // Silver Moonlight Glow
-  const glow = ctx.createRadialGradient(cx, cy, moonR * 0.8, cx, cy, moonR * 1.15);
-  glow.addColorStop(0, 'rgba(241, 245, 249, 0.35)');
-  glow.addColorStop(1, 'rgba(255, 255, 255, 0)');
+  // Luminous Silver-Blue Moonlight Halo
+  const glow = ctx.createRadialGradient(cx, cy, moonR * 0.75, cx, cy, moonR * 1.25);
+  glow.addColorStop(0, 'rgba(226, 232, 240, 0.45)');
+  glow.addColorStop(0.5, 'rgba(148, 163, 184, 0.2)');
+  glow.addColorStop(1, 'rgba(15, 23, 42, 0)');
   ctx.fillStyle = glow;
   ctx.beginPath();
-  ctx.arc(cx, cy, moonR * 1.15, 0, Math.PI * 2);
+  ctx.arc(cx, cy, moonR * 1.25, 0, Math.PI * 2);
   ctx.fill();
 
-  // Lunar Surface Sphere
-  const surface = ctx.createRadialGradient(cx - moonR * 0.25, cy - moonR * 0.25, 0, cx, cy, moonR);
-  surface.addColorStop(0, '#ffffff');
-  surface.addColorStop(0.5, '#cbd5e1');
-  surface.addColorStop(1, '#64748b');
+  // 3D Spherical Shading Base
+  const surface = ctx.createRadialGradient(cx - moonR * 0.35, cy - moonR * 0.35, 0, cx, cy, moonR);
+  surface.addColorStop(0, '#f8fafc');
+  surface.addColorStop(0.4, '#e2e8f0');
+  surface.addColorStop(0.75, '#94a3b8');
+  surface.addColorStop(1, '#334155');
   ctx.fillStyle = surface;
   ctx.beginPath();
   ctx.arc(cx, cy, moonR, 0, Math.PI * 2);
   ctx.fill();
 
-  // Shaded Craters
-  const craters = [
-    { x: -0.2, y: -0.25, r: 0.16 },
-    { x: 0.25, y: -0.1, r: 0.12 },
-    { x: -0.1, y: 0.25, r: 0.14 },
-    { x: 0.2, y: 0.28, r: 0.1 },
+  // Clip to lunar disc for rotating 3D surface features
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(cx, cy, moonR, 0, Math.PI * 2);
+  ctx.clip();
+
+  // True 3D Rotating Lunar Maria & Impact Craters
+  // As the moon rotates (rot = phase * 0.45), features orbit smoothly across the 3D sphere
+  const rotAngle = phase * 0.45;
+  const lunarFeatures = [
+    // Maria (Dark volcanic basalt plains)
+    { name: 'Mare Tranquillitatis', lon: 0.3, lat: 0.15, rx: 0.35, ry: 0.28, isMare: true },
+    { name: 'Mare Serenitatis', lon: 0.2, lat: 0.45, rx: 0.32, ry: 0.26, isMare: true },
+    { name: 'Mare Imbrium', lon: -0.4, lat: 0.5, rx: 0.42, ry: 0.36, isMare: true },
+    { name: 'Oceanus Procellarum', lon: -0.8, lat: 0.1, rx: 0.5, ry: 0.44, isMare: true },
+    { name: 'Mare Fecunditatis', lon: 0.7, lat: -0.1, rx: 0.28, ry: 0.25, isMare: true },
+    { name: 'Mare Crisium', lon: 1.0, lat: 0.3, rx: 0.22, ry: 0.18, isMare: true },
+    // Major Impact Craters (with specular illuminated rims)
+    { name: 'Tycho', lon: -0.15, lat: -0.65, rx: 0.14, ry: 0.14, isMare: false },
+    { name: 'Copernicus', lon: -0.35, lat: 0.2, rx: 0.12, ry: 0.12, isMare: false },
+    { name: 'Kepler', lon: -0.65, lat: 0.18, rx: 0.09, ry: 0.09, isMare: false },
+    { name: 'Aristarchus', lon: -0.75, lat: 0.4, rx: 0.08, ry: 0.08, isMare: false },
+    { name: 'Plato', lon: -0.2, lat: 0.75, rx: 0.1, ry: 0.08, isMare: false },
   ];
 
-  for (const c of craters) {
-    const cxP = cx + c.x * moonR;
-    const cyP = cy + c.y * moonR;
-    const cR = c.r * moonR;
-    ctx.beginPath();
-    ctx.arc(cxP, cyP, cR, 0, Math.PI * 2);
-    ctx.fillStyle = '#94a3b8';
-    ctx.fill();
-    ctx.strokeStyle = '#64748b';
-    ctx.lineWidth = 1;
-    ctx.stroke();
+  for (const f of lunarFeatures) {
+    // Current orbital angle on the rotating sphere
+    const curLon = (((f.lon + rotAngle) % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2) - Math.PI;
+    // Orthographic spherical projection: visible when facing the camera (cos(curLon) > 0)
+    if (Math.cos(curLon) > 0) {
+      const cosLat = Math.cos(f.lat);
+      const projX = cx + Math.sin(curLon) * cosLat * moonR;
+      const projY = cy - Math.sin(f.lat) * moonR;
+      const foreshortenX = Math.max(0.12, Math.cos(curLon));
+      const radX = f.rx * moonR * foreshortenX;
+      const radY = f.ry * moonR;
+
+      ctx.beginPath();
+      ctx.ellipse(projX, projY, Math.max(1, radX), Math.max(1, radY), 0, 0, Math.PI * 2);
+      if (f.isMare) {
+        ctx.fillStyle = 'rgba(71, 85, 105, 0.48)';
+        ctx.fill();
+      } else {
+        // Crater bowl with dark floor & bright sunlit rim
+        ctx.fillStyle = 'rgba(51, 65, 85, 0.72)';
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.75)';
+        ctx.lineWidth = 1.2;
+        ctx.stroke();
+
+        // Tycho ray system if Tycho crater
+        if (f.name === 'Tycho') {
+          ctx.beginPath();
+          for (let ray = 0; ray < 6; ray++) {
+            const rayA = (ray * Math.PI) / 3 + curLon * 0.2;
+            const rLen = moonR * 0.45;
+            ctx.moveTo(projX, projY);
+            ctx.lineTo(projX + Math.cos(rayA) * rLen * foreshortenX, projY + Math.sin(rayA) * rLen);
+          }
+          ctx.strokeStyle = 'rgba(248, 250, 252, 0.22)';
+          ctx.lineWidth = 1;
+          ctx.stroke();
+        }
+      }
+    }
   }
 
+  // Soft Terminator Shadow (Day/Night Crescent on the right side)
+  const term = ctx.createLinearGradient(cx - moonR, cy, cx + moonR, cy);
+  term.addColorStop(0, 'rgba(0, 0, 0, 0)');
+  term.addColorStop(0.65, 'rgba(15, 23, 42, 0.2)');
+  term.addColorStop(1, 'rgba(15, 23, 42, 0.75)');
+  ctx.fillStyle = term;
+  ctx.beginPath();
+  ctx.arc(cx, cy, moonR, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.restore();
   ctx.restore();
 }
 

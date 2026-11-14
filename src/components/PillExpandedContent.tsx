@@ -80,6 +80,7 @@ import {
 } from '../utils/themeAndSliders';
 import { createZipArchive } from '../utils/zipBuilder';
 import { AnimatedBatterySymbol } from './AnimatedBatterySymbol';
+import { ThemedIcon } from './ThemedIcon';
 import {
   AppMenuGridPanel,
   ControlCenterPanel,
@@ -1669,7 +1670,7 @@ export const PillExpandedContent: React.FC<PillExpandedContentProps> = ({
               }}
               className="py-1.5 px-2 rounded-xl bg-white/10 hover:bg-white/18 text-[11px] font-medium flex items-center justify-center gap-1"
             >
-              <Search className="w-3 h-3 shrink-0" />
+              <ThemedIcon name="search" packStyle={preferences.iconPack} size={13} className="shrink-0" />
               <span className="truncate">Google Search</span>
             </button>
             <button
@@ -1685,7 +1686,7 @@ export const PillExpandedContent: React.FC<PillExpandedContentProps> = ({
               style={{ backgroundColor: palette.primaryHex }}
               className={`py-1.5 px-2 rounded-xl text-[11px] font-semibold flex items-center justify-center gap-1 ${palette.onPrimaryTextClass}`}
             >
-              <Sparkles className="w-3 h-3 shrink-0" />
+              <ThemedIcon name="sparkles" packStyle={preferences.iconPack} size={13} className="shrink-0" />
               <span className="truncate">Astra Orb</span>
             </button>
           </div>
@@ -1783,7 +1784,7 @@ export const PillExpandedContent: React.FC<PillExpandedContentProps> = ({
         >
           <div className="flex items-center justify-between gap-1 text-[10px] opacity-75 w-full">
             <span className="flex items-center gap-1 truncate">
-              <Wifi className="w-3 h-3 text-emerald-400 shrink-0" />
+              <ThemedIcon name="wifi" packStyle={preferences.iconPack} size={13} color="#34d399" className="shrink-0" />
               <span className="truncate font-mono">{systemState.localIpv4}</span>
             </span>
             <span className="font-mono shrink-0">{systemState.pingMs}ms</span>
@@ -1841,7 +1842,7 @@ export const PillExpandedContent: React.FC<PillExpandedContentProps> = ({
         >
           <div className="flex items-center justify-between w-full text-[10px] opacity-85">
             <span className="flex items-center gap-1 font-semibold truncate">
-              <Sun className="w-3 h-3 text-amber-400 shrink-0" />
+              <ThemedIcon name="sun" packStyle={preferences.iconPack} size={13} color="#fbbf24" className="shrink-0" />
               <span>Bengaluru · Sunny</span>
             </span>
             <span className="font-mono text-emerald-400 font-semibold">24°C</span>
@@ -1939,7 +1940,7 @@ export const PillExpandedContent: React.FC<PillExpandedContentProps> = ({
             }
             className={`flex flex-col items-center justify-center py-1.5 ${innerPillMetrics.radiusClass} bg-white/[0.06] hover:bg-white/[0.12] text-[10px] gap-0.5`}
           >
-            <Scissors className="w-3.5 h-3.5" strokeWidth={iconMetrics.strokeWidth} />
+            <ThemedIcon name="snip" packStyle={preferences.iconPack} size={15} strokeWidth={iconMetrics.strokeWidth} />
             <span>Snip</span>
           </button>
           <button
@@ -1955,7 +1956,7 @@ export const PillExpandedContent: React.FC<PillExpandedContentProps> = ({
                 : 'bg-white/[0.06] hover:bg-white/[0.12]'
             }`}
           >
-            {micMuted ? <MicOff className="w-3.5 h-3.5" /> : <Mic className="w-3.5 h-3.5" />}
+            <ThemedIcon name="mic" packStyle={preferences.iconPack} size={15} color={micMuted ? '#fca5a5' : undefined} />
             <span>{micMuted ? 'Muted' : 'Mic'}</span>
           </button>
           <button
@@ -1971,7 +1972,7 @@ export const PillExpandedContent: React.FC<PillExpandedContentProps> = ({
                 : 'bg-white/[0.06] hover:bg-white/[0.12]'
             }`}
           >
-            <Moon className="w-3.5 h-3.5" />
+            <ThemedIcon name="nightlight" packStyle={preferences.iconPack} size={15} color={nightLight ? '#fcd34d' : undefined} />
             <span>Warm</span>
           </button>
           <button
@@ -1987,7 +1988,7 @@ export const PillExpandedContent: React.FC<PillExpandedContentProps> = ({
                 : 'bg-white/[0.06] hover:bg-white/[0.12]'
             }`}
           >
-            <Coffee className="w-3.5 h-3.5" />
+            <ThemedIcon name="awake" packStyle={preferences.iconPack} size={15} color={keepAwake ? '#6ee7b7' : undefined} />
             <span>Awake</span>
           </button>
         </div>
@@ -2376,7 +2377,7 @@ export const PillExpandedContent: React.FC<PillExpandedContentProps> = ({
             title="Pill Settings & Customization"
             className="p-1.5 rounded-lg opacity-70 hover:opacity-100 hover:bg-white/10 transition-colors focus-visible:outline-2 focus-visible:outline-sky-400"
           >
-            <Settings className="w-3.5 h-3.5" strokeWidth={iconMetrics.strokeWidth} />
+            <ThemedIcon name="settings" packStyle={preferences.iconPack} size={15} strokeWidth={iconMetrics.strokeWidth} />
           </button>
 
           <button
