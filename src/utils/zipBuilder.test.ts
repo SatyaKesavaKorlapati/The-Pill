@@ -10,8 +10,8 @@ test('computeCrc32 matches standard IEEE 802.3 check value for 123456789', () =>
 
 test('createZipArchive writes valid PKZIP local headers, central directory, and EOCD signature', () => {
   const archive = createZipArchive([
-    { path: 'DynamicLedge.WinUI/Program.cs', content: 'using System;\nConsole.WriteLine("OK");' },
-    { path: 'DynamicLedge.WinUI/Shaders/Liquid.hlsl', content: 'float4 main() : SV_TARGET { return 1; }' },
+    { path: 'Pill.WinUI/Program.cs', content: 'using System;\nConsole.WriteLine("OK");' },
+    { path: 'Pill.WinUI/Shaders/Liquid.hlsl', content: 'float4 main() : SV_TARGET { return 1; }' },
   ]);
 
   const view = new DataView(archive.buffer);

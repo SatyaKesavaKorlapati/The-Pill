@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { MusicVisualizerStyle } from '../types/ledge';
+import { MusicVisualizerStyle } from '../types/pill';
 
 interface FluidMusicVisualizerProps {
   style: MusicVisualizerStyle;

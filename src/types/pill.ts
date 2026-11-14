@@ -1,9 +1,12 @@
 import {
+  PillAnchorPosition,
+  PillShapeStyle,
+  PillSizeScale,
+  SpringConfig,
+  SpringPresetId,
   LedgeAnchorPosition,
   LedgeShapeStyle,
   LedgeSizeScale,
-  SpringConfig,
-  SpringPresetId,
 } from '../utils/springPhysics';
 import { ClipboardCategory } from '../utils/customizationLogic';
 import {
@@ -12,6 +15,7 @@ import {
   IconPackStyle,
   InnerCapsuleRadius,
   InnerPillScale,
+  PillThemeId,
   LedgeThemeId,
   SliderVisualStyle,
   TileSurfaceStyle,
@@ -303,7 +307,8 @@ export interface WindowsSystemState {
   cpuUsagePct: number;
   systemRamUsedGb: number;
   systemRamTotalGb: number;
-  ledgeNativeRamMb: number;
+  pillNativeRamMb: number;
+  ledgeNativeRamMb?: number;
   nvmeReadMb: number;
   netDownMbps: number;
   netUpMbps: number;
@@ -350,7 +355,7 @@ export type NotedownFormatStyle = 'structured_md' | 'executive_brief' | 'action_
 
 export interface PillPreferences {
   // Color Theme, Style Kit, Icon Pack, Inner Pills & Sliders
-  themeId: LedgeThemeId;
+  themeId: PillThemeId;
   tileSurfaceStyle: TileSurfaceStyle;
   customPrimaryHex: string;
   customSecondaryHex: string;
@@ -380,10 +385,10 @@ export interface PillPreferences {
 
   // Shape & Location
   material: AppearanceMaterial;
-  shapeStyle: LedgeShapeStyle;
-  anchorPosition: LedgeAnchorPosition;
+  shapeStyle: PillShapeStyle;
+  anchorPosition: PillAnchorPosition;
   floatingOffsetPx: number;
-  sizeScale: LedgeSizeScale;
+  sizeScale: PillSizeScale;
   isElongated: boolean;
   isFloatingPill: boolean;
 
@@ -432,13 +437,13 @@ export interface PillPreferences {
   defaultLiveVoice: LiveVoiceName;
 
   // Tab Order, Renaming, Extra Custom Widget Pages & Control Center Tiles
-  tabOrder: BuiltinLedgeTab[];
-  enabledTabs: Record<BuiltinLedgeTab, boolean>;
-  customTabNames: Partial<Record<BuiltinLedgeTab, string>>;
+  tabOrder: BuiltinPillTab[];
+  enabledTabs: Record<BuiltinPillTab, boolean>;
+  customTabNames: Partial<Record<BuiltinPillTab, string>>;
   customWidgetTabs: CustomWidgetTab[];
   controlTiles: ControlTileId[];
   controlTileSizes: Partial<Record<ControlTileId, ControlTileSpan>>;
-  featureFlags: LedgeFeatureFlags;
+  featureFlags: PillFeatureFlags;
 
   // OS & Privacy
   openAtLogin: boolean;
@@ -453,3 +458,8 @@ export interface PillPreferences {
 }
 
 export type LedgePreferences = PillPreferences;
+export {
+  PillAnchorPosition as LedgeAnchorPosition,
+  PillShapeStyle as LedgeShapeStyle,
+  PillSizeScale as LedgeSizeScale,
+};

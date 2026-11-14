@@ -20,9 +20,9 @@ export const WINUI_NATIVE_FILES: WinUIProjectFile[] = [
 ## SUMMARY OF DELTA CHANGES TO APPLY
 
 ### DIFF 1 — Multi-Size Dynamic Widgets (\`Small 1×1\`, \`Medium 2×1\`, \`Large 2×2\`, \`Vertical 1×2\`) & Space-Efficient Music Card
-- **Target Files:** \`Models/LedgePreferences.cs\`, \`Views/HomePlaygroundPage.xaml(.cs)\`, \`Controls/MusicStudioWidget.xaml(.cs)\`
+- **Target Files:** \`Models/PillPreferences.cs\`, \`Views/HomePlaygroundPage.xaml(.cs)\`, \`Controls/MusicStudioWidget.xaml(.cs)\`
 - **Changes:**
-  1. Add \`public enum WidgetSizeVariant { Small, Medium, Large, Vertical }\` and \`Dictionary<string, WidgetSizeVariant> WidgetSizes\` to \`LedgePreferences\`.
+  1. Add \`public enum WidgetSizeVariant { Small, Medium, Large, Vertical }\` and \`Dictionary<string, WidgetSizeVariant> WidgetSizes\` to \`PillPreferences\`.
   2. Replace the fixed 2-column split on Home with a 4-column dense \`VariableSizedWrapGrid\` / CSS-equivalent \`Grid\` (\`ColumnDefinitions="*,*,*,*"\`, \`RowHeight="108"\`):
      - \`Small\`: \`ColumnSpan=1, RowSpan=1\`
      - \`Medium\`: \`ColumnSpan=2, RowSpan=1\` (Default for Music — eliminates empty dark space!)
@@ -31,7 +31,7 @@ export const WINUI_NATIVE_FILES: WinUIProjectFile[] = [
   3. **Remove \`"Fluent Mica"\` / \`"24-bit WASAPI"\` label** from \`MusicStudioWidget\`.
   4. **Move \`Edit Home\` (\`Playground\`) button OUTSIDE \`MusicStudioWidget\`** into the persistent top non-widget toolbar of \`HomePlaygroundPage\` so removing or shrinking the Music widget never hides layout editing.
   5. **Synchronized Lyrics On by Default + Toggle + Full Expand:**
-     - Add \`bool MusicLyricsVisible { get; set; } = true;\` to \`LedgePreferences\`.
+     - Add \`bool MusicLyricsVisible { get; set; } = true;\` to \`PillPreferences\`.
      - Render fused inline lyric bar above \`LivingProgressBar\` by default; wire \`Lyrics On/Off\` toggle button and \`Expand\` (\`Maximize\`) button that swaps in a scrollable \`ListView\` of synchronized LRC/GSMTC lines.
 
 ### DIFF 2 — Apple-Style Interactive "Playground" Building-Block Editor (Home + Control Center)
@@ -45,7 +45,7 @@ export const WINUI_NATIVE_FILES: WinUIProjectFile[] = [
      - Add \`Edit Blocks\` Playground toggle allowing drag-and-drop tile reorder and \`1×1\` vs \`2×1\` span toggle (\`ControlTileSizes\`).
 
 ### DIFF 3 — Tab Renaming (\`"Voice AI"\` → \`"Search & AI"\`) & Extra Custom Widget Pages
-- **Target Files:** \`Models/LedgePreferences.cs\`, \`Views/ExpandedIslandShell.xaml.cs\`, \`Views/FullSettingsWindow.xaml(.cs)\`
+- **Target Files:** \`Models/PillPreferences.cs\`, \`Views/ExpandedIslandShell.xaml.cs\`, \`Views/FullSettingsWindow.xaml(.cs)\`
 - **Changes:**
   1. Change default label of \`ai\` tab from \`"Voice AI"\` to \`"Search & AI"\`.
   2. Add \`Dictionary<string, string> CustomTabNames\` so users can rename any built-in tab in Settings.

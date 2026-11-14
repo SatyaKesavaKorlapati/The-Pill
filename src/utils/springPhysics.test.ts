@@ -3,14 +3,14 @@ import assert from 'node:assert/strict';
 import {
   SPRING_PRESETS,
   SpringPresetId,
-  LedgeSizeScale,
-  LedgeShapeStyle,
-  LedgeAnchorPosition,
+  PillSizeScale,
+  PillShapeStyle,
+  PillAnchorPosition,
   stepSpring1D,
   isSpringAtRest,
   computeLiquidDeformation,
   computeMetaballBridge,
-  resolveLedgeGeometry,
+  resolvePillGeometry,
 } from './springPhysics';
 
 test('stepSpring1D converges cleanly to target position for LiquidSilk and ElasticDrop presets', () => {
@@ -57,7 +57,7 @@ test('computeMetaballBridge transitions smoothly from fused neck to detached dro
   assert.equal(computeMetaballBridge(16, 14).detachmentRatio, 1);
 });
 
-test('resolveLedgeGeometry handles DynamicPill, TopBezelLedge, Squircle, MinimalistBar, and Stealth Hide', () => {
+test('resolvePillGeometry handles DynamicPill, TopBezelPill, Squircle, MinimalistBar, and Stealth Hide', () => {
   const baseInput = {
     isExpanded: false,
     isLauncherOpen: false,
@@ -67,41 +67,41 @@ test('resolveLedgeGeometry handles DynamicPill, TopBezelLedge, Squircle, Minimal
     hasSecondaryDroplet: false,
     isHovered: false,
     isDragOver: false,
-    sizeScale: LedgeSizeScale.Medium,
+    sizeScale: PillSizeScale.Medium,
     isElongated: false,
   };
 
-  const pillIdle = resolveLedgeGeometry({
+  const pillIdle = resolvePillGeometry({
     ...baseInput,
-    shapeStyle: LedgeShapeStyle.DynamicPill,
-    anchorPosition: LedgeAnchorPosition.TopCenter,
+    shapeStyle: PillShapeStyle.DynamicPill,
+    anchorPosition: PillAnchorPosition.TopCenter,
   });
   assert.equal(pillIdle.isDockedFlushTop, false);
   assert.equal(pillIdle.topOffset, 12);
 
-  const bezelDocked = resolveLedgeGeometry({
+  const bezelDocked = resolvePillGeometry({
     ...baseInput,
-    shapeStyle: LedgeShapeStyle.TopBezelLedge,
-    anchorPosition: LedgeAnchorPosition.TopCenter,
+    shapeStyle: PillShapeStyle.TopBezelPill,
+    anchorPosition: PillAnchorPosition.TopCenter,
   });
   assert.equal(bezelDocked.isDockedFlushTop, true);
   assert.equal(bezelDocked.topOffset, 0);
 
-  const minimalBar = resolveLedgeGeometry({
+  const minimalBar = resolvePillGeometry({
     ...baseInput,
     hasPrimaryActivity: true,
-    shapeStyle: LedgeShapeStyle.MinimalistBar,
+    shapeStyle: PillShapeStyle.MinimalistBar,
   });
   assert.equal(minimalBar.height, 28);
 
-  const stealthTop = resolveLedgeGeometry({
+  const stealthTop = resolvePillGeometry({
     ...baseInput,
     isStealthHidden: true,
-    anchorPosition: LedgeAnchorPosition.TopRight,
+    anchorPosition: PillAnchorPosition.TopRight,
   });
   assert.ok(stealthTop.topOffset < -30);
 
-  const expandedControl = resolveLedgeGeometry({
+  const expandedControl = resolvePillGeometry({
     ...baseInput,
     isExpanded: true,
     activeTab: 'control',
@@ -109,7 +109,7 @@ test('resolveLedgeGeometry handles DynamicPill, TopBezelLedge, Squircle, Minimal
   assert.equal(expandedControl.width, 684);
   assert.equal(expandedControl.height, 388);
 
-  const expandedAi = resolveLedgeGeometry({
+  const expandedAi = resolvePillGeometry({
     ...baseInput,
     isExpanded: true,
     activeTab: 'ai',
@@ -117,14 +117,14 @@ test('resolveLedgeGeometry handles DynamicPill, TopBezelLedge, Squircle, Minimal
   assert.equal(expandedAi.width, 684);
   assert.equal(expandedAi.height, 422);
 
-  const expandedClipboard = resolveLedgeGeometry({
+  const expandedClipboard = resolvePillGeometry({
     ...baseInput,
     isExpanded: true,
     activeTab: 'clipboard',
   });
   assert.equal(expandedClipboard.height, 426);
 
-  const expandedMonitor = resolveLedgeGeometry({
+  const expandedMonitor = resolvePillGeometry({
     ...baseInput,
     isExpanded: true,
     activeTab: 'monitor',
@@ -132,7 +132,7 @@ test('resolveLedgeGeometry handles DynamicPill, TopBezelLedge, Squircle, Minimal
   assert.equal(expandedMonitor.height, 414);
 });
 
-test('resolveLedgeGeometry morphs the existing Pill directly into Astra (orb_only & orb_with_chat) and overrides stealth hide', () => {
+test('resolvePillGeometry morphs the existing Pill directly into Astra (orb_only & orb_with_chat) and overrides stealth hide', () => {
   const baseInput = {
     isExpanded: false,
     isLauncherOpen: false,
@@ -142,31 +142,31 @@ test('resolveLedgeGeometry morphs the existing Pill directly into Astra (orb_onl
     hasSecondaryDroplet: false,
     isHovered: false,
     isDragOver: false,
-    sizeScale: LedgeSizeScale.Medium,
+    sizeScale: PillSizeScale.Medium,
     isElongated: false,
   };
 
-  const orbOnlyIdle = resolveLedgeGeometry({
+  const orbOnlyIdle = resolvePillGeometry({
     ...baseInput,
     isStealthHidden: true,
     isAstraActive: true,
     astraMode: 'orb_only',
     astraExpandedResult: false,
   });
-  assert.equal(orbOnlyIdle.width, 352);
-  assert.equal(orbOnlyIdle.height, 62);
+  assert.equal(orbOnlyIdle.width, 70);
+  assert.equal(orbOnlyIdle.height, 70);
   assert.equal(orbOnlyIdle.topOffset, 12);
 
-  const orbOnlyWithResult = resolveLedgeGeometry({
+  const orbOnlyWithResult = resolvePillGeometry({
     ...baseInput,
     isAstraActive: true,
     astraMode: 'orb_only',
     astraExpandedResult: true,
   });
-  assert.equal(orbOnlyWithResult.width, 430);
-  assert.equal(orbOnlyWithResult.height, 158);
+  assert.equal(orbOnlyWithResult.width, 420);
+  assert.equal(orbOnlyWithResult.height, 138);
 
-  const orbWithChat = resolveLedgeGeometry({
+  const orbWithChat = resolvePillGeometry({
     ...baseInput,
     isAstraActive: true,
     astraMode: 'orb_with_chat',

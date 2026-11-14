@@ -26,10 +26,10 @@ import {
 } from 'lucide-react';
 import {
   AiAssistantModelId,
-  LedgePreferences,
+  PillPreferences,
   LiveVoiceName,
   VoiceAgentAction,
-} from '../types/ledge';
+} from '../types/pill';
 import { playTactilePop } from '../utils/audioSynth';
 import { resolveThemePalette } from '../utils/themeAndSliders';
 import { CustomPopdown, PopdownOption } from './CustomPopdown';
@@ -37,8 +37,8 @@ import { FluidMusicVisualizer } from './FluidMusicVisualizer';
 import { RichMarkdown } from './RichMarkdown';
 
 interface IslandAiAssistantPanelProps {
-  preferences: LedgePreferences;
-  onUpdatePreferences: (patch: Partial<LedgePreferences>) => void;
+  preferences: PillPreferences;
+  onUpdatePreferences: (patch: Partial<PillPreferences>) => void;
   onAppendToNotes: (text: string) => void;
   onCopyToClipboard: (text: string, source: string) => void;
   onTriggerToast: (msg: string) => void;
@@ -1172,7 +1172,7 @@ export const IslandAiAssistantPanel: React.FC<IslandAiAssistantPanelProps> = ({
       {mode === 'chat' && (
         <>
           <div
-            className={`flex-1 overflow-y-auto ledge-scroll space-y-2.5 pr-1 border rounded-xl p-2.5 select-text ${panelCardCls}`}
+            className={`flex-1 overflow-y-auto pill-scroll space-y-2.5 pr-1 border rounded-xl p-2.5 select-text ${panelCardCls}`}
           >
             {messages.map((turn) => (
               <div
@@ -1479,7 +1479,7 @@ export const IslandAiAssistantPanel: React.FC<IslandAiAssistantPanelProps> = ({
           </div>
 
           {/* Formatted Answer + Code Viewport */}
-          <div className="flex-1 min-h-[96px] bg-black/40 border border-white/10 rounded-xl p-2.5 overflow-y-auto ledge-scroll select-text cursor-text">
+          <div className="flex-1 min-h-[96px] bg-black/40 border border-white/10 rounded-xl p-2.5 overflow-y-auto pill-scroll select-text cursor-text">
             {assistLoading ? (
               <div className="h-full flex items-center justify-center gap-2 text-xs text-slate-300">
                 <Loader2 className="w-4 h-4 animate-spin text-sky-300" />
@@ -1627,7 +1627,7 @@ export const IslandAiAssistantPanel: React.FC<IslandAiAssistantPanelProps> = ({
             ))}
           </div>
 
-          <div className="flex-1 bg-black/35 border border-white/10 rounded-xl p-2.5 overflow-y-auto ledge-scroll select-text cursor-text">
+          <div className="flex-1 bg-black/35 border border-white/10 rounded-xl p-2.5 overflow-y-auto pill-scroll select-text cursor-text">
             {searchLoading ? (
               <div className="h-full flex items-center justify-center gap-2 text-xs text-slate-300">
                 <Loader2 className="w-4 h-4 animate-spin text-sky-300" />
@@ -1753,7 +1753,7 @@ export const IslandAiAssistantPanel: React.FC<IslandAiAssistantPanelProps> = ({
             </div>
           </div>
 
-          <div className="flex-1 bg-black/35 border border-white/10 rounded-xl p-2.5 text-xs text-slate-100 overflow-y-auto ledge-scroll select-text cursor-text">
+          <div className="flex-1 bg-black/35 border border-white/10 rounded-xl p-2.5 text-xs text-slate-100 overflow-y-auto pill-scroll select-text cursor-text">
             {transcribing ? (
               <div className="h-full flex items-center justify-center gap-2 text-slate-300">
                 <Loader2 className="w-4 h-4 animate-spin text-sky-300" />

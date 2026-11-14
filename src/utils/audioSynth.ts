@@ -1,4 +1,4 @@
-import { SoundActionKind, SoundProfileId } from '../types/ledge';
+import { SoundActionKind, SoundProfileId } from '../types/pill';
 
 let sharedAudioCtx: AudioContext | null = null;
 let lastSoundTimestamp = 0;

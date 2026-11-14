@@ -35,7 +35,7 @@ import {
   AppearanceMaterial,
   AstraDisplayMode,
   AstraOrbStyle,
-  BuiltinLedgeTab,
+  BuiltinPillTab,
   ClipboardGroupBy,
   ClipboardLayoutMode,
   ClipboardSortBy,
@@ -43,21 +43,21 @@ import {
   CustomWidgetTab,
   EdgeLightProfile,
   HomeWidgetId,
-  LedgeFeatureFlags,
-  LedgePreferences,
+  PillFeatureFlags,
+  PillPreferences,
   LiveVoiceName,
   MusicVisualizerStyle,
   NotedownFormatStyle,
   SoundActionKind,
   SoundProfileId,
   WidgetSizeVariant,
-} from '../types/ledge';
+} from '../types/pill';
 import { playTactilePop } from '../utils/audioSynth';
 import { isTabEnabledInPrefs, moveOrderedItem } from '../utils/customizationLogic';
 import {
-  LedgeAnchorPosition,
-  LedgeShapeStyle,
-  LedgeSizeScale,
+  PillAnchorPosition,
+  PillShapeStyle,
+  PillSizeScale,
   SPRING_PRESETS,
   SpringPresetId,
 } from '../utils/springPhysics';
@@ -71,8 +71,8 @@ import {
   IconPackStyle,
   InnerCapsuleRadius,
   InnerPillScale,
-  LEDGE_THEMES,
-  LedgeThemeId,
+  PILL_THEMES,
+  PillThemeId,
   resolveEdgeGlowCss,
   resolveIconPackMetrics,
   resolveInnerPillMetrics,
@@ -87,7 +87,7 @@ import { ALL_CONTROL_TILES } from './ControlAndMonitorPanels';
 import { CustomPopdown, PopdownOption } from './CustomPopdown';
 import { FluidEffectSlider } from './FluidEffectSlider';
 import { FluidMusicVisualizer } from './FluidMusicVisualizer';
-import { HOME_WIDGET_CATALOG } from './LedgeExpandedContent';
+import { HOME_WIDGET_CATALOG } from './PillExpandedContent';
 
 const SETTINGS_CLIP_SORT_OPTIONS: PopdownOption<ClipboardSortBy>[] = [
   { value: 'newest', label: 'Newest First', sublabel: 'Most recently copied items first' },
@@ -137,8 +137,8 @@ const SETTINGS_ASSIST_LANG_OPTIONS: PopdownOption<string>[] = [
 ];
 
 interface FullSettingsViewProps {
-  preferences: LedgePreferences;
-  onUpdatePreferences: (patch: Partial<LedgePreferences>) => void;
+  preferences: PillPreferences;
+  onUpdatePreferences: (patch: Partial<PillPreferences>) => void;
   onBackToSimulator: () => void;
 }
 
@@ -151,7 +151,7 @@ type SettingsSectionId =
   | 'tabs_manager'
   | 'ai_astra';
 
-const TAB_TITLES: Record<BuiltinLedgeTab, { title: string; desc: string; defaultLabel: string }> = {
+const TAB_TITLES: Record<BuiltinPillTab, { title: string; desc: string; defaultLabel: string }> = {
   home: {
     title: 'Home Hub (Multi-Size Playground)',
     desc: 'Resizable S / M / L / V widgets, Now Playing lyrics, Search & Astra, timers',
@@ -194,7 +194,7 @@ const TAB_TITLES: Record<BuiltinLedgeTab, { title: string; desc: string; default
   },
 };
 
-const FEATURE_META: { key: keyof LedgeFeatureFlags; label: string; desc: string }[] = [
+const FEATURE_META: { key: keyof PillFeatureFlags; label: string; desc: string }[] = [
   {
     key: 'fuseVisualizerInSlider',
     label: 'Incorporate Visualizer Directly Into Progress Slider',
@@ -753,7 +753,7 @@ export const FullSettingsView: React.FC<FullSettingsViewProps> = ({
     playTactilePop('confirm');
   };
 
-  const toggleTabEnabled = (tab: BuiltinLedgeTab) => {
+  const toggleTabEnabled = (tab: BuiltinPillTab) => {
     const enabledCount = Object.values(preferences.enabledTabs).filter(Boolean).length;
     const currentlyOn = preferences.enabledTabs[tab];
     if (currentlyOn && enabledCount <= 1) return;
@@ -785,7 +785,7 @@ export const FullSettingsView: React.FC<FullSettingsViewProps> = ({
     playTactilePop('confirm');
   };
 
-  const toggleFeatureFlag = (key: keyof LedgeFeatureFlags) => {
+  const toggleFeatureFlag = (key: keyof PillFeatureFlags) => {
     const next = !preferences.featureFlags[key];
     onUpdatePreferences({
       featureFlags: { ...preferences.featureFlags, [key]: next },
@@ -984,7 +984,7 @@ export const FullSettingsView: React.FC<FullSettingsViewProps> = ({
         </aside>
 
         {/* Right Active Configuration Pane with Smooth Independent Scrolling */}
-        <main className="flex-1 h-full overflow-y-auto ledge-scroll p-6 pb-24 bg-[#090b10] select-text">
+        <main className="flex-1 h-full overflow-y-auto pill-scroll p-6 pb-24 bg-[#090b10] select-text">
           <div className="max-w-4xl mx-auto space-y-6">
             {/* Top Settings Header */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-white/10">
@@ -1053,22 +1053,22 @@ export const FullSettingsView: React.FC<FullSettingsViewProps> = ({
                       <button
                         type="button"
                         onClick={() => {
-                          if (preferences.shapeStyle === LedgeShapeStyle.MinimalistBar) {
+                          if (preferences.shapeStyle === PillShapeStyle.MinimalistBar) {
                             setIsRazorSlicing(true);
                             playTactilePop('confirm');
                             window.setTimeout(() => setIsRazorSlicing(false), 550);
                           } else {
                             setTestBounce(true);
-                            playTactilePop(preferences.shapeStyle === LedgeShapeStyle.SplitDualCapsule ? 'tab' : 'expand');
+                            playTactilePop(preferences.shapeStyle === PillShapeStyle.SplitDualCapsule ? 'tab' : 'expand');
                             window.setTimeout(() => setTestBounce(false), 450);
                           }
                         }}
                         className="px-2.5 py-1 text-[11px] font-medium bg-white/10 hover:bg-white/20 text-sky-300 rounded-lg transition-colors flex items-center gap-1"
                       >
                         <span>
-                          {preferences.shapeStyle === LedgeShapeStyle.MinimalistBar
+                          {preferences.shapeStyle === PillShapeStyle.MinimalistBar
                             ? '⚡ Test Razor Slice Gesture'
-                            : preferences.shapeStyle === LedgeShapeStyle.SplitDualCapsule
+                            : preferences.shapeStyle === PillShapeStyle.SplitDualCapsule
                             ? '⚡ Test Dual Droplet Detach'
                             : '⚡ Test Spring Wobble'}
                         </span>
@@ -1265,14 +1265,14 @@ export const FullSettingsView: React.FC<FullSettingsViewProps> = ({
                                 : 'top-1 left-1/2 -translate-x-1/2'
                             }`}
                           >
-                            {preferences.shapeStyle === LedgeShapeStyle.SplitDualCapsule ? (
+                            {preferences.shapeStyle === PillShapeStyle.SplitDualCapsule ? (
                               /* PERMANENT DUAL SPLIT: Main Capsule + Detached Satellite Droplet separated by gap */
                               <div className={`flex items-center gap-2.5 ${testBounce ? 'animate-spring-wobble' : ''}`}>
                                 <div
                                   className={`relative flex items-center justify-between px-3 text-slate-100 shadow-lg bg-[#050609] border border-white/20 rounded-full py-1 ${
-                                    preferences.sizeScale === LedgeSizeScale.Small
+                                    preferences.sizeScale === PillSizeScale.Small
                                       ? 'w-36 text-[10px]'
-                                      : preferences.sizeScale === LedgeSizeScale.Large
+                                      : preferences.sizeScale === PillSizeScale.Large
                                       ? 'w-48 text-xs'
                                       : 'w-40 text-[11px]'
                                   }`}
@@ -1295,28 +1295,28 @@ export const FullSettingsView: React.FC<FullSettingsViewProps> = ({
                                 </div>
                               </div>
                             ) : (
-                              /* The Simulated Capsule for DynamicPill, Squircle, TopBezelLedge, and MinimalistBar */
+                              /* The Simulated Capsule for DynamicPill, Squircle, TopBezelPill, and MinimalistBar */
                               <div
                                 className={`relative flex items-center justify-between px-3 text-slate-100 shadow-lg ${
                                   testBounce ? 'animate-spring-wobble' : ''
                                 } ${
-                                  preferences.shapeStyle === LedgeShapeStyle.TopBezelLedge
+                                  preferences.shapeStyle === PillShapeStyle.TopBezelPill
                                     ? 'bg-[#050609] border-x border-b border-white/20 rounded-b-2xl pt-1 pb-1.5'
-                                    : preferences.shapeStyle === LedgeShapeStyle.SuperellipseSquircle
+                                    : preferences.shapeStyle === PillShapeStyle.SuperellipseSquircle
                                     ? 'bg-[#050609] border border-white/20 rounded-[14px] py-1'
-                                    : preferences.shapeStyle === LedgeShapeStyle.MinimalistBar
+                                    : preferences.shapeStyle === PillShapeStyle.MinimalistBar
                                     ? 'bg-[#050609] border border-cyan-400/40 rounded-[6px] py-0.5 h-[26px] shadow-[0_0_12px_rgba(34,211,238,0.2)] overflow-hidden'
                                     : 'bg-[#050609] border border-white/20 rounded-full py-1'
                                 } ${
-                                  preferences.sizeScale === LedgeSizeScale.Small
+                                  preferences.sizeScale === PillSizeScale.Small
                                     ? 'w-44 text-[10px]'
-                                    : preferences.sizeScale === LedgeSizeScale.Large
+                                    : preferences.sizeScale === PillSizeScale.Large
                                     ? 'w-56 text-xs'
                                     : 'w-48 text-[11px]'
                                 }`}
                               >
                                 {/* Minimalist Razor Specular Edge Line & Slice Flare */}
-                                {preferences.shapeStyle === LedgeShapeStyle.MinimalistBar && (
+                                {preferences.shapeStyle === PillShapeStyle.MinimalistBar && (
                                   <>
                                     <span className="absolute top-0 left-0 right-0 h-[1.5px] bg-gradient-to-r from-transparent via-cyan-300/80 to-transparent pointer-events-none" />
                                     {isRazorSlicing && (
@@ -1326,7 +1326,7 @@ export const FullSettingsView: React.FC<FullSettingsViewProps> = ({
                                 )}
 
                                 {/* Concave Meniscus Fillets for Docked Bezel */}
-                                {preferences.shapeStyle === LedgeShapeStyle.TopBezelLedge && (
+                                {preferences.shapeStyle === PillShapeStyle.TopBezelPill && (
                                   <>
                                     <span className="absolute -left-2 top-0 w-2 h-2 border-r border-t border-white/20 rounded-tr-lg" />
                                     <span className="absolute -right-2 top-0 w-2 h-2 border-l border-t border-white/20 rounded-tl-lg" />
@@ -1340,11 +1340,11 @@ export const FullSettingsView: React.FC<FullSettingsViewProps> = ({
                                     className="w-2.5 h-2.5 rounded-full shrink-0 shadow-sm"
                                   />
                                   <span className="font-semibold truncate">
-                                    {preferences.shapeStyle === LedgeShapeStyle.TopBezelLedge
-                                      ? 'Bezel Ledge'
-                                      : preferences.shapeStyle === LedgeShapeStyle.SuperellipseSquircle
+                                    {preferences.shapeStyle === PillShapeStyle.TopBezelPill
+                                      ? 'Bezel Pill'
+                                      : preferences.shapeStyle === PillShapeStyle.SuperellipseSquircle
                                       ? 'iOS Squircle'
-                                      : preferences.shapeStyle === LedgeShapeStyle.MinimalistBar
+                                      : preferences.shapeStyle === PillShapeStyle.MinimalistBar
                                       ? 'Razor Status'
                                       : 'Dynamic Island'}
                                   </span>
@@ -1371,7 +1371,7 @@ export const FullSettingsView: React.FC<FullSettingsViewProps> = ({
                       <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-white/10 text-xs">
                         <div className="flex items-center gap-3">
                           <span className="font-mono text-sky-300 bg-sky-950/60 border border-sky-400/20 px-2 py-0.5 rounded text-[11px]">
-                            {preferences.sizeScale === LedgeSizeScale.Small ? '193 × 33 px (Compact)' : preferences.sizeScale === LedgeSizeScale.Large ? '229 × 39 px (Roomy)' : '210 × 36 px (Normal)'}
+                            {preferences.sizeScale === PillSizeScale.Small ? '193 × 33 px (Compact)' : preferences.sizeScale === PillSizeScale.Large ? '229 × 39 px (Roomy)' : '210 × 36 px (Normal)'}
                           </span>
                           <span className="text-slate-300">
                             Anchor: <strong className="text-white capitalize">{String(preferences.anchorPosition || 'top_center').replace(/_/g, ' ')}</strong>
@@ -1501,7 +1501,7 @@ export const FullSettingsView: React.FC<FullSettingsViewProps> = ({
                           <span>Avatar Manifestations ({ALL_ASTRA_ORB_DEFINITIONS.length}):</span>
                           <span className="text-cyan-400">Scroll to preview</span>
                         </div>
-                        <div className="flex items-center gap-1.5 overflow-x-auto pb-1.5 ledge-scroll">
+                        <div className="flex items-center gap-1.5 overflow-x-auto pb-1.5 pill-scroll">
                           {ALL_ASTRA_ORB_DEFINITIONS.map((st) => {
                             const isSelected = (preferences.astraOrbStyle || 'siri_rainbow') === st.id;
                             return (
@@ -1549,7 +1549,7 @@ export const FullSettingsView: React.FC<FullSettingsViewProps> = ({
 
                 <div className="grid grid-cols-1 xl:grid-cols-2 gap-3">
                   {COMPLETE_STYLE_KITS.map((kit) => {
-                    const th = LEDGE_THEMES[kit.themeId];
+                    const th = PILL_THEMES[kit.themeId];
                     const active =
                       preferences.themeId === kit.themeId &&
                       preferences.tileSurfaceStyle === kit.tileSurfaceStyle;
@@ -1637,9 +1637,9 @@ export const FullSettingsView: React.FC<FullSettingsViewProps> = ({
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                  {(Object.keys(LEDGE_THEMES) as Exclude<LedgeThemeId, 'custom_hex'>[]).map(
+                  {(Object.keys(PILL_THEMES) as Exclude<PillThemeId, 'custom_hex'>[]).map(
                     (id) => {
-                      const th = LEDGE_THEMES[id];
+                      const th = PILL_THEMES[id];
                       const selected = preferences.themeId === id;
                       return (
                         <button
@@ -2484,7 +2484,7 @@ export const FullSettingsView: React.FC<FullSettingsViewProps> = ({
                 <div>
                   <h2 className="text-sm font-semibold text-white">Dynamic Island Outer Silhouette</h2>
                   <p className="text-xs text-slate-400 mt-0.5">
-                    Keep classic Dynamic Island Pill or switch to Top-Bezel Ledge, Squircle, Minimalist Bar, or Permanent Dual Split.
+                    Keep classic Dynamic Island Pill or switch to Top-Bezel Pill Dock, Squircle, Minimalist Bar, or Permanent Dual Split.
                   </p>
                 </div>
 
@@ -2492,27 +2492,27 @@ export const FullSettingsView: React.FC<FullSettingsViewProps> = ({
                   {(
                     [
                       {
-                        id: LedgeShapeStyle.DynamicPill,
+                        id: PillShapeStyle.DynamicPill,
                         name: 'Dynamic Island Pill',
                         desc: 'Floating 360° rounded Apple capsule (Recommended)',
                       },
                       {
-                        id: LedgeShapeStyle.TopBezelLedge,
-                        name: 'Top-Bezel Ledge',
+                        id: PillShapeStyle.TopBezelPill,
+                        name: 'Top-Bezel Pill Dock',
                         desc: 'Flush hardware notch with concave meniscus ears',
                       },
                       {
-                        id: LedgeShapeStyle.SuperellipseSquircle,
+                        id: PillShapeStyle.SuperellipseSquircle,
                         name: 'Continuous Squircle',
                         desc: 'Sculpted iOS superellipse corner curvature',
                       },
                       {
-                        id: LedgeShapeStyle.MinimalistBar,
+                        id: PillShapeStyle.MinimalistBar,
                         name: 'Minimalist Razor Pill',
                         desc: 'Ultra-slim 28px panoramic status strip',
                       },
                       {
-                        id: LedgeShapeStyle.SplitDualCapsule,
+                        id: PillShapeStyle.SplitDualCapsule,
                         name: 'Permanent Dual Split',
                         desc: 'Always detaches a companion status droplet',
                       },
@@ -2527,7 +2527,7 @@ export const FullSettingsView: React.FC<FullSettingsViewProps> = ({
                           playTactilePop('tab');
                           onUpdatePreferences({
                             shapeStyle: sh.id,
-                            isFloatingPill: sh.id !== LedgeShapeStyle.TopBezelLedge,
+                            isFloatingPill: sh.id !== PillShapeStyle.TopBezelPill,
                           });
                         }}
                         style={selected ? { borderColor: palette.primaryHex } : undefined}
@@ -2541,21 +2541,21 @@ export const FullSettingsView: React.FC<FullSettingsViewProps> = ({
                           <div className="text-xs font-semibold">{sh.name}</div>
                           {/* Miniature Visual Shape Representation */}
                           <div className="h-5 flex items-center justify-center shrink-0">
-                            {sh.id === LedgeShapeStyle.DynamicPill && (
+                            {sh.id === PillShapeStyle.DynamicPill && (
                               <div className="w-12 h-3.5 rounded-full bg-slate-800 border border-white/30" />
                             )}
-                            {sh.id === LedgeShapeStyle.TopBezelLedge && (
+                            {sh.id === PillShapeStyle.TopBezelPill && (
                               <div className="w-12 h-3 rounded-b-md bg-slate-800 border-x border-b border-white/30" />
                             )}
-                            {sh.id === LedgeShapeStyle.SuperellipseSquircle && (
+                            {sh.id === PillShapeStyle.SuperellipseSquircle && (
                               <div className="w-10 h-4 rounded-[6px] bg-slate-800 border border-white/30" />
                             )}
-                            {sh.id === LedgeShapeStyle.MinimalistBar && (
+                            {sh.id === PillShapeStyle.MinimalistBar && (
                               <div className="w-14 h-2 rounded-[2px] bg-slate-800 border border-cyan-400/60 relative overflow-hidden">
                                 <span className="absolute top-0 left-0 right-0 h-[1px] bg-cyan-300" />
                               </div>
                             )}
-                            {sh.id === LedgeShapeStyle.SplitDualCapsule && (
+                            {sh.id === PillShapeStyle.SplitDualCapsule && (
                               <div className="flex items-center gap-1.5">
                                 <div className="w-8 h-3.5 rounded-full bg-slate-800 border border-white/30" />
                                 <div className="w-3.5 h-3.5 rounded-full bg-slate-800 border border-white/30" />
@@ -2580,10 +2580,10 @@ export const FullSettingsView: React.FC<FullSettingsViewProps> = ({
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                   {(
                     [
-                      { id: LedgeAnchorPosition.TopCenter, label: 'Top Center' },
-                      { id: LedgeAnchorPosition.TopLeft, label: 'Top Left' },
-                      { id: LedgeAnchorPosition.TopRight, label: 'Top Right' },
-                      { id: LedgeAnchorPosition.BottomTaskbar, label: 'Bottom Taskbar' },
+                      { id: PillAnchorPosition.TopCenter, label: 'Top Center' },
+                      { id: PillAnchorPosition.TopLeft, label: 'Top Left' },
+                      { id: PillAnchorPosition.TopRight, label: 'Top Right' },
+                      { id: PillAnchorPosition.BottomTaskbar, label: 'Bottom Taskbar' },
                     ] as const
                   ).map((pos) => (
                     <button
@@ -2665,9 +2665,9 @@ export const FullSettingsView: React.FC<FullSettingsViewProps> = ({
                   <span className="text-xs text-slate-400 mr-1">Outer Scale:</span>
                   {(
                     [
-                      { id: LedgeSizeScale.Small, label: 'Small' },
-                      { id: LedgeSizeScale.Medium, label: 'Medium' },
-                      { id: LedgeSizeScale.Large, label: 'Large' },
+                      { id: PillSizeScale.Small, label: 'Small' },
+                      { id: PillSizeScale.Medium, label: 'Medium' },
+                      { id: PillSizeScale.Large, label: 'Large' },
                     ] as const
                   ).map((sz) => (
                     <button

@@ -53,14 +53,14 @@ import {
 } from 'lucide-react';
 import {
   AudioOutputDevice,
-  BuiltinLedgeTab,
+  BuiltinPillTab,
   ClipboardGroupBy,
   ClipboardItem,
   ClipboardLayoutMode,
   ClipboardSortBy,
   HomeWidgetId,
-  LedgePreferences,
-  LedgeTab,
+  PillPreferences,
+  PillTab,
   MusicTrack,
   NotedownFormatStyle,
   ReminderTask,
@@ -68,7 +68,7 @@ import {
   VoiceAgentAction,
   WidgetSizeVariant,
   WindowsSystemState,
-} from '../types/ledge';
+} from '../types/pill';
 import { formatDurationClock, playTactilePop } from '../utils/audioSynth';
 import { classifyClipboardPayload, moveOrderedItem } from '../utils/customizationLogic';
 import {
@@ -108,8 +108,8 @@ const NOTEDOWN_FORMAT_OPTIONS: PopdownOption<NotedownFormatStyle>[] = [
 import { ResilientThumb } from './ResilientThumb';
 
 export interface PillExpandedContentProps {
-  activeTab: LedgeTab;
-  onSelectTab: (tab: LedgeTab) => void;
+  activeTab: PillTab;
+  onSelectTab: (tab: PillTab) => void;
   isLauncherOpen: boolean;
   onToggleLauncher: () => void;
   onCollapse: () => void;
@@ -174,8 +174,8 @@ export interface PillExpandedContentProps {
   reminders: ReminderTask[];
   onToggleReminder: (id: string) => void;
   onAddReminder: (title: string) => void;
-  preferences: LedgePreferences;
-  onUpdatePreferences: (patch: Partial<LedgePreferences>) => void;
+  preferences: PillPreferences;
+  onUpdatePreferences: (patch: Partial<PillPreferences>) => void;
 }
 
 const AUDIO_DEVICES: AudioOutputDevice[] = [
@@ -184,7 +184,7 @@ const AUDIO_DEVICES: AudioOutputDevice[] = [
   'Focusrite Scarlett DAC',
 ];
 
-export const BUILTIN_TAB_LABELS: Record<BuiltinLedgeTab, string> = {
+export const BUILTIN_TAB_LABELS: Record<BuiltinPillTab, string> = {
   home: 'Home',
   control: 'Controls',
   ai: 'Search & AI',
@@ -260,7 +260,7 @@ const WIDGET_SIZE_OPTIONS: { id: WidgetSizeVariant; short: string; title: string
 
 type ClipFilterGroup = 'all' | 'text_code' | 'media' | 'files' | 'colors_links';
 
-function isBuiltinTab(tab: LedgeTab): tab is BuiltinLedgeTab {
+function isBuiltinTab(tab: PillTab): tab is BuiltinPillTab {
   return !tab.startsWith('custom_');
 }
 
@@ -324,8 +324,6 @@ function blobToBase64(blob: Blob): Promise<string> {
     reader.readAsDataURL(blob);
   });
 }
-
-export type LedgeExpandedContentProps = PillExpandedContentProps;
 
 export const PillExpandedContent: React.FC<PillExpandedContentProps> = ({
   activeTab,
@@ -836,16 +834,16 @@ export const PillExpandedContent: React.FC<PillExpandedContentProps> = ({
   };
 
   // Compute visible tabs (Built-in + Enabled Extra Custom Widget Tabs)
-  const visibleBuiltinTabs: LedgeTab[] = preferences.tabOrder.filter(
+  const visibleBuiltinTabs: PillTab[] = preferences.tabOrder.filter(
     (t) => preferences.enabledTabs[t] && (t !== 'ai' || preferences.aiEnabled)
   );
   const enabledCustomTabs = (preferences.customWidgetTabs ?? []).filter((ct) => ct.enabled);
-  const visibleTabs: LedgeTab[] = [
+  const visibleTabs: PillTab[] = [
     ...visibleBuiltinTabs,
     ...enabledCustomTabs.map((ct) => ct.id),
   ];
 
-  const getTabDisplayLabel = (tabId: LedgeTab): string => {
+  const getTabDisplayLabel = (tabId: PillTab): string => {
     if (!isBuiltinTab(tabId)) {
       const found = (preferences.customWidgetTabs ?? []).find((ct) => ct.id === tabId);
       return found?.name || 'Widgets';
@@ -1121,7 +1119,7 @@ export const PillExpandedContent: React.FC<PillExpandedContentProps> = ({
           </div>
 
           {expandedFullLyrics ? (
-            <div className="flex-1 min-h-0 overflow-y-auto ledge-scroll rounded-xl bg-black/30 border border-white/10 p-2 space-y-1 text-[10px]">
+            <div className="flex-1 min-h-0 overflow-y-auto pill-scroll rounded-xl bg-black/30 border border-white/10 p-2 space-y-1 text-[10px]">
               {currentTrack.lyrics.map((line, idx) => (
                 <button
                   key={`${idx}-${line}`}
@@ -1338,7 +1336,7 @@ export const PillExpandedContent: React.FC<PillExpandedContentProps> = ({
 
           {/* Fused Lyric + Living Scrubber Capsule (or Expandable Full Lyrics View) */}
           {expandedFullLyrics ? (
-            <div className="max-h-24 overflow-y-auto ledge-scroll px-2.5 py-1.5 rounded-xl bg-black/35 border border-white/10 space-y-1">
+            <div className="max-h-24 overflow-y-auto pill-scroll px-2.5 py-1.5 rounded-xl bg-black/35 border border-white/10 space-y-1">
               {currentTrack.lyrics.map((line, idx) => (
                 <button
                   key={`${idx}-${line}`}
@@ -1496,7 +1494,7 @@ export const PillExpandedContent: React.FC<PillExpandedContentProps> = ({
             ))}
           </div>
         ) : expandedFullLyrics ? (
-          <div className="flex-1 min-h-[84px] max-h-32 overflow-y-auto ledge-scroll px-3 py-2 rounded-xl bg-black/35 border border-white/10 space-y-1.5 select-text">
+          <div className="flex-1 min-h-[84px] max-h-32 overflow-y-auto pill-scroll px-3 py-2 rounded-xl bg-black/35 border border-white/10 space-y-1.5 select-text">
             {currentTrack.lyrics.map((line, idx) => (
               <button
                 key={`${idx}-${line}`}
@@ -1923,7 +1921,7 @@ export const PillExpandedContent: React.FC<PillExpandedContentProps> = ({
             onChange={(e) => onChangeNoteContent(e.target.value)}
             rows={size === 'large' || size === 'vertical' ? 5 : 2}
             placeholder="Type a quick desktop note..."
-            className="flex-1 w-full resize-none bg-black/20 border border-white/10 rounded-lg px-2 py-1 text-[11px] focus:outline-none focus:border-sky-400 ledge-scroll"
+            className="flex-1 w-full resize-none bg-black/20 border border-white/10 rounded-lg px-2 py-1 text-[11px] focus:outline-none focus:border-sky-400 pill-scroll"
           />
         </div>
       );
@@ -2195,7 +2193,7 @@ export const PillExpandedContent: React.FC<PillExpandedContentProps> = ({
             <span className="text-xs font-mono font-bold cursor-text">{clip.text}</span>
           </div>
         ) : clip.category === 'code' ? (
-          <pre className="p-2 rounded-xl bg-black/45 border border-white/10 text-[10.5px] font-mono text-sky-200 whitespace-pre-wrap break-words leading-relaxed max-h-24 overflow-y-auto ledge-scroll cursor-text">
+          <pre className="p-2 rounded-xl bg-black/45 border border-white/10 text-[10.5px] font-mono text-sky-200 whitespace-pre-wrap break-words leading-relaxed max-h-24 overflow-y-auto pill-scroll cursor-text">
             {clip.text}
           </pre>
         ) : clip.category === 'link' ? (
@@ -2247,7 +2245,7 @@ export const PillExpandedContent: React.FC<PillExpandedContentProps> = ({
         }`}
       >
         <div
-          className="flex items-center gap-1 overflow-x-auto ledge-scroll"
+          className="flex items-center gap-1 overflow-x-auto pill-scroll"
           role="tablist"
           aria-label="Dynamic Island sections"
         >
@@ -2396,9 +2394,10 @@ export const PillExpandedContent: React.FC<PillExpandedContentProps> = ({
       </div>
 
       {/* Main Interior Body */}
-      <div className="flex-1 min-h-0 pt-2 overflow-y-auto ledge-scroll">
+      <div className="flex-1 min-h-0 pt-2 overflow-y-auto pill-scroll">
         {isLauncherOpen ? (
           <AppMenuGridPanel
+            isLight={Boolean(palette.isLightSurface)}
             onOpenTab={(tab) => {
               onToggleLauncher();
               onSelectTab(tab);
@@ -2537,7 +2536,7 @@ export const PillExpandedContent: React.FC<PillExpandedContentProps> = ({
 
             {/* + Add Widget Drawer when Playground Mode is active */}
             {playgroundMode && unaddedCatalogWidgets.length > 0 && (
-              <div className="flex items-center gap-1.5 overflow-x-auto ledge-scroll py-1 px-2 rounded-xl bg-white/[0.04] border border-dashed border-white/15 shrink-0">
+              <div className="flex items-center gap-1.5 overflow-x-auto pill-scroll py-1 px-2 rounded-xl bg-white/[0.04] border border-dashed border-white/15 shrink-0">
                 <span className="text-[10px] font-semibold opacity-70 whitespace-nowrap">
                   + Add Block:
                 </span>
@@ -2556,7 +2555,7 @@ export const PillExpandedContent: React.FC<PillExpandedContentProps> = ({
             )}
 
             {/* Dense 4-Column Building-Block Bento Grid */}
-            <div className="grid grid-cols-4 auto-rows-[minmax(108px,auto)] grid-flow-dense gap-2 flex-1 min-h-0 overflow-y-auto ledge-scroll pr-0.5">
+            <div className="grid grid-cols-4 auto-rows-[minmax(108px,auto)] grid-flow-dense gap-2 flex-1 min-h-0 overflow-y-auto pill-scroll pr-0.5">
               {pageWidgets.map((wid, idx) => {
                 const size = getWidgetSize(wid);
                 const spanCls = resolveGridSpanClass(size);
@@ -2941,7 +2940,7 @@ export const PillExpandedContent: React.FC<PillExpandedContentProps> = ({
 
                 {/* Filter + Sort + Group Bar */}
                 <div className="flex items-center justify-between gap-2 text-[10.5px] select-none">
-                  <div className="flex items-center gap-1 overflow-x-auto ledge-scroll">
+                  <div className="flex items-center gap-1 overflow-x-auto pill-scroll">
                     {(
                       [
                         { id: 'all', label: `All (${clipboardItems.length})` },
@@ -3007,7 +3006,7 @@ export const PillExpandedContent: React.FC<PillExpandedContentProps> = ({
                     <p className="text-xs">No clipboard items in this filter</p>
                   </div>
                 ) : (
-                  <div className="flex-1 overflow-y-auto ledge-scroll space-y-2.5 pr-1 select-text">
+                  <div className="flex-1 overflow-y-auto pill-scroll space-y-2.5 pr-1 select-text">
                     {groupedClipSections.map((group) => {
                       const activeLayout: ClipboardLayoutMode =
                         preferences.clipboardLayout ?? 'dynamic_bento';
@@ -3156,7 +3155,7 @@ export const PillExpandedContent: React.FC<PillExpandedContentProps> = ({
             {/* Editor OR Rendered Markdown Surface */}
             {noteViewMode === 'preview' ? (
               <div
-                className={`flex-1 w-full overflow-y-auto border rounded-xl p-3 ledge-scroll select-text cursor-text ${cardSurfaceCls}`}
+                className={`flex-1 w-full overflow-y-auto border rounded-xl p-3 pill-scroll select-text cursor-text ${cardSurfaceCls}`}
               >
                 {noteContent.trim() ? (
                   <RichMarkdown
@@ -3176,7 +3175,7 @@ export const PillExpandedContent: React.FC<PillExpandedContentProps> = ({
                 onChange={(e) => onChangeNoteContent(e.target.value)}
                 aria-label="Notedown Markdown scratchpad"
                 placeholder="Type notes, dictate with Mic, or capture System Audio — then click 'Notedown MD' to structure into clean Markdown..."
-                className={`flex-1 w-full resize-none border rounded-xl p-2.5 text-xs font-mono leading-relaxed focus:outline-none focus:border-sky-400 ledge-scroll select-text ${cardSurfaceCls}`}
+                className={`flex-1 w-full resize-none border rounded-xl p-2.5 text-xs font-mono leading-relaxed focus:outline-none focus:border-sky-400 pill-scroll select-text ${cardSurfaceCls}`}
               />
             )}
 
@@ -3368,5 +3367,3 @@ export const PillExpandedContent: React.FC<PillExpandedContentProps> = ({
     </div>
   );
 };
-
-export const LedgeExpandedContent = PillExpandedContent;

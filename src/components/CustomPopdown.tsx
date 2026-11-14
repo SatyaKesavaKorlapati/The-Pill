@@ -229,7 +229,7 @@ export function CustomPopdown<T extends string = string>({
               minWidth: `${coords.minWidth}px`,
               transform: coords.openUpward ? 'translateY(-100%)' : undefined,
             }}
-            className="z-[120] max-h-64 overflow-y-auto ledge-scroll rounded-2xl p-1.5 bg-[#0b0f19]/95 backdrop-blur-2xl border border-white/16 shadow-[0_22px_50px_rgba(0,0,0,0.72),inset_0_1px_0_rgba(255,255,255,0.14)] text-slate-100"
+            className="z-[120] max-h-64 overflow-y-auto pill-scroll rounded-2xl p-1.5 bg-[#0b0f19]/95 backdrop-blur-2xl border border-white/16 shadow-[0_22px_50px_rgba(0,0,0,0.72),inset_0_1px_0_rgba(255,255,255,0.14)] text-slate-100"
           >
             {options.map((opt, idx) => {
               const isSelected = opt.value === value;

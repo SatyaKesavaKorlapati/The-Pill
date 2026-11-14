@@ -19,10 +19,10 @@ import {
 import {
   AstraDisplayMode,
   AstraOrbStyle,
-  LedgePreferences,
+  PillPreferences,
   VoiceAgentAction,
   WindowsSystemState,
-} from '../types/ledge';
+} from '../types/pill';
 import { playTactilePop } from '../utils/audioSynth';
 import { resolveThemePalette } from '../utils/themeAndSliders';
 import { AstraSiriOrbCanvas, SiriOrbVisualState } from './AstraSiriOrbCanvas';
@@ -222,8 +222,8 @@ export const AstraWakeWordDaemon: React.FC<{
 
 export interface InPillAstraPanelProps {
   onClose: () => void;
-  preferences: LedgePreferences;
-  onUpdatePreferences: (patch: Partial<LedgePreferences>) => void;
+  preferences: PillPreferences;
+  onUpdatePreferences: (patch: Partial<PillPreferences>) => void;
   systemState: WindowsSystemState;
   volumeLevel: number;
   brightnessLevel: number;
@@ -237,7 +237,7 @@ export interface InPillAstraPanelProps {
 
 /**
  * In-Pill Astra (`అస్త్రం` / `Astram`) Morph Surface.
- * Renders directly inside the existing DynamicLedge Pill — never spawning a second separate window!
+ * Renders directly inside the existing Pill — never spawning a second separate window!
  */
 export const InPillAstraPanel: React.FC<InPillAstraPanelProps> = ({
   onClose,
@@ -734,7 +734,7 @@ export const InPillAstraPanel: React.FC<InPillAstraPanelProps> = ({
 
         {/* Inline Expanded Result if Astra answers while in compact mode */}
         {hasResult && (
-          <div className="pt-1 mt-1 border-t border-white/10 max-h-[80px] overflow-y-auto ledge-scroll space-y-1 w-full px-2 text-left">
+          <div className="pt-1 mt-1 border-t border-white/10 max-h-[80px] overflow-y-auto pill-scroll space-y-1 w-full px-2 text-left">
             <div className="text-[11px] text-slate-200">
               <RichMarkdown content={replyMarkdown} />
             </div>
@@ -920,7 +920,7 @@ export const InPillAstraPanel: React.FC<InPillAstraPanelProps> = ({
       </div>
 
       {/* Center Scrollable Conversation & Action Area */}
-      <div className="flex-1 min-h-0 overflow-y-auto ledge-scroll my-2 pr-1 space-y-2">
+      <div className="flex-1 min-h-0 overflow-y-auto pill-scroll my-2 pr-1 space-y-2">
         {activeTranscriptBubble ? (
           <div className="flex justify-end">
             <div className="max-w-[85%] rounded-2xl bg-white/[0.1] border border-white/12 px-3 py-1.5 text-xs text-white leading-relaxed">

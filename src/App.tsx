@@ -1,6 +1,4 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { ArchitectureAndSourceView } from './components/ArchitectureAndSourceView';
-import { DesktopStudioDock } from './components/DesktopStudioDock';
 import { PillCapsule } from './components/PillCapsule';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { FullSettingsView } from './components/FullSettingsView';
@@ -21,34 +19,32 @@ import { WINUI_NATIVE_FILES } from './data/winuiProjectFiles';
 import {
   AgentApprovalRequest,
   AudioOutputDevice,
-  BuiltinLedgeTab,
+  BuiltinPillTab,
   ClipboardItem,
   IncomingCallSession,
-  LedgePreferences,
-  LedgeTab,
+  PillPreferences,
+  PillTab,
   ReminderTask,
   TransientHudKind,
   TrayFileItem,
   VoiceAgentAction,
   WindowsSystemState,
-  WorkspacePage,
-} from './types/ledge';
+} from './types/pill';
 import { configureSoundEngine, playTactilePop } from './utils/audioSynth';
 import { isTabEnabledInPrefs, matchesShortcutCombo } from './utils/customizationLogic';
 import { SPRING_PRESETS } from './utils/springPhysics';
 import { COMPLETE_STYLE_KITS, KIT_ASTRA_STYLES } from './utils/themeAndSliders';
 import { createZipArchive } from './utils/zipBuilder';
 
-const NOTES_STORAGE_KEY = 'dynamic_ledge_win_notes_v1';
+const NOTES_STORAGE_KEY = 'pill_win_notes_v1';
 const PREFS_STORAGE_KEY = 'pill_win_prefs_v5';
 
 export default function App() {
-  const [activePage, setActivePage] = useState<WorkspacePage>(WorkspacePage.Simulator);
-  const [preferences, setPreferences] = useState<LedgePreferences>(() => {
+  const [preferences, setPreferences] = useState<PillPreferences>(() => {
     try {
       const raw = localStorage.getItem(PREFS_STORAGE_KEY);
       if (!raw) return DEFAULT_PREFERENCES;
-      const parsed = JSON.parse(raw) as Partial<LedgePreferences>;
+      const parsed = JSON.parse(raw) as Partial<PillPreferences>;
       const homeWidgets =
         parsed.homeWidgets && parsed.homeWidgets.length >= 4
           ? parsed.homeWidgets
@@ -82,7 +78,7 @@ export default function App() {
 
   // Dynamic Island Core State
   const [isExpanded, setIsExpanded] = useState(false);
-  const [activeTab, setActiveTab] = useState<LedgeTab>('home');
+  const [activeTab, setActiveTab] = useState<PillTab>('home');
   const [isLauncherOpen, setIsLauncherOpen] = useState(false);
   const [stealthRevealedByShortcut, setStealthRevealedByShortcut] = useState(false);
   const [isVoiceAgentOpen, setIsVoiceAgentOpen] = useState(false);
@@ -168,7 +164,7 @@ export default function App() {
     }, 2400);
   }, []);
 
-  const updatePreferences = useCallback((patch: Partial<LedgePreferences>) => {
+  const updatePreferences = useCallback((patch: Partial<PillPreferences>) => {
     setPreferences((prev) => {
       const next = { ...prev, ...patch };
       try {
@@ -252,7 +248,7 @@ export default function App() {
         invoke<string | null>('get_saved_preferences').then((savedJson) => {
           if (savedJson) {
             try {
-              const diskPrefs = JSON.parse(savedJson) as Partial<LedgePreferences>;
+              const diskPrefs = JSON.parse(savedJson) as Partial<PillPreferences>;
               setPreferences((prev) => {
                 const merged = { ...prev, ...diskPrefs };
                 try {
@@ -281,7 +277,6 @@ export default function App() {
       showTransientToast('Astra & AI features are disabled in Settings');
       return;
     }
-    setActivePage(WorkspacePage.Simulator);
     setTransientHud('none');
     setIsExpanded(false);
     setIsVoiceAgentOpen((prev) => {
@@ -394,13 +389,21 @@ export default function App() {
             break;
           }
           case 'openIslandView': {
-            const view = String(args.view || 'home') as LedgeTab | 'settings';
+            const view = String(args.view || 'home') as PillTab | 'settings';
             setIsVoiceAgentOpen(false);
             if (view === 'settings') {
               setIsExpanded(false);
-              setActivePage(WorkspacePage.Settings);
+              const isTauri = typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window;
+              if (isTauri) {
+                import('@tauri-apps/api/core').then(({ invoke }) => {
+                  invoke('open_settings_window').catch(() => {
+                    setIsSettingsModalOpen(true);
+                  });
+                });
+              } else {
+                setIsSettingsModalOpen(true);
+              }
             } else {
-              setActivePage(WorkspacePage.Simulator);
               setIsLauncherOpen(false);
               setActiveTab(view);
               setIsExpanded(true);
@@ -456,7 +459,6 @@ export default function App() {
           showTransientToast('Astra & AI features are disabled in Settings');
           return;
         }
-        setActivePage(WorkspacePage.Simulator);
         setIsExpanded(false);
         setIsVoiceAgentOpen((prev) => {
           const next = !prev;
@@ -468,7 +470,6 @@ export default function App() {
 
       if (matchesShortcutCombo(e, preferences.toggleShortcut)) {
         e.preventDefault();
-        setActivePage(WorkspacePage.Simulator);
         setStealthRevealedByShortcut(true);
         setIsVoiceAgentOpen(false);
         setIsExpanded((prev) => {
@@ -750,7 +751,7 @@ export default function App() {
         // Cross-window preferences sync broadcast
         const uPrefs = await listen<string>('pill://preferences-updated', (event) => {
           try {
-            const parsed = JSON.parse(event.payload) as Partial<LedgePreferences>;
+            const parsed = JSON.parse(event.payload) as Partial<PillPreferences>;
             setPreferences((prev) => ({ ...prev, ...parsed }));
             if (parsed.anchorPosition) {
               invoke('reposition_pill_window', { anchor: parsed.anchorPosition }).catch(() => {});

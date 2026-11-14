@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Check, Copy, Download, FileCode2 } from 'lucide-react';
 import { WINUI_NATIVE_FILES } from '../data/winuiProjectFiles';
-import { WorkspacePage } from '../types/ledge';
+import { WorkspacePage } from '../types/pill';
 
 interface ArchitectureAndSourceViewProps {
   mode: WorkspacePage.Architecture | WorkspacePage.WinUISource;
@@ -288,7 +288,7 @@ export const ArchitectureAndSourceView: React.FC<ArchitectureAndSourceViewProps>
             </button>
           </div>
 
-          <pre className="p-4 text-xs font-mono text-slate-200 leading-relaxed overflow-x-auto max-h-[540px] overflow-y-auto ledge-scroll">
+          <pre className="p-4 text-xs font-mono text-slate-200 leading-relaxed overflow-x-auto max-h-[540px] overflow-y-auto pill-scroll">
             <code>{activeFile.content}</code>
           </pre>
         </div>

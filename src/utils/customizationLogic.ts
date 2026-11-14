@@ -1,4 +1,4 @@
-import type { BuiltinLedgeTab, LedgePreferences, LedgeTab } from '../types/ledge';
+import type { BuiltinPillTab, PillPreferences, PillTab } from '../types/pill';
 
 export type ClipboardCategory =
   | 'text'
@@ -194,12 +194,12 @@ export function matchesShortcutCombo(
 /**
  * Checks whether a specific tab is enabled in current preferences.
  */
-export function isTabEnabledInPrefs(tab: LedgeTab, prefs: LedgePreferences): boolean {
+export function isTabEnabledInPrefs(tab: PillTab, prefs: PillPreferences): boolean {
   if (!prefs || !tab || typeof tab !== 'string') return false;
   if (tab.startsWith('custom_')) {
     return Boolean(prefs.customWidgetTabs?.some((ct) => ct.id === tab && ct.enabled));
   }
-  const builtin = tab as BuiltinLedgeTab;
+  const builtin = tab as BuiltinPillTab;
   if (builtin === 'ai' && !prefs.aiEnabled) return false;
   return Boolean(prefs.enabledTabs?.[builtin]);
 }

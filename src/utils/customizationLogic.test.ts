@@ -9,7 +9,7 @@ import {
 
 test('classifyClipboardPayload detects A-to-Z file formats, colors, links, and code snippets', () => {
   assert.equal(classifyClipboardPayload('#38BDF8').category, 'color');
-  assert.equal(classifyClipboardPayload('https://github.com/shandilyaswagat/dynamic_ledge').category, 'link');
+  assert.equal(classifyClipboardPayload('https://github.com/SatyaKesavaKorlapati/The-Pill').category, 'link');
   assert.equal(classifyClipboardPayload('MotionShader.hlsl').category, 'code');
   assert.equal(classifyClipboardPayload('Mockup_v4.fig').category, 'image');
   assert.equal(classifyClipboardPayload('DemoReel_120fps.mp4').category, 'video');

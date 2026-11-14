@@ -1,13 +1,12 @@
 import React, { useEffect, useRef } from 'react';
-import { AstraOrbStyle } from '../types/ledge';
-import { AKATSUKI_CLOUD_DATA_URL } from '../assets/akatsuki_cloud_b64';
+import { AstraOrbStyle } from '../types/pill';
 
 let akatsukiImgCache: HTMLImageElement | null = null;
 function getAkatsukiImage(): HTMLImageElement | null {
   if (typeof window === 'undefined') return null;
   if (!akatsukiImgCache) {
     akatsukiImgCache = new Image();
-    akatsukiImgCache.src = AKATSUKI_CLOUD_DATA_URL;
+    akatsukiImgCache.src = '/assets/themes/icons/akatsuki_cloud.png';
   }
   return akatsukiImgCache;
 }

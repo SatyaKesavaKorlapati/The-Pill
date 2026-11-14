@@ -34,7 +34,7 @@ function writeUint32LE(view: DataView, offset: number, value: number): void {
 
 /**
  * Generates a standards-compliant PKZIP (Store / Method 0) binary archive in memory.
- * Used both by the Ledge File Tray ("Export as ZIP") and the Native WinUI 3 Project exporter.
+ * Used both by the Pill File Tray ("Export as ZIP") and the Native WinUI 3 Project exporter.
  */
 export function createZipArchive(entries: ZipFileEntry[]): Uint8Array<ArrayBuffer> {
   const encoder = new TextEncoder();

@@ -19,12 +19,12 @@ import {
   Volume2,
 } from 'lucide-react';
 import {
-  LedgePreferences,
+  PillPreferences,
   TransientHudKind,
   TrayFileItem,
-} from '../types/ledge';
+} from '../types/pill';
 import { playTactilePop } from '../utils/audioSynth';
-import { LedgeAnchorPosition } from '../utils/springPhysics';
+import { PillAnchorPosition } from '../utils/springPhysics';
 import { resolveThemePalette } from '../utils/themeAndSliders';
 
 interface DesktopStudioDockProps {
@@ -37,8 +37,8 @@ interface DesktopStudioDockProps {
   onTriggerAgentPrompt: () => void;
   onTriggerSystemHud: (kind: 'volume' | 'brightness' | 'battery' | 'download') => void;
   onSendDesktopFileToTray: (file: TrayFileItem) => void;
-  preferences: LedgePreferences;
-  onUpdatePreferences: (patch: Partial<LedgePreferences>) => void;
+  preferences: PillPreferences;
+  onUpdatePreferences: (patch: Partial<PillPreferences>) => void;
   onOpenFullSettings: () => void;
   isAstraOpen: boolean;
   onToggleVoiceAgent: () => void;
@@ -92,7 +92,7 @@ export const DesktopStudioDock: React.FC<DesktopStudioDockProps> = ({
   onToggleVoiceAgent,
   onDownloadWinUIZip,
 }) => {
-  const isBottomPill = preferences.anchorPosition === LedgeAnchorPosition.BottomTaskbar;
+  const isBottomPill = preferences.anchorPosition === PillAnchorPosition.BottomTaskbar;
   const palette = resolveThemePalette(
     preferences.themeId,
     preferences.customPrimaryHex,

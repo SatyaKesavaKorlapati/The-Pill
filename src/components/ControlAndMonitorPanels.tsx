@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   Accessibility,
   Activity,
@@ -57,12 +57,12 @@ import {
   AudioOutputDevice,
   BluetoothDeviceEntry,
   ControlTileId,
-  LedgePreferences,
-  LedgeTab,
+  PillPreferences,
+  PillTab,
   ProjectDisplayMode,
   ReminderTask,
   WindowsSystemState,
-} from '../types/ledge';
+} from '../types/pill';
 import { formatStopwatchClock, playTactilePop } from '../utils/audioSynth';
 import { computeBatteryEta, moveOrderedItem } from '../utils/customizationLogic';
 import {
@@ -135,8 +135,8 @@ interface ControlCenterPanelProps {
   nightLight: boolean;
   onToggleNightLight: () => void;
   onTriggerToast: (msg: string) => void;
-  preferences: LedgePreferences;
-  onUpdatePreferences: (patch: Partial<LedgePreferences>) => void;
+  preferences: PillPreferences;
+  onUpdatePreferences: (patch: Partial<PillPreferences>) => void;
 }
 
 const AUDIO_OUTPUT_LIST: AudioOutputDevice[] = [
@@ -438,6 +438,25 @@ export const ControlCenterPanel: React.FC<ControlCenterPanelProps> = ({
    * DRILL-DOWN SUBMENUS (`>` Wi-Fi, Bluetooth, Accessibility, Cast, Project, Sound Mixer)
    * ---------------------------------------------------------------------- */
   if (submenu !== 'none') {
+    const subCardClass = (active: boolean) =>
+      isLight
+        ? active
+          ? 'bg-stone-900/[0.08] border-stone-900/25 text-stone-900'
+          : 'bg-stone-900/[0.03] hover:bg-stone-900/[0.06] border-stone-900/10 text-stone-800'
+        : active
+          ? 'bg-white/[0.09] border-white/25 text-white'
+          : 'bg-white/[0.03] hover:bg-white/[0.07] border-white/[0.07] text-slate-200';
+
+    const subBtnClass = (active: boolean) =>
+      active
+        ? palette.onPrimaryTextClass
+        : isLight
+          ? 'bg-stone-900/10 hover:bg-stone-900/15 text-stone-800'
+          : 'bg-white/10 hover:bg-white/18 text-slate-200';
+
+    const subMutedText = isLight ? 'text-stone-500' : 'text-slate-400';
+    const subToggleOff = isLight ? 'bg-stone-900/10 text-stone-700' : 'bg-white/10 text-slate-300';
+
     return (
       <div className="flex flex-col justify-between h-full gap-2">
         <div
@@ -491,7 +510,7 @@ export const ControlCenterPanel: React.FC<ControlCenterPanelProps> = ({
               className={`px-2.5 py-0.5 rounded-full text-[11px] font-semibold transition-colors ${
                 (submenu === 'wifi' ? systemState.wifiEnabled : systemState.bluetoothEnabled)
                   ? palette.onPrimaryTextClass
-                  : 'bg-white/10 text-slate-300'
+                  : subToggleOff
               }`}
             >
               {(submenu === 'wifi' ? systemState.wifiEnabled : systemState.bluetoothEnabled)
@@ -502,17 +521,15 @@ export const ControlCenterPanel: React.FC<ControlCenterPanelProps> = ({
         </div>
 
         {submenu === 'wifi' && (
-          <div className="flex-1 overflow-y-auto ledge-scroll space-y-1.5 pr-1">
+          <div className="flex-1 overflow-y-auto pill-scroll space-y-1.5 pr-1">
             {AVAILABLE_WIFI_NETWORKS.map((net) => {
               const connected = systemState.wifiEnabled && systemState.wifiSsid === net.ssid;
               return (
                 <div
                   key={net.ssid}
-                  className={`flex items-center justify-between px-3 py-2 rounded-xl border transition-colors ${
+                  className={`flex items-center justify-between px-3 py-2 rounded-xl border transition-colors ${subCardClass(
                     connected
-                      ? 'bg-white/[0.09] border-white/25'
-                      : 'bg-white/[0.03] hover:bg-white/[0.07] border-white/[0.07]'
-                  }`}
+                  )}`}
                 >
                   <div className="flex items-center gap-2.5 min-w-0">
                     <Wifi
@@ -522,9 +539,9 @@ export const ControlCenterPanel: React.FC<ControlCenterPanelProps> = ({
                     <div className="min-w-0">
                       <div className="text-xs font-semibold truncate flex items-center gap-1.5">
                         <span>{net.ssid}</span>
-                        {net.secured && <Lock className="w-2.5 h-2.5 text-slate-400" />}
+                        {net.secured && <Lock className={`w-2.5 h-2.5 ${subMutedText}`} />}
                       </div>
-                      <div className="text-[10px] text-slate-400 font-mono tabular-nums">
+                      <div className={`text-[10px] ${subMutedText} font-mono tabular-nums`}>
                         {connected ? 'Connected, secured' : 'Available'} · {net.band} ·{' '}
                         {net.signalPct}%
                       </div>
@@ -542,11 +559,9 @@ export const ControlCenterPanel: React.FC<ControlCenterPanelProps> = ({
                       onTriggerToast(`Connected to ${net.ssid}`);
                     }}
                     style={connected ? { backgroundColor: palette.primaryHex } : undefined}
-                    className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-colors whitespace-nowrap ${
+                    className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-colors whitespace-nowrap ${subBtnClass(
                       connected
-                        ? palette.onPrimaryTextClass
-                        : 'bg-white/10 hover:bg-white/18 text-slate-200'
-                    }`}
+                    )}`}
                   >
                     {connected ? 'Connected' : 'Connect'}
                   </button>
@@ -557,15 +572,13 @@ export const ControlCenterPanel: React.FC<ControlCenterPanelProps> = ({
         )}
 
         {submenu === 'bluetooth' && (
-          <div className="flex-1 overflow-y-auto ledge-scroll space-y-1.5 pr-1">
+          <div className="flex-1 overflow-y-auto pill-scroll space-y-1.5 pr-1">
             {btDevices.map((dev) => (
               <div
                 key={dev.name}
-                className={`flex items-center justify-between px-3 py-2 rounded-xl border transition-colors ${
+                className={`flex items-center justify-between px-3 py-2 rounded-xl border transition-colors ${subCardClass(
                   dev.connected && systemState.bluetoothEnabled
-                    ? 'bg-white/[0.09] border-white/25'
-                    : 'bg-white/[0.03] hover:bg-white/[0.07] border-white/[0.07]'
-                }`}
+                )}`}
               >
                 <div className="flex items-center gap-2.5 min-w-0">
                   <Bluetooth
@@ -579,7 +592,7 @@ export const ControlCenterPanel: React.FC<ControlCenterPanelProps> = ({
                   />
                   <div className="min-w-0">
                     <div className="text-xs font-semibold truncate">{dev.name}</div>
-                    <div className="text-[10px] text-slate-400 font-mono tabular-nums">
+                    <div className={`text-[10px] ${subMutedText} font-mono tabular-nums`}>
                       {dev.category}
                       {dev.batteryPct !== undefined ? ` · Battery ${dev.batteryPct}%` : ''}
                     </div>
@@ -606,11 +619,9 @@ export const ControlCenterPanel: React.FC<ControlCenterPanelProps> = ({
                       ? { backgroundColor: palette.primaryHex }
                       : undefined
                   }
-                  className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-colors whitespace-nowrap ${
+                  className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-colors whitespace-nowrap ${subBtnClass(
                     dev.connected && systemState.bluetoothEnabled
-                      ? palette.onPrimaryTextClass
-                      : 'bg-white/10 hover:bg-white/18 text-slate-200'
-                  }`}
+                  )}`}
                 >
                   {dev.connected && systemState.bluetoothEnabled ? 'Disconnect' : 'Connect'}
                 </button>
@@ -662,32 +673,38 @@ export const ControlCenterPanel: React.FC<ControlCenterPanelProps> = ({
                 }
                 className={`p-3 rounded-xl border text-left transition-colors ${
                   item.val
-                    ? ''
-                    : 'bg-white/[0.03] border-white/10 text-slate-300 hover:bg-white/[0.07]'
+                    ? isLight
+                      ? 'text-stone-900 border-stone-900/30 font-semibold'
+                      : 'text-white'
+                    : isLight
+                      ? 'bg-stone-900/[0.03] border-stone-900/10 text-stone-800 hover:bg-stone-900/[0.06]'
+                      : 'bg-white/[0.03] border-white/10 text-slate-300 hover:bg-white/[0.07]'
                 }`}
               >
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-semibold">{item.label}</span>
                   <span className="text-[10px] font-mono">{item.val ? 'ON' : 'OFF'}</span>
                 </div>
-                <p className="text-[11px] text-slate-400 mt-1">{item.desc}</p>
+                <p className={`text-[11px] ${subMutedText} mt-1`}>{item.desc}</p>
               </button>
             ))}
           </div>
         )}
 
         {submenu === 'cast' && (
-          <div className="flex-1 overflow-y-auto ledge-scroll space-y-1.5 pr-1">
+          <div className="flex-1 overflow-y-auto pill-scroll space-y-1.5 pr-1">
             {AVAILABLE_CAST_DISPLAYS.map((disp) => {
               const active = systemState.castDevice === disp.name;
               return (
                 <div
                   key={disp.id}
-                  className="flex items-center justify-between px-3 py-2.5 rounded-xl bg-white/[0.04] border border-white/10"
+                  className={`flex items-center justify-between px-3 py-2.5 rounded-xl border ${subCardClass(
+                    active
+                  )}`}
                 >
                   <div>
                     <div className="text-xs font-semibold">{disp.name}</div>
-                    <div className="text-[10px] text-slate-400">{disp.protocol}</div>
+                    <div className={`text-[10px] ${subMutedText}`}>{disp.protocol}</div>
                   </div>
                   <button
                     type="button"
@@ -696,11 +713,9 @@ export const ControlCenterPanel: React.FC<ControlCenterPanelProps> = ({
                       onUpdateSystemState({ castDevice: active ? null : disp.name });
                     }}
                     style={active ? { backgroundColor: palette.primaryHex } : undefined}
-                    className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold ${
+                    className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold ${subBtnClass(
                       active
-                        ? palette.onPrimaryTextClass
-                        : 'bg-white/10 hover:bg-white/18 text-slate-200'
-                    }`}
+                    )}`}
                   >
                     {active ? 'Disconnect' : 'Cast'}
                   </button>
@@ -737,8 +752,12 @@ export const ControlCenterPanel: React.FC<ControlCenterPanelProps> = ({
                   }
                   className={`p-3 rounded-xl border text-left transition-colors ${
                     selected
-                      ? ''
-                      : 'bg-white/[0.03] border-white/10 text-slate-300 hover:bg-white/[0.07]'
+                      ? isLight
+                        ? 'text-stone-900 border-stone-900/30 font-semibold'
+                        : 'text-white'
+                      : isLight
+                        ? 'bg-stone-900/[0.03] border-stone-900/10 text-stone-800 hover:bg-stone-900/[0.06]'
+                        : 'bg-white/[0.03] border-white/10 text-slate-300 hover:bg-white/[0.07]'
                   }`}
                 >
                   <div className="flex items-center justify-between">
@@ -747,7 +766,7 @@ export const ControlCenterPanel: React.FC<ControlCenterPanelProps> = ({
                       <Check className="w-3.5 h-3.5" style={{ color: palette.primaryHex }} />
                     )}
                   </div>
-                  <p className="text-[11px] text-slate-400 mt-1">{modeOpt.desc}</p>
+                  <p className={`text-[11px] ${subMutedText} mt-1`}>{modeOpt.desc}</p>
                 </button>
               );
             })}
@@ -755,9 +774,9 @@ export const ControlCenterPanel: React.FC<ControlCenterPanelProps> = ({
         )}
 
         {submenu === 'sound_mixer' && (
-          <div className="flex-1 overflow-y-auto ledge-scroll space-y-2.5 pr-1">
+          <div className="flex-1 overflow-y-auto pill-scroll space-y-2.5 pr-1">
             <div>
-              <div className="text-[11px] text-slate-400 mb-1">Output Device</div>
+              <div className={`text-[11px] ${subMutedText} mb-1`}>Output Device</div>
               <div className="grid grid-cols-3 gap-1.5">
                 {AUDIO_OUTPUT_LIST.map((dev) => {
                   const active = audioDevice === dev;
@@ -773,7 +792,9 @@ export const ControlCenterPanel: React.FC<ControlCenterPanelProps> = ({
                       className={`px-2.5 py-1.5 rounded-xl text-[11px] font-medium truncate transition-colors ${
                         active
                           ? `${palette.onPrimaryTextClass} font-semibold`
-                          : 'bg-white/[0.05] hover:bg-white/10 text-slate-300'
+                          : isLight
+                            ? 'bg-stone-900/[0.05] hover:bg-stone-900/10 text-stone-800'
+                            : 'bg-white/[0.05] hover:bg-white/10 text-slate-300'
                       }`}
                     >
                       {dev}
@@ -784,12 +805,20 @@ export const ControlCenterPanel: React.FC<ControlCenterPanelProps> = ({
             </div>
 
             {preferences.featureFlags.perAppVolumeMixer && (
-              <div className="space-y-1.5 pt-1 border-t border-white/10">
-                <div className="text-[11px] text-slate-400">Per-App Volume Mixer</div>
+              <div
+                className={`space-y-1.5 pt-1 border-t ${
+                  isLight ? 'border-stone-900/15' : 'border-white/10'
+                }`}
+              >
+                <div className={`text-[11px] ${subMutedText}`}>Per-App Volume Mixer</div>
                 {systemState.appMixer.map((ch) => (
                   <div
                     key={ch.id}
-                    className="flex items-center gap-2.5 bg-white/[0.03] border border-white/[0.07] rounded-xl px-2.5 py-1.5"
+                    className={`flex items-center gap-2.5 rounded-xl px-2.5 py-1.5 border ${
+                      isLight
+                        ? 'bg-stone-900/[0.03] border-stone-900/10 text-stone-800'
+                        : 'bg-white/[0.03] border-white/[0.07] text-slate-200'
+                    }`}
                   >
                     <button
                       type="button"
@@ -907,7 +936,7 @@ export const ControlCenterPanel: React.FC<ControlCenterPanelProps> = ({
 
       {/* Interactive Control Center Playground Add-Controls Bar */}
       {playgroundMode && (
-        <div className="flex items-center justify-between gap-2 px-2 py-1.5 rounded-xl bg-white/[0.04] border border-white/10 text-[10.5px] overflow-x-auto ledge-scroll">
+        <div className="flex items-center justify-between gap-2 px-2 py-1.5 rounded-xl bg-white/[0.04] border border-white/10 text-[10.5px] overflow-x-auto pill-scroll">
           <div className="flex items-center gap-1 shrink-0">
             {(
               [
@@ -1783,8 +1812,8 @@ export const ControlCenterPanel: React.FC<ControlCenterPanelProps> = ({
 interface SystemPowerMonitorPanelProps {
   systemState: WindowsSystemState;
   onUpdateSystemState: (patch: Partial<WindowsSystemState>) => void;
-  preferences: LedgePreferences;
-  onUpdatePreferences: (patch: Partial<LedgePreferences>) => void;
+  preferences: PillPreferences;
+  onUpdatePreferences: (patch: Partial<PillPreferences>) => void;
 }
 
 function buildSparklinePoints(series: number[], width: number, height: number, maxVal: number): string {
@@ -1811,6 +1840,16 @@ export const SystemPowerMonitorPanel: React.FC<SystemPowerMonitorPanelProps> = (
   const [batteryPreviewMode, setBatteryPreviewMode] = useState<
     BatteryOperationalMode | undefined
   >(undefined);
+  const speedTestTimerRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (speedTestTimerRef.current !== null) {
+        window.clearInterval(speedTestTimerRef.current);
+        speedTestTimerRef.current = null;
+      }
+    };
+  }, []);
 
   const palette = resolveThemePalette(
     preferences.themeId,
@@ -1836,7 +1875,10 @@ export const SystemPowerMonitorPanel: React.FC<SystemPowerMonitorPanelProps> = (
     setTestingSpeed(true);
     playTactilePop('toggleOn');
     let ticks = 0;
-    const timer = window.setInterval(() => {
+    if (speedTestTimerRef.current !== null) {
+      window.clearInterval(speedTestTimerRef.current);
+    }
+    speedTestTimerRef.current = window.setInterval(() => {
       ticks++;
       const simulatedDown = Number((340 + Math.random() * 145).toFixed(1));
       const simulatedUp = Number((108 + Math.random() * 44).toFixed(1));
@@ -1849,7 +1891,10 @@ export const SystemPowerMonitorPanel: React.FC<SystemPowerMonitorPanelProps> = (
         netHistoryUp: [...systemState.netHistoryUp.slice(1), simulatedUp],
       });
       if (ticks >= 5) {
-        window.clearInterval(timer);
+        if (speedTestTimerRef.current !== null) {
+          window.clearInterval(speedTestTimerRef.current);
+          speedTestTimerRef.current = null;
+        }
         setTestingSpeed(false);
         playTactilePop('confirm');
       }
@@ -2264,7 +2309,7 @@ export const SystemPowerMonitorPanel: React.FC<SystemPowerMonitorPanelProps> = (
  * 3. THE 4-BLOCKS ALL-APPS LAUNCHER MENU PAGE
  * ========================================================================== */
 interface AppMenuGridPanelProps {
-  onOpenTab: (tab: LedgeTab) => void;
+  onOpenTab: (tab: PillTab) => void;
   onOpenFullSettings: () => void;
   onOpenVoiceAgent?: () => void;
   reminders: ReminderTask[];
@@ -2274,6 +2319,7 @@ interface AppMenuGridPanelProps {
   stopwatchMs: number;
   onToggleStopwatch: () => void;
   onResetStopwatch: () => void;
+  isLight?: boolean;
 }
 
 type MiniSubTool = 'apps' | 'reminders' | 'stopwatch' | 'calc';
@@ -2289,6 +2335,7 @@ export const AppMenuGridPanel: React.FC<AppMenuGridPanelProps> = ({
   stopwatchMs,
   onToggleStopwatch,
   onResetStopwatch,
+  isLight = false,
 }) => {
   const [subView, setSubView] = useState<MiniSubTool>('apps');
   const [newTask, setNewTask] = useState('');
@@ -2314,22 +2361,26 @@ export const AppMenuGridPanel: React.FC<AppMenuGridPanelProps> = ({
 
   if (subView === 'reminders') {
     return (
-      <div className="flex flex-col justify-between h-full gap-2">
+      <div className={`flex flex-col justify-between h-full gap-2 ${isLight ? 'text-stone-900' : 'text-slate-100'}`}>
         <div className="flex items-center justify-between">
           <span className="text-xs font-semibold">Reminders &amp; Tasks</span>
           <button
             type="button"
             onClick={() => setSubView('apps')}
-            className="text-xs text-sky-400 hover:underline"
+            className={`text-xs ${isLight ? 'text-sky-700 hover:text-sky-900' : 'text-sky-400'} hover:underline`}
           >
             ← Back to All Apps
           </button>
         </div>
-        <div className="flex-1 overflow-y-auto ledge-scroll space-y-1 pr-1">
+        <div className="flex-1 overflow-y-auto pill-scroll space-y-1 pr-1">
           {reminders.map((r) => (
             <label
               key={r.id}
-              className="flex items-center justify-between gap-2 px-2 py-1.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.07] cursor-pointer text-xs"
+              className={`flex items-center justify-between gap-2 px-2 py-1.5 rounded-xl cursor-pointer text-xs ${
+                isLight
+                  ? 'bg-stone-900/[0.04] hover:bg-stone-900/[0.07] text-stone-900'
+                  : 'bg-white/[0.04] hover:bg-white/[0.07] text-slate-100'
+              }`}
             >
               <span className="flex items-center gap-2 min-w-0">
                 <input
@@ -2364,11 +2415,17 @@ export const AppMenuGridPanel: React.FC<AppMenuGridPanelProps> = ({
             onChange={(e) => setNewTask(e.target.value)}
             placeholder="Add reminder..."
             aria-label="New reminder title"
-            className="flex-1 bg-black/40 border border-white/10 rounded-lg px-2.5 py-1 text-xs text-white focus:outline-none focus:border-sky-400"
+            className={`flex-1 rounded-lg px-2.5 py-1 text-xs focus:outline-none focus:border-sky-400 ${
+              isLight
+                ? 'bg-stone-900/10 border border-stone-900/20 text-stone-900 placeholder:text-stone-500'
+                : 'bg-black/40 border border-white/10 text-white placeholder:text-slate-500'
+            }`}
           />
           <button
             type="submit"
-            className="px-3 py-1 text-xs font-semibold bg-white text-slate-950 rounded-lg"
+            className={`px-3 py-1 text-xs font-semibold rounded-lg ${
+              isLight ? 'bg-stone-900 text-stone-50' : 'bg-white text-slate-950'
+            }`}
           >
             Add
           </button>
@@ -2379,13 +2436,13 @@ export const AppMenuGridPanel: React.FC<AppMenuGridPanelProps> = ({
 
   if (subView === 'stopwatch') {
     return (
-      <div className="flex flex-col items-center justify-between h-full py-2">
+      <div className={`flex flex-col items-center justify-between h-full py-2 ${isLight ? 'text-stone-900' : 'text-slate-100'}`}>
         <div className="w-full flex items-center justify-between">
           <span className="text-xs font-semibold">Precision Centisecond Stopwatch</span>
           <button
             type="button"
             onClick={() => setSubView('apps')}
-            className="text-xs text-sky-400 hover:underline"
+            className={`text-xs ${isLight ? 'text-sky-700 hover:text-sky-900' : 'text-sky-400'} hover:underline`}
           >
             ← Back to All Apps
           </button>
@@ -2397,14 +2454,18 @@ export const AppMenuGridPanel: React.FC<AppMenuGridPanelProps> = ({
           <button
             type="button"
             onClick={onToggleStopwatch}
-            className="px-5 py-1.5 text-xs font-semibold bg-white text-slate-950 rounded-xl"
+            className={`px-5 py-1.5 text-xs font-semibold rounded-xl ${
+              isLight ? 'bg-stone-900 text-stone-50' : 'bg-white text-slate-950'
+            }`}
           >
             {stopwatchRunning ? 'Pause' : 'Start'}
           </button>
           <button
             type="button"
             onClick={onResetStopwatch}
-            className="px-4 py-1.5 text-xs font-medium bg-white/10 hover:bg-white/16 rounded-xl"
+            className={`px-4 py-1.5 text-xs font-medium rounded-xl ${
+              isLight ? 'bg-stone-900/10 hover:bg-stone-900/15 text-stone-900' : 'bg-white/10 hover:bg-white/16'
+            }`}
           >
             Reset
           </button>
@@ -2415,13 +2476,13 @@ export const AppMenuGridPanel: React.FC<AppMenuGridPanelProps> = ({
 
   if (subView === 'calc') {
     return (
-      <div className="flex flex-col justify-between h-full py-1 gap-2">
+      <div className={`flex flex-col justify-between h-full py-1 gap-2 ${isLight ? 'text-stone-900' : 'text-slate-100'}`}>
         <div className="flex items-center justify-between">
           <span className="text-xs font-semibold">Instant Math &amp; Unit Scratch</span>
           <button
             type="button"
             onClick={() => setSubView('apps')}
-            className="text-xs text-sky-400 hover:underline"
+            className={`text-xs ${isLight ? 'text-sky-700 hover:text-sky-900' : 'text-sky-400'} hover:underline`}
           >
             ← Back to All Apps
           </button>
@@ -2432,11 +2493,19 @@ export const AppMenuGridPanel: React.FC<AppMenuGridPanelProps> = ({
           aria-label="Math expression"
           onChange={(e) => evaluateQuickMath(e.target.value)}
           placeholder="Type math e.g. (1920 * 1080) / 1024..."
-          className="w-full bg-slate-950/75 border border-white/15 rounded-xl px-3 py-2 text-sm font-mono text-white focus:outline-none focus:border-sky-400"
+          className={`w-full rounded-xl px-3 py-2 text-sm font-mono focus:outline-none focus:border-sky-400 ${
+            isLight
+              ? 'bg-stone-900/10 border border-stone-900/20 text-stone-900'
+              : 'bg-slate-950/75 border border-white/15 text-white'
+          }`}
         />
-        <div className="flex items-center justify-between bg-white/[0.04] border border-white/10 rounded-xl px-3 py-2.5">
+        <div className={`flex items-center justify-between border rounded-xl px-3 py-2.5 ${
+          isLight
+            ? 'bg-stone-900/[0.04] border-stone-900/15 text-stone-900'
+            : 'bg-white/[0.04] border-white/10 text-slate-100'
+        }`}>
           <span className="text-xs opacity-75">Result</span>
-          <span className="text-lg font-mono font-bold text-emerald-400 tabular-nums">
+          <span className="text-lg font-mono font-bold text-emerald-600 dark:text-emerald-400 tabular-nums">
             = {calcResult}
           </span>
         </div>
@@ -2460,13 +2529,13 @@ export const AppMenuGridPanel: React.FC<AppMenuGridPanelProps> = ({
   ];
 
   return (
-    <div className="flex flex-col justify-between h-full gap-1.5">
+    <div className={`flex flex-col justify-between h-full gap-1.5 ${isLight ? 'text-stone-900' : 'text-slate-100'}`}>
       <div className="flex items-center justify-between px-0.5">
         <span className="text-xs font-semibold">All Dynamic Island Apps</span>
         <button
           type="button"
           onClick={() => setSubView('calc')}
-          className="text-[11px] text-sky-400 hover:underline flex items-center gap-1"
+          className={`text-[11px] ${isLight ? 'text-sky-700 hover:text-sky-900' : 'text-sky-400'} hover:underline flex items-center gap-1`}
         >
           <Calculator className="w-3 h-3" />
           <span>Open Quick Math</span>
@@ -2483,7 +2552,11 @@ export const AppMenuGridPanel: React.FC<AppMenuGridPanelProps> = ({
                 playTactilePop('tab');
                 app.action();
               }}
-              className="flex items-center gap-2 p-2 rounded-xl bg-white/[0.04] hover:bg-white/[0.09] border border-white/[0.07] text-left transition-colors group focus-visible:outline-2 focus-visible:outline-sky-400"
+              className={`flex items-center gap-2 p-2 rounded-xl text-left transition-colors group focus-visible:outline-2 focus-visible:outline-sky-400 ${
+                isLight
+                  ? 'bg-stone-900/[0.04] hover:bg-stone-900/[0.08] border border-stone-900/10 text-stone-900'
+                  : 'bg-white/[0.04] hover:bg-white/[0.09] border border-white/[0.07] text-slate-100'
+              }`}
             >
               <div
                 className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${app.color}`}
@@ -2492,7 +2565,7 @@ export const AppMenuGridPanel: React.FC<AppMenuGridPanelProps> = ({
               </div>
               <div className="min-w-0">
                 <div className="text-xs font-semibold truncate">{app.label}</div>
-                <div className="text-[10px] opacity-70 truncate">{app.desc}</div>
+                <div className={`text-[10px] truncate ${isLight ? 'text-stone-600' : 'opacity-70'}`}>{app.desc}</div>
               </div>
             </button>
           );

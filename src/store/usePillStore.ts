@@ -3,7 +3,7 @@ import {
   BluetoothDeviceDto,
   ClipboardRecord,
   DEFAULT_PREFERENCES,
-  LedgePreferences,
+  PillPreferences,
   MediaTrackPayload,
   SystemTelemetryPayload,
   WifiNetworkDto,
@@ -13,7 +13,7 @@ const PREFS_STORAGE_KEY = 'pill_win_prefs_v5';
 const NOTES_STORAGE_KEY = 'pill_win_notes_v1';
 const CLIPBOARD_STORAGE_KEY = 'pill_win_clipboard_v1';
 
-function loadStoredPreferences(): LedgePreferences {
+function loadStoredPreferences(): PillPreferences {
   try {
     const raw = localStorage.getItem(PREFS_STORAGE_KEY);
     if (!raw) return DEFAULT_PREFERENCES;
@@ -106,7 +106,7 @@ function loadStoredClipboard(): ClipboardRecord[] {
 }
 
 interface PillState {
-  preferences: LedgePreferences;
+  preferences: PillPreferences;
   isExpanded: boolean;
   activeTab: string;
   astraVisible: boolean;
@@ -123,7 +123,7 @@ interface PillState {
   activePopdownId: string | null;
 
   // Actions
-  updatePreferences: (updater: Partial<LedgePreferences> | ((prev: LedgePreferences) => LedgePreferences)) => void;
+  updatePreferences: (updater: Partial<PillPreferences> | ((prev: PillPreferences) => PillPreferences)) => void;
   setExpanded: (expanded: boolean) => void;
   toggleExpanded: () => void;
   setActiveTab: (tab: string) => void;

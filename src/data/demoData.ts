@@ -3,26 +3,26 @@ import {
   AppearanceMaterial,
   BluetoothDeviceEntry,
   ClipboardItem,
-  LedgePreferences,
+  PillPreferences,
   MusicTrack,
   ReminderTask,
   TrayFileItem,
   WifiNetworkEntry,
   WindowsSystemState,
-} from '../types/ledge';
+} from '../types/pill';
 import {
-  LedgeAnchorPosition,
-  LedgeShapeStyle,
-  LedgeSizeScale,
+  PillAnchorPosition,
+  PillShapeStyle,
+  PillSizeScale,
   SPRING_PRESETS,
   SpringPresetId,
 } from '../utils/springPhysics';
 
 export const DESKTOP_WALLPAPER_URL =
-  '/src/assets/images/wallpaper_windows_fluid_1794384705717.jpg';
+  '/assets/images/wallpaper_windows_fluid_1794384705717.jpg';
 
 export const CALLER_AVATAR_URL =
-  '/src/assets/images/caller_avatar_elena_1794384709117.jpg';
+  '/assets/images/caller_avatar_elena_1794384709117.jpg';
 
 export const DEMO_TRACKS: MusicTrack[] = [
   {
@@ -31,7 +31,7 @@ export const DEMO_TRACKS: MusicTrack[] = [
     artist: 'Nils Frahm & Olafur',
     album: 'Sapphire Prism Sessions',
     durationSec: 234,
-    coverUrl: '/src/assets/images/album_cover_midnight_1794384707111.jpg',
+    coverUrl: '/assets/images/album_cover_midnight_1794384707111.jpg',
     accentHex: '#38bdf8',
     secondaryHex: '#a78bfa',
     lyrics: [
@@ -47,7 +47,7 @@ export const DEMO_TRACKS: MusicTrack[] = [
     artist: 'Kiasmos',
     album: 'Solstice Echo',
     durationSec: 268,
-    coverUrl: '/src/assets/images/album_cover_solstice_1794384708539.jpg',
+    coverUrl: '/assets/images/album_cover_solstice_1794384708539.jpg',
     accentHex: '#22d3ee',
     secondaryHex: '#f59e0b',
     lyrics: [
@@ -121,11 +121,11 @@ export const INITIAL_CLIPBOARD_ITEMS: ClipboardItem[] = [
     category: 'image',
     badgeCode: 'PNG',
     fileSizeLabel: '2.4 MB · 2048 × 2048 px · RGBA 16-bit',
-    previewImageUrl: '/src/assets/images/album_cover_midnight_1794384707111.jpg',
+    previewImageUrl: '/assets/images/album_cover_midnight_1794384707111.jpg',
   },
   {
     id: 'clip-1',
-    text: 'dotnet publish DynamicLedge.WinUI.csproj -c Release -r win-x64 \\\n  -p:PublishAot=true -p:StripSymbols=true',
+    text: 'dotnet publish Pill.WinUI.csproj -c Release -r win-x64 \\\n  -p:PublishAot=true -p:StripSymbols=true',
     source: 'Windows Terminal',
     copiedAt: '2m ago',
     pinned: true,
@@ -141,7 +141,7 @@ export const INITIAL_CLIPBOARD_ITEMS: ClipboardItem[] = [
     category: 'image',
     badgeCode: 'JPG',
     fileSizeLabel: '1.8 MB · 3840 × 2160 px · Display P3',
-    previewImageUrl: '/src/assets/images/album_cover_solstice_1794384708539.jpg',
+    previewImageUrl: '/assets/images/album_cover_solstice_1794384708539.jpg',
   },
   {
     id: 'clip-3',
@@ -155,7 +155,7 @@ export const INITIAL_CLIPBOARD_ITEMS: ClipboardItem[] = [
   },
   {
     id: 'clip-4',
-    text: 'DynamicLedge_Installer_v2.4_x64.msix',
+    text: 'Pill_Installer_v2.4_x64.msix',
     source: 'File Explorer',
     copiedAt: '9m ago',
     pinned: false,
@@ -165,7 +165,7 @@ export const INITIAL_CLIPBOARD_ITEMS: ClipboardItem[] = [
   },
   {
     id: 'clip-5',
-    text: 'https://github.com/shandilyaswagat/dynamic_ledge',
+    text: 'https://github.com/SatyaKesavaKorlapati/The-Pill',
     source: 'Microsoft Edge',
     copiedAt: '14m ago',
     pinned: false,
@@ -209,14 +209,14 @@ export const DEMO_AGENT_PROMPTS: AgentApprovalRequest[] = [
   {
     id: 'agent-claude',
     agentName: 'Claude Code',
-    commandSummary: 'dotnet test DynamicLedge.Tests --filter FluidSpringTests',
-    workspacePath: 'C:\\src\\dynamic-ledge-win',
+    commandSummary: 'dotnet test Pill.Tests --filter FluidSpringTests',
+    workspacePath: 'D:\\Pill',
   },
   {
     id: 'agent-cursor',
     agentName: 'Cursor',
     commandSummary: 'fxc.exe /T ps_4_0 /Fo LiquidMetaballShader.bin',
-    workspacePath: 'C:\\src\\dynamic-ledge-win\\Shaders',
+    workspacePath: 'D:\\Pill\\Shaders',
   },
 ];
 
@@ -248,6 +248,7 @@ export const INITIAL_SYSTEM_STATE: WindowsSystemState = {
   cpuUsagePct: 6.4,
   systemRamUsedGb: 11.2,
   systemRamTotalGb: 32,
+  pillNativeRamMb: 12.4,
   ledgeNativeRamMb: 12.4,
   nvmeReadMb: 420,
   netDownMbps: 342.8,
@@ -276,7 +277,7 @@ export const INITIAL_SYSTEM_STATE: WindowsSystemState = {
   ],
 };
 
-export const DEFAULT_PREFERENCES: LedgePreferences = {
+export const DEFAULT_PREFERENCES: PillPreferences = {
   themeId: 'win11_cyan',
   tileSurfaceStyle: 'fluent_glass',
   customPrimaryHex: '#22d3ee',
@@ -312,10 +313,10 @@ export const DEFAULT_PREFERENCES: LedgePreferences = {
   clipboardGroupBy: 'none',
 
   material: AppearanceMaterial.Obsidian,
-  shapeStyle: LedgeShapeStyle.DynamicPill,
-  anchorPosition: LedgeAnchorPosition.TopCenter,
+  shapeStyle: PillShapeStyle.DynamicPill,
+  anchorPosition: PillAnchorPosition.TopCenter,
   floatingOffsetPx: 12,
-  sizeScale: LedgeSizeScale.Medium,
+  sizeScale: PillSizeScale.Medium,
   isElongated: false,
   isFloatingPill: true,
 

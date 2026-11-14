@@ -1,6 +1,6 @@
-import type { EdgeLightProfile, AstraOrbStyle } from '../types/ledge';
+import type { EdgeLightProfile, AstraOrbStyle } from '../types/pill';
 
-export type LedgeThemeId =
+export type PillThemeId =
   | 'win11_cyan'
   | 'midnight_sapphire'
   | 'apple_indigo'
@@ -14,6 +14,8 @@ export type LedgeThemeId =
   | 'sunset_rose'
   | 'crimson_titanium'
   | 'custom_hex';
+
+export type LedgeThemeId = PillThemeId;
 
 export type IconPackStyle =
   | 'fluent_outline'
@@ -66,7 +68,7 @@ export type ControlCenterLayoutMode =
 export type ControlSliderOrientation = 'horizontal' | 'vertical';
 
 export interface ThemePalette {
-  id: LedgeThemeId;
+  id: PillThemeId;
   name: string;
   subtitle: string;
   primaryHex: string;
@@ -80,11 +82,11 @@ export interface ThemePalette {
 }
 
 export interface StyleKitPreset {
-  id: Exclude<LedgeThemeId, 'custom_hex'>;
+  id: Exclude<PillThemeId, 'custom_hex'>;
   title: string;
   genre: string;
   summary: string;
-  themeId: Exclude<LedgeThemeId, 'custom_hex'>;
+  themeId: Exclude<PillThemeId, 'custom_hex'>;
   musicSliderStyle: SliderVisualStyle;
   controlSliderStyle: SliderVisualStyle;
   tileSurfaceStyle: TileSurfaceStyle;
@@ -110,7 +112,7 @@ export interface StyleKitPreset {
     | 'silent';
 }
 
-export const LEDGE_THEMES: Record<Exclude<LedgeThemeId, 'custom_hex'>, ThemePalette> = {
+export const PILL_THEMES: Record<Exclude<PillThemeId, 'custom_hex'>, ThemePalette> = {
   win11_cyan: {
     id: 'win11_cyan',
     name: 'Windows 11 Fluent Cyan',
@@ -423,7 +425,7 @@ export function getReadableForegroundClass(hexColor: string): 'text-slate-950' |
 }
 
 export function resolveThemePalette(
-  themeId: LedgeThemeId,
+  themeId: PillThemeId,
   customPrimaryHex = '#22d3ee',
   customSecondaryHex = '#a855f7'
 ): ThemePalette {
@@ -441,8 +443,10 @@ export function resolveThemePalette(
       motifName: 'Custom Studio',
     };
   }
-  return LEDGE_THEMES[themeId] ?? LEDGE_THEMES.win11_cyan;
+  return PILL_THEMES[themeId] ?? PILL_THEMES.win11_cyan;
 }
+
+export const LEDGE_THEMES = PILL_THEMES;
 
 export function resolveTileSurfaceClasses(
   tileSurfaceStyle: TileSurfaceStyle,

@@ -161,28 +161,28 @@ export function computeMetaballBridge(
   };
 }
 
-export enum LedgeSizeScale {
+export enum PillSizeScale {
   Small = 'small',
   Medium = 'medium',
   Large = 'large',
 }
 
-export enum LedgeShapeStyle {
+export enum PillShapeStyle {
   DynamicPill = 'dynamic_pill',
-  TopBezelLedge = 'top_bezel_ledge',
+  TopBezelPill = 'top_bezel_pill',
   SuperellipseSquircle = 'squircle',
   MinimalistBar = 'minimal_bar',
   SplitDualCapsule = 'split_capsule',
 }
 
-export enum LedgeAnchorPosition {
+export enum PillAnchorPosition {
   TopCenter = 'top_center',
   TopLeft = 'top_left',
   TopRight = 'top_right',
   BottomTaskbar = 'bottom_taskbar',
 }
 
-export interface LedgeGeometryInput {
+export interface PillGeometryInput {
   isExpanded: boolean;
   isLauncherOpen: boolean;
   activeTab: string;
@@ -191,11 +191,11 @@ export interface LedgeGeometryInput {
   hasSecondaryDroplet: boolean;
   isHovered: boolean;
   isDragOver: boolean;
-  sizeScale: LedgeSizeScale;
+  sizeScale: PillSizeScale;
   isElongated: boolean;
   isFloatingPill?: boolean;
-  shapeStyle?: LedgeShapeStyle;
-  anchorPosition?: LedgeAnchorPosition;
+  shapeStyle?: PillShapeStyle;
+  anchorPosition?: PillAnchorPosition;
   floatingOffsetPx?: number;
   isStealthHidden?: boolean;
   isAstraActive?: boolean;
@@ -203,7 +203,7 @@ export interface LedgeGeometryInput {
   astraExpandedResult?: boolean;
 }
 
-export interface LedgeGeometryOutput {
+export interface PillGeometryOutput {
   width: number;
   height: number;
   borderRadius: number;
@@ -213,30 +213,30 @@ export interface LedgeGeometryOutput {
   isDockedFlushTop: boolean;
 }
 
-const SCALE_MULTIPLIER: Record<LedgeSizeScale, number> = {
-  [LedgeSizeScale.Small]: 0.92,
-  [LedgeSizeScale.Medium]: 1.0,
-  [LedgeSizeScale.Large]: 1.09,
+const SCALE_MULTIPLIER: Record<PillSizeScale, number> = {
+  [PillSizeScale.Small]: 0.92,
+  [PillSizeScale.Medium]: 1.0,
+  [PillSizeScale.Large]: 1.09,
 };
 
 /**
- * Pure deterministic layout solver for all Dynamic Island / Ledge shapes, anchor positions,
+ * Pure deterministic layout solver for all Dynamic Island / Pill shapes, anchor positions,
  * stealth edge-hide mode, In-Pill Astra morphing, transient HUDs, and expanded workspaces.
  */
-export function resolveLedgeGeometry(input: LedgeGeometryInput): LedgeGeometryOutput {
+export function resolvePillGeometry(input: PillGeometryInput): PillGeometryOutput {
   const mult = SCALE_MULTIPLIER[input.sizeScale] ?? 1.0;
 
   // Backward compatibility with boolean isFloatingPill if shapeStyle omitted
   const effectiveShape =
     input.shapeStyle ??
     (input.isFloatingPill === false
-      ? LedgeShapeStyle.TopBezelLedge
-      : LedgeShapeStyle.DynamicPill);
+      ? PillShapeStyle.TopBezelPill
+      : PillShapeStyle.DynamicPill);
 
-  const anchor = input.anchorPosition ?? LedgeAnchorPosition.TopCenter;
+  const anchor = input.anchorPosition ?? PillAnchorPosition.TopCenter;
   const isDockedFlushTop =
-    effectiveShape === LedgeShapeStyle.TopBezelLedge &&
-    anchor !== LedgeAnchorPosition.BottomTaskbar;
+    (effectiveShape === PillShapeStyle.TopBezelPill || (effectiveShape as string) === 'top_bezel_ledge') &&
+    anchor !== PillAnchorPosition.BottomTaskbar;
 
   const defaultOffset = isDockedFlushTop ? 0 : (input.floatingOffsetPx ?? 12);
 
@@ -252,7 +252,7 @@ export function resolveLedgeGeometry(input: LedgeGeometryInput): LedgeGeometryOu
       width: Math.round(140 * mult),
       height: h,
       borderRadius: Math.round(h / 2),
-      topOffset: anchor === LedgeAnchorPosition.BottomTaskbar ? 52 : -48,
+      topOffset: anchor === PillAnchorPosition.BottomTaskbar ? 52 : -48,
       satelliteGap: 0,
       satelliteSize: 0,
       isDockedFlushTop: false,
@@ -260,13 +260,13 @@ export function resolveLedgeGeometry(input: LedgeGeometryInput): LedgeGeometryOu
   }
 
   const computeCornerRadius = (h: number, expanded: boolean): number => {
-    if (effectiveShape === LedgeShapeStyle.SuperellipseSquircle) {
+    if (effectiveShape === PillShapeStyle.SuperellipseSquircle) {
       return expanded ? 24 : 14;
     }
-    if (effectiveShape === LedgeShapeStyle.MinimalistBar) {
+    if (effectiveShape === PillShapeStyle.MinimalistBar) {
       return expanded ? 12 : 7;
     }
-    if (effectiveShape === LedgeShapeStyle.TopBezelLedge) {
+    if (effectiveShape === PillShapeStyle.TopBezelPill || (effectiveShape as string) === 'top_bezel_ledge') {
       return expanded ? 28 : Math.round(h / 2);
     }
     return expanded ? 34 : Math.round(h / 2);
@@ -426,9 +426,9 @@ export function resolveLedgeGeometry(input: LedgeGeometryInput): LedgeGeometryOu
   }
 
   // 4. Compact Live Activity State (with optional liquid-split secondary droplet)
-  const forceSplit = effectiveShape === LedgeShapeStyle.SplitDualCapsule;
+  const forceSplit = effectiveShape === PillShapeStyle.SplitDualCapsule;
   if (input.hasPrimaryActivity) {
-    const isMinimal = effectiveShape === LedgeShapeStyle.MinimalistBar;
+    const isMinimal = effectiveShape === PillShapeStyle.MinimalistBar;
     const baseW = isMinimal ? 272 : 258;
     const baseH = isMinimal ? 28 : 37;
     const h = Math.round(baseH * mult);
@@ -445,7 +445,7 @@ export function resolveLedgeGeometry(input: LedgeGeometryInput): LedgeGeometryOu
   }
 
   // 5. Quiet Idle Capsule
-  const isMinimalIdle = effectiveShape === LedgeShapeStyle.MinimalistBar;
+  const isMinimalIdle = effectiveShape === PillShapeStyle.MinimalistBar;
   const idleW = isMinimalIdle ? 164 : 176;
   const idleH = isMinimalIdle ? 24 : 33;
   const h = Math.round(idleH * mult);
@@ -459,3 +459,16 @@ export function resolveLedgeGeometry(input: LedgeGeometryInput): LedgeGeometryOu
     isDockedFlushTop,
   };
 }
+
+// Backward-compatibility aliases during transition
+export const resolveLedgeGeometry = resolvePillGeometry;
+export const calculatePillGeometry = resolvePillGeometry;
+export const calculateLedgeGeometry = resolvePillGeometry;
+export type LedgeSizeScale = PillSizeScale;
+export const LedgeSizeScale = PillSizeScale;
+export type LedgeShapeStyle = PillShapeStyle;
+export const LedgeShapeStyle = PillShapeStyle;
+export type LedgeAnchorPosition = PillAnchorPosition;
+export const LedgeAnchorPosition = PillAnchorPosition;
+export type LedgeGeometryInput = PillGeometryInput;
+export type LedgeGeometryOutput = PillGeometryOutput;

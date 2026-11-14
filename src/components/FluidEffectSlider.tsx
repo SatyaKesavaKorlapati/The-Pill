@@ -444,7 +444,7 @@ export const FluidEffectSlider: React.FC<FluidEffectSliderProps> = ({
         </div>
       ) : styleVariant === 'retro_vu_cassette' ? (
         /* Retro 80s 16-LED Segmented VU Meter Bar */
-        <div className="relative w-full h-5 grid grid-cols-16 gap-[2px] items-center">
+        <div className="relative w-full h-5 grid grid-cols-[repeat(16,minmax(0,1fr))] gap-[2px] items-center">
           {Array.from({ length: 16 }).map((_, idx) => {
             const segRatio = (idx + 0.5) / 16;
             const lit = segRatio <= clampedRatio + 0.01;

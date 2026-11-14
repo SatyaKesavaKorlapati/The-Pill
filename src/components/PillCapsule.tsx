@@ -25,22 +25,22 @@ import {
   ClipboardItem,
   EdgeLightProfile,
   IncomingCallSession,
-  LedgePreferences,
-  LedgeTab,
+  PillPreferences,
+  PillTab,
   MusicTrack,
   ReminderTask,
   TransientHudKind,
   TrayFileItem,
   VoiceAgentAction,
   WindowsSystemState,
-} from '../types/ledge';
+} from '../types/pill';
 import { formatDurationClock, playTactilePop } from '../utils/audioSynth';
 import { computeBatteryEta } from '../utils/customizationLogic';
 import {
   computeLiquidDeformation,
   isSpringAtRest,
-  LedgeAnchorPosition,
-  LedgeShapeStyle,
+  PillAnchorPosition,
+  PillShapeStyle,
   resolveLedgeGeometry,
   SpringState1D,
   stepSpring1D,
@@ -56,10 +56,10 @@ import { InPillAstraPanel } from './VoiceAgentOverlay';
 
 export interface PillCapsuleProps {
   isExpanded: boolean;
-  onExpand: (tab?: LedgeTab) => void;
+  onExpand: (tab?: PillTab) => void;
   onCollapse: () => void;
-  activeTab: LedgeTab;
-  onSelectTab: (tab: LedgeTab) => void;
+  activeTab: PillTab;
+  onSelectTab: (tab: PillTab) => void;
   isLauncherOpen: boolean;
   onToggleLauncher: () => void;
   onOpenFullSettings: () => void;
@@ -132,12 +132,10 @@ export interface PillCapsuleProps {
   onToggleReminder: (id: string) => void;
   onAddReminder: (title: string) => void;
 
-  preferences: LedgePreferences;
-  onUpdatePreferences: (patch: Partial<LedgePreferences>) => void;
+  preferences: PillPreferences;
+  onUpdatePreferences: (patch: Partial<PillPreferences>) => void;
   stealthRevealedByShortcut: boolean;
 }
-
-export type DynamicLedgeProps = PillCapsuleProps;
 
 export const PillCapsule: React.FC<PillCapsuleProps> = ({
   isExpanded,
@@ -235,7 +233,7 @@ export const PillCapsule: React.FC<PillCapsuleProps> = ({
     !isExpanded &&
     !effectiveAstraActive &&
     transientHud === 'none' &&
-    (preferences.shapeStyle === LedgeShapeStyle.SplitDualCapsule || (musicVisible && (timerVisible || keepAwake)));
+    (preferences.shapeStyle === PillShapeStyle.SplitDualCapsule || (musicVisible && (timerVisible || keepAwake)));
 
   const isStealthHidden =
     preferences.stealthAutoHide &&
@@ -353,7 +351,7 @@ export const PillCapsule: React.FC<PillCapsuleProps> = ({
       const target = targetGeoRef.current;
       const cfg = springConfigRef.current;
       const s = physicsStateRef.current;
-      const isBottom = anchorRef.current === LedgeAnchorPosition.BottomTaskbar;
+      const isBottom = anchorRef.current === PillAnchorPosition.BottomTaskbar;
 
       const targetSatOffset =
         target.satelliteSize > 0 ? target.satelliteGap + target.satelliteSize : -26;
@@ -402,9 +400,9 @@ export const PillCapsule: React.FC<PillCapsuleProps> = ({
       const currentShape = preferencesRef.current.shapeStyle;
       if (!isExpandedRef.current && hPx <= 60) {
         if (
-          currentShape === LedgeShapeStyle.DynamicPill ||
-          currentShape === LedgeShapeStyle.SplitDualCapsule ||
-          currentShape === LedgeShapeStyle.TopBezelLedge
+          currentShape === PillShapeStyle.DynamicPill ||
+          currentShape === PillShapeStyle.SplitDualCapsule ||
+          currentShape === PillShapeStyle.TopBezelPill
         ) {
           effectiveRadius = Math.max(effectiveRadius, Math.round(hPx / 2));
         }
@@ -610,7 +608,7 @@ export const PillCapsule: React.FC<PillCapsuleProps> = ({
   const isGlass = !isLightPaper && preferences.material === AppearanceMaterial.LiquidGlass;
   const isGraphite = !isLightPaper && preferences.material === AppearanceMaterial.FrostedGraphite;
   const isDockedBezel = targetGeometry.isDockedFlushTop;
-  const isBottomAnchor = preferences.anchorPosition === LedgeAnchorPosition.BottomTaskbar;
+  const isBottomAnchor = preferences.anchorPosition === PillAnchorPosition.BottomTaskbar;
   const isPureOrbOnly = Boolean(effectiveAstraActive && preferences.astraMode === 'orb_only' && !astraHasResult);
 
   // Compute Edge Lighting Aura (or Siri Rainbow Aura when Astra is morphed in-Pill)
@@ -634,9 +632,9 @@ export const PillCapsule: React.FC<PillCapsuleProps> = ({
       : undefined;
 
   const anchorFlexClass =
-    preferences.anchorPosition === LedgeAnchorPosition.TopLeft
+    preferences.anchorPosition === PillAnchorPosition.TopLeft
       ? 'justify-start pl-8'
-      : preferences.anchorPosition === LedgeAnchorPosition.TopRight
+      : preferences.anchorPosition === PillAnchorPosition.TopRight
         ? 'justify-end pr-8'
         : 'justify-center';
 
@@ -926,7 +924,7 @@ export const PillCapsule: React.FC<PillCapsuleProps> = ({
             }`}
           >
             {/* Minimalist Razor Specular Horizon Highlight */}
-            {!isPureOrbOnly && preferences.shapeStyle === LedgeShapeStyle.MinimalistBar && (
+            {!isPureOrbOnly && preferences.shapeStyle === PillShapeStyle.MinimalistBar && (
               <span className="absolute top-0 left-0 right-0 h-[1.5px] bg-gradient-to-r from-transparent via-cyan-300/80 to-transparent pointer-events-none z-50" />
             )}
 
@@ -1486,16 +1484,16 @@ export const PillCapsule: React.FC<PillCapsuleProps> = ({
               setContextMenuPos(null);
               onUpdatePreferences({
                 shapeStyle:
-                  preferences.shapeStyle === LedgeShapeStyle.DynamicPill
-                    ? LedgeShapeStyle.TopBezelLedge
-                    : LedgeShapeStyle.DynamicPill,
+                  preferences.shapeStyle === PillShapeStyle.DynamicPill
+                    ? PillShapeStyle.TopBezelPill
+                    : PillShapeStyle.DynamicPill,
               });
             }}
             className="w-full text-left px-2.5 py-1.5 rounded-lg hover:bg-white/10 transition-colors"
           >
             Switch to{' '}
-            {preferences.shapeStyle === LedgeShapeStyle.DynamicPill
-              ? 'Top-Bezel Ledge'
+            {preferences.shapeStyle === PillShapeStyle.DynamicPill
+              ? 'Top-Bezel Pill Dock'
               : 'Dynamic Island Pill'}
           </button>
           <button
@@ -1527,5 +1525,3 @@ export const PillCapsule: React.FC<PillCapsuleProps> = ({
     </>
   );
 };
-
-export const DynamicLedge = PillCapsule;

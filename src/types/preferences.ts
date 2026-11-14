@@ -16,7 +16,7 @@ export interface CustomWidgetTab {
   widgetSizes: Record<string, WidgetSizeVariant>;
 }
 
-export interface LedgePreferences {
+export interface PillPreferences {
   // Master AI & Astra (Diff 5 & 6)
   aiEnabled: boolean;                    // Default: true (Master kill-switch)
   astraWakeWordEnabled: boolean;         // Default: true ("Astra" / "Astram" / "అస్త్రం")
@@ -103,7 +103,7 @@ export interface LyricLine {
   text: string;
 }
 
-export const DEFAULT_PREFERENCES: LedgePreferences = {
+export const DEFAULT_PREFERENCES: PillPreferences = {
   aiEnabled: true,
   astraWakeWordEnabled: true,
   astraMode: 'OrbWithChat',
@@ -142,3 +142,5 @@ export const DEFAULT_PREFERENCES: LedgePreferences = {
   clipboardGroupBy: 'None',
   theme: 'desktop',
 };
+
+export type LedgePreferences = PillPreferences;

@@ -119,7 +119,7 @@ const CodeFenceBlock: React.FC<{
           )}
         </button>
       </div>
-      <pre className="p-2.5 text-[11px] font-mono leading-relaxed overflow-x-auto ledge-scroll select-text cursor-text">
+      <pre className="p-2.5 text-[11px] font-mono leading-relaxed overflow-x-auto pill-scroll select-text cursor-text">
         <code>{code}</code>
       </pre>
     </div>
@@ -175,7 +175,7 @@ export const RichMarkdown: React.FC<RichMarkdownProps> = ({
           i++;
         }
         blocks.push(
-          <div key={`tbl-${blockKey++}`} className="my-1.5 overflow-x-auto ledge-scroll">
+          <div key={`tbl-${blockKey++}`} className="my-1.5 overflow-x-auto pill-scroll">
             <table
               className={`w-full text-[11px] border-collapse rounded-lg overflow-hidden ${
                 isLightSurface ? 'border border-stone-900/15' : 'border border-white/12'
