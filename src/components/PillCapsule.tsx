@@ -231,8 +231,7 @@ export const PillCapsule: React.FC<PillCapsuleProps> = ({
     !isExpanded &&
     !effectiveAstraActive &&
     transientHud === 'none' &&
-    musicVisible &&
-    (timerVisible || keepAwake);
+    (preferences.shapeStyle === LedgeShapeStyle.SplitDualCapsule || (musicVisible && (timerVisible || keepAwake)));
 
   const isStealthHidden =
     preferences.stealthAutoHide &&
@@ -694,11 +693,14 @@ export const PillCapsule: React.FC<PillCapsuleProps> = ({
               (activeEl.tagName === 'INPUT' ||
                 activeEl.tagName === 'TEXTAREA' ||
                 activeEl.hasAttribute('contenteditable'));
-            if (!isInputFocused && !isExpanded) {
+            if (!isInputFocused) {
               if (collapseTimerRef.current !== null) window.clearTimeout(collapseTimerRef.current);
               collapseTimerRef.current = window.setTimeout(() => {
-                onCollapse();
-              }, 350);
+                collapseTimerRef.current = null;
+                if (isExpanded) {
+                  onCollapse();
+                }
+              }, 420);
             }
           }}
           onClick={(e) => {
@@ -830,6 +832,11 @@ export const PillCapsule: React.FC<PillCapsuleProps> = ({
                       : 'ring-1 ring-white/[0.15] shadow-[0_18px_44px_rgba(0,0,0,0.72),inset_0_1px_0_rgba(255,255,255,0.11)]'
             }`}
           >
+            {/* Minimalist Razor Specular Horizon Highlight */}
+            {preferences.shapeStyle === LedgeShapeStyle.MinimalistBar && (
+              <span className="absolute top-0 left-0 right-0 h-[1.5px] bg-gradient-to-r from-transparent via-cyan-300/80 to-transparent pointer-events-none z-50" />
+            )}
+
             {isCloakedFromScreenCapture ? (
               /* OS-Level Screen-Capture Privacy Mask Preview (`WDA_EXCLUDEFROMCAPTURE`) */
               <div

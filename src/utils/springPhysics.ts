@@ -260,10 +260,10 @@ export function resolveLedgeGeometry(input: LedgeGeometryInput): LedgeGeometryOu
 
   const computeCornerRadius = (h: number, expanded: boolean): number => {
     if (effectiveShape === LedgeShapeStyle.SuperellipseSquircle) {
-      return expanded ? 22 : Math.min(14, Math.round(h * 0.36));
+      return expanded ? 24 : 14;
     }
     if (effectiveShape === LedgeShapeStyle.MinimalistBar) {
-      return expanded ? 20 : Math.round(h / 2);
+      return expanded ? 12 : 7;
     }
     if (effectiveShape === LedgeShapeStyle.TopBezelLedge) {
       return expanded ? 28 : Math.round(h / 2);

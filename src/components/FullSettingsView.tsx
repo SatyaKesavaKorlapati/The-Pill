@@ -540,28 +540,8 @@ export const FullSettingsView: React.FC<FullSettingsViewProps> = ({
     { id: 'ai_astra', label: 'Astra AI Copilot & Voice Orb', Icon: Sparkles },
   ];
 
-  const leaveTimerRef = useRef<number | null>(null);
-
-  const handleContainerMouseLeave = () => {
-    if (preferences.closeSettingsOnMouseLeave ?? true) {
-      if (leaveTimerRef.current !== null) window.clearTimeout(leaveTimerRef.current);
-      leaveTimerRef.current = window.setTimeout(() => {
-        handleClose();
-      }, 420);
-    }
-  };
-
-  const handleContainerMouseEnter = () => {
-    if (leaveTimerRef.current !== null) {
-      window.clearTimeout(leaveTimerRef.current);
-      leaveTimerRef.current = null;
-    }
-  };
-
   return (
     <div
-      onMouseLeave={handleContainerMouseLeave}
-      onMouseEnter={handleContainerMouseEnter}
       className="w-full h-screen flex flex-col bg-[#090b10] text-slate-100 overflow-hidden select-none"
     >
       {/* 1. Custom Titlebar Header with Window Drag Region and Windows 11 Controls */}
@@ -784,12 +764,18 @@ export const FullSettingsView: React.FC<FullSettingsViewProps> = ({
                         type="button"
                         onClick={() => {
                           setTestBounce(true);
-                          playTactilePop('expand');
+                          playTactilePop(preferences.shapeStyle === LedgeShapeStyle.MinimalistBar ? 'confirm' : 'expand');
                           window.setTimeout(() => setTestBounce(false), 380);
                         }}
-                        className="px-2.5 py-1 text-[11px] font-medium bg-white/10 hover:bg-white/20 text-sky-300 rounded-lg transition-colors"
+                        className="px-2.5 py-1 text-[11px] font-medium bg-white/10 hover:bg-white/20 text-sky-300 rounded-lg transition-colors flex items-center gap-1"
                       >
-                        ⚡ Test Spring Wobble
+                        <span>
+                          {preferences.shapeStyle === LedgeShapeStyle.MinimalistBar
+                            ? '⚡ Test Razor Slice Gesture'
+                            : preferences.shapeStyle === LedgeShapeStyle.SplitDualCapsule
+                            ? '⚡ Test Dual Droplet Detach'
+                            : '⚡ Test Spring Wobble'}
+                        </span>
                       </button>
                     )}
                     {section === 'edge_sounds' && (
@@ -970,56 +956,101 @@ export const FullSettingsView: React.FC<FullSettingsViewProps> = ({
                                 : 'top-0 left-1/2 -translate-x-1/2'
                             }`}
                           >
-                            {/* The Simulated Capsule */}
-                            <div
-                              style={{
-                                transform: testBounce ? 'scale(1.08) translateY(3px)' : 'none',
-                                transition: 'transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1)',
-                              }}
-                              className={`relative flex items-center justify-between px-3 text-slate-100 shadow-lg ${
-                                preferences.shapeStyle === LedgeShapeStyle.TopBezelLedge || preferences.dockFlushBezel
-                                  ? 'bg-[#050609] border-x border-b border-white/20 rounded-b-2xl pt-1 pb-1.5'
-                                  : preferences.shapeStyle === LedgeShapeStyle.MinimalistBar
-                                  ? 'bg-[#050609] border border-white/20 rounded-full py-0.5 mt-1.5'
-                                  : 'bg-[#050609] border border-white/20 rounded-full py-1 mt-1.5'
-                              } ${
-                                preferences.sizeScale === LedgeSizeScale.Small
-                                  ? 'w-44 text-[10px]'
-                                  : preferences.sizeScale === LedgeSizeScale.Large
-                                  ? 'w-56 text-xs'
-                                  : 'w-48 text-[11px]'
-                              }`}
-                            >
-                              {/* Concave Meniscus Fillets for Docked Bezel */}
-                              {(preferences.shapeStyle === LedgeShapeStyle.TopBezelLedge || preferences.dockFlushBezel) && (
-                                <>
-                                  <span className="absolute -left-2 top-0 w-2 h-2 border-r border-t border-white/20 rounded-tr-lg" />
-                                  <span className="absolute -right-2 top-0 w-2 h-2 border-l border-t border-white/20 rounded-tl-lg" />
-                                </>
-                              )}
+                            {preferences.shapeStyle === LedgeShapeStyle.SplitDualCapsule ? (
+                              /* PERMANENT DUAL SPLIT: Main Capsule + Detached Satellite Droplet separated by gap */
+                              <div className="flex items-center gap-2.5">
+                                <div
+                                  style={{
+                                    transform: testBounce ? 'scale(1.06) translateY(2px)' : 'none',
+                                    transition: 'transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                                  }}
+                                  className={`relative flex items-center justify-between px-3 text-slate-100 shadow-lg bg-[#050609] border border-white/20 rounded-full py-1 mt-1.5 ${
+                                    preferences.sizeScale === LedgeSizeScale.Small
+                                      ? 'w-36 text-[10px]'
+                                      : preferences.sizeScale === LedgeSizeScale.Large
+                                      ? 'w-48 text-xs'
+                                      : 'w-40 text-[11px]'
+                                  }`}
+                                >
+                                  <div className="flex items-center gap-1.5 min-w-0">
+                                    <span
+                                      style={{ backgroundColor: palette.primaryHex }}
+                                      className="w-2.5 h-2.5 rounded-full shrink-0 shadow-sm animate-pulse"
+                                    />
+                                    <span className="font-semibold truncate">Dynamic Island</span>
+                                  </div>
+                                  <span className="text-emerald-400 font-mono text-[9px]">● Live</span>
+                                </div>
 
-                              {/* Capsule Content Preview */}
-                              <div className="flex items-center gap-1.5 min-w-0">
-                                <span
-                                  style={{ backgroundColor: palette.primaryHex }}
-                                  className="w-2.5 h-2.5 rounded-full shrink-0 shadow-sm"
-                                />
-                                <span className="font-semibold truncate">
-                                  {preferences.shapeStyle === LedgeShapeStyle.TopBezelLedge || preferences.dockFlushBezel
-                                    ? 'Bezel Ledge'
-                                    : 'Dynamic Island'}
-                                </span>
+                                {/* Completely Detached Companion Satellite Droplet */}
+                                <div
+                                  style={{
+                                    transform: testBounce ? 'scale(1.12) translateY(2px)' : 'none',
+                                    transition: 'transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                                  }}
+                                  className="relative flex items-center justify-center w-8 h-8 rounded-full bg-[#050609] border border-white/20 mt-1.5 shadow-lg text-[9px] font-mono text-amber-300 font-semibold"
+                                >
+                                  <span>5m</span>
+                                </div>
                               </div>
-
-                              <div className="flex items-center gap-1 shrink-0 font-mono text-[9px] text-slate-400">
-                                {preferences.shapeStyle === LedgeShapeStyle.SplitDualCapsule && (
-                                  <span className="w-4 h-4 rounded-full bg-slate-800 border border-white/10 flex items-center justify-center text-[8px] text-sky-300">
-                                    5m
-                                  </span>
+                            ) : (
+                              /* The Simulated Capsule for DynamicPill, Squircle, TopBezelLedge, and MinimalistBar */
+                              <div
+                                style={{
+                                  transform: testBounce ? 'scale(1.08) translateY(3px)' : 'none',
+                                  transition: 'transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                                }}
+                                className={`relative flex items-center justify-between px-3 text-slate-100 shadow-lg ${
+                                  preferences.shapeStyle === LedgeShapeStyle.TopBezelLedge || preferences.dockFlushBezel
+                                    ? 'bg-[#050609] border-x border-b border-white/20 rounded-b-2xl pt-1 pb-1.5'
+                                    : preferences.shapeStyle === LedgeShapeStyle.SuperellipseSquircle
+                                    ? 'bg-[#050609] border border-white/20 rounded-[14px] py-1 mt-1.5'
+                                    : preferences.shapeStyle === LedgeShapeStyle.MinimalistBar
+                                    ? 'bg-[#050609] border border-cyan-400/40 rounded-[6px] py-0.5 mt-2 h-[26px] shadow-[0_0_12px_rgba(34,211,238,0.2)] overflow-hidden'
+                                    : 'bg-[#050609] border border-white/20 rounded-full py-1 mt-1.5'
+                                } ${
+                                  preferences.sizeScale === LedgeSizeScale.Small
+                                    ? 'w-44 text-[10px]'
+                                    : preferences.sizeScale === LedgeSizeScale.Large
+                                    ? 'w-56 text-xs'
+                                    : 'w-48 text-[11px]'
+                                }`}
+                              >
+                                {/* Minimalist Razor Specular Edge Line */}
+                                {preferences.shapeStyle === LedgeShapeStyle.MinimalistBar && (
+                                  <span className="absolute top-0 left-0 right-0 h-[1.5px] bg-gradient-to-r from-transparent via-cyan-300/80 to-transparent pointer-events-none" />
                                 )}
-                                <span className="text-emerald-400">● Live</span>
+
+                                {/* Concave Meniscus Fillets for Docked Bezel */}
+                                {(preferences.shapeStyle === LedgeShapeStyle.TopBezelLedge || preferences.dockFlushBezel) && (
+                                  <>
+                                    <span className="absolute -left-2 top-0 w-2 h-2 border-r border-t border-white/20 rounded-tr-lg" />
+                                    <span className="absolute -right-2 top-0 w-2 h-2 border-l border-t border-white/20 rounded-tl-lg" />
+                                  </>
+                                )}
+
+                                {/* Capsule Content Preview */}
+                                <div className="flex items-center gap-1.5 min-w-0">
+                                  <span
+                                    style={{ backgroundColor: palette.primaryHex }}
+                                    className="w-2.5 h-2.5 rounded-full shrink-0 shadow-sm"
+                                  />
+                                  <span className="font-semibold truncate">
+                                    {preferences.shapeStyle === LedgeShapeStyle.TopBezelLedge || preferences.dockFlushBezel
+                                      ? 'Bezel Ledge'
+                                      : preferences.shapeStyle === LedgeShapeStyle.SuperellipseSquircle
+                                      ? 'iOS Squircle'
+                                      : preferences.shapeStyle === LedgeShapeStyle.MinimalistBar
+                                      ? 'Razor Status'
+                                      : 'Dynamic Island'}
+                                  </span>
+                                </div>
+
+                                <div className="flex items-center gap-1 shrink-0 font-mono text-[9px] text-slate-400">
+                                  <span className="text-emerald-400">● Live</span>
+                                </div>
                               </div>
-                            </div>
+                            )}
                           </div>
                         </div>
 

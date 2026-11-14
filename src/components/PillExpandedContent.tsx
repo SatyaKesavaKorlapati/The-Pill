@@ -2373,7 +2373,10 @@ export const PillExpandedContent: React.FC<PillExpandedContentProps> = ({
 
           <button
             type="button"
-            onClick={onCollapse}
+            onClick={(e) => {
+              e.stopPropagation();
+              onCollapse();
+            }}
             aria-label="Collapse Dynamic Island"
             title="Collapse (Esc)"
             className="p-1.5 rounded-lg opacity-70 hover:opacity-100 hover:bg-white/10 transition-colors focus-visible:outline-2 focus-visible:outline-sky-400"

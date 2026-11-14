@@ -614,6 +614,18 @@ export default function App() {
         });
         unlistenList.push(u3);
 
+        // Global outside click: collapse expanded pill when clicking elsewhere on desktop
+        const uOutside = await listen('pill://outside-click', () => {
+          setIsExpanded((expanded) => {
+            if (expanded) {
+              playTactilePop('collapse');
+              setStealthRevealedByShortcut(false);
+            }
+            return false;
+          });
+        });
+        unlistenList.push(uOutside);
+
         // Cross-window preferences sync broadcast
         const uPrefs = await listen<string>('pill://preferences-updated', (event) => {
           try {
@@ -713,15 +725,19 @@ export default function App() {
           setIsExpanded(true);
         }}
         onCollapse={() => {
-          playTactilePop('collapse');
+          if (!isExpanded && !isVoiceAgentOpen) return;
           setIsExpanded(false);
           setStealthRevealedByShortcut(false);
+          playTactilePop('collapse');
         }}
         activeTab={activeTab}
         onSelectTab={(tab) => setActiveTab(tab)}
         isLauncherOpen={isLauncherOpen}
         onToggleLauncher={() => setIsLauncherOpen((v) => !v)}
         onOpenFullSettings={() => {
+          setIsExpanded(false);
+          setStealthRevealedByShortcut(false);
+          playTactilePop('collapse');
           if (typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window) {
             import('@tauri-apps/api/core').then(({ invoke }) => {
               invoke('open_settings_window').catch(() => {});

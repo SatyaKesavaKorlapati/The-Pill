@@ -3,6 +3,11 @@ use std::sync::{Arc, Mutex};
 use std::time::Duration;
 use tauri::{AppHandle, Emitter, Manager, WebviewWindow};
 use windows::Win32::Foundation::{HWND, POINT};
+use windows::Win32::Graphics::Dwm::{
+    DwmSetWindowAttribute, DWMWA_BORDER_COLOR, DWMWA_WINDOW_CORNER_PREFERENCE,
+    DWMWCP_DONOTROUND,
+};
+use windows::Win32::UI::Input::KeyboardAndMouse::{GetAsyncKeyState, VK_LBUTTON};
 use windows::Win32::UI::WindowsAndMessaging::{
     GetCursorPos, GetSystemMetrics, GetWindowLongPtrW, SetForegroundWindow, SetWindowLongPtrW,
     SetWindowPos, GWL_EXSTYLE, HWND_TOPMOST, SM_CXSCREEN, SM_CYSCREEN,
@@ -50,6 +55,22 @@ pub fn configure_pill_overlay_window(window: &WebviewWindow) -> Arc<Mutex<PillHi
     }
 
     unsafe {
+        // Completely remove Windows 11 DWM window border and prevent corner rounding artifacts
+        let border_none: u32 = 0xFFFFFFFE;
+        let _ = DwmSetWindowAttribute(
+            hwnd,
+            DWMWA_BORDER_COLOR,
+            &border_none as *const _ as *const _,
+            std::mem::size_of::<u32>() as u32,
+        );
+        let corner_pref = DWMWCP_DONOTROUND;
+        let _ = DwmSetWindowAttribute(
+            hwnd,
+            DWMWA_WINDOW_CORNER_PREFERENCE,
+            &corner_pref as *const _ as *const _,
+            std::mem::size_of_val(&corner_pref) as u32,
+        );
+
         // Strip taskbar footprint
         let ex_style = GetWindowLongPtrW(hwnd, GWL_EXSTYLE);
         SetWindowLongPtrW(
@@ -94,6 +115,7 @@ pub fn configure_pill_overlay_window(window: &WebviewWindow) -> Arc<Mutex<PillHi
     std::thread::spawn(move || {
         let mut last_ignore = true;
         let mut was_at_top_edge = false;
+        let mut was_lbutton_down = false;
         let _ = win_clone.set_ignore_cursor_events(true);
 
         loop {
@@ -128,6 +150,14 @@ pub fn configure_pill_overlay_window(window: &WebviewWindow) -> Arc<Mutex<PillHi
                             && pt.x <= pill_right
                             && pt.y >= pill_top
                             && pt.y <= pill_bottom);
+
+                    // Detect global outside click when pill is expanded (height > 80.0)
+                    let is_expanded_rect = st.rect.height > 80.0;
+                    let lbutton_down = unsafe { GetAsyncKeyState(VK_LBUTTON.0 as i32) < 0 };
+                    if !inside && is_expanded_rect && lbutton_down && !was_lbutton_down {
+                        let _ = win_clone.emit("pill://outside-click", ());
+                    }
+                    was_lbutton_down = lbutton_down;
 
                     let should_ignore = !inside;
                     if should_ignore != last_ignore {

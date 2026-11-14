@@ -31,8 +31,16 @@ if (typeof window !== 'undefined') {
   const warmUp = () => {
     try {
       const ctx = getAudioContext();
-      if (ctx && ctx.state === 'suspended') {
-        ctx.resume().catch(() => {});
+      if (ctx) {
+        if (ctx.state === 'suspended') {
+          ctx.resume().catch(() => {});
+        }
+        // Play 1-frame silent buffer to fully unpause hardware audio pipeline with zero latency
+        const buf = ctx.createBuffer(1, 1, 22050);
+        const src = ctx.createBufferSource();
+        src.buffer = buf;
+        src.connect(ctx.destination);
+        src.start(0);
       }
     } catch {}
     window.removeEventListener('pointerdown', warmUp);
@@ -59,9 +67,10 @@ export function playTactilePop(
   if (profile === 'silent' || currentVolume <= 0.01) return;
 
   const nowPerf = typeof performance !== 'undefined' ? performance.now() : Date.now();
-  if (!overrideProfile && kind === 'collapse' && nowPerf - lastCollapseTimestamp < 260) return;
+  // Enforce crisp single collapse sound (reject duplicate collapse triggers within 420ms unless overrideProfile provided)
+  if (!overrideProfile && kind === 'collapse' && nowPerf - lastCollapseTimestamp < 420) return;
   if (kind === 'collapse') lastCollapseTimestamp = nowPerf;
-  if (!overrideProfile && nowPerf - lastSoundTimestamp < 12) return;
+  if (!overrideProfile && nowPerf - lastSoundTimestamp < 15) return;
   lastSoundTimestamp = nowPerf;
 
   try {
