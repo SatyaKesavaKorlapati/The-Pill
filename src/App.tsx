@@ -58,8 +58,10 @@ export default function App() {
       return {
         ...DEFAULT_PREFERENCES,
         ...parsed,
-        stealthAutoHide: true,
-        revealOnEdgeTouch: true,
+        stealthAutoHide: parsed.stealthAutoHide ?? DEFAULT_PREFERENCES.stealthAutoHide,
+        revealOnEdgeTouch: parsed.revealOnEdgeTouch ?? DEFAULT_PREFERENCES.revealOnEdgeTouch,
+        revealAreaWidth: parsed.revealAreaWidth ?? DEFAULT_PREFERENCES.revealAreaWidth,
+        revealAreaHeight: parsed.revealAreaHeight ?? DEFAULT_PREFERENCES.revealAreaHeight,
         homeWidgets,
         springPreset,
         customSpring,
@@ -242,6 +244,33 @@ export default function App() {
         .catch(() => {});
     }
   }, [preferences.revealAreaWidth, preferences.revealAreaHeight, preferences.revealOnEdgeTouch]);
+
+  // Restore persistent preferences from disk on initial startup
+  useEffect(() => {
+    if (typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window) {
+      import('@tauri-apps/api/core').then(({ invoke }) => {
+        invoke<string | null>('get_saved_preferences').then((savedJson) => {
+          if (savedJson) {
+            try {
+              const diskPrefs = JSON.parse(savedJson) as Partial<LedgePreferences>;
+              setPreferences((prev) => {
+                const merged = { ...prev, ...diskPrefs };
+                try {
+                  localStorage.setItem(PREFS_STORAGE_KEY, JSON.stringify(merged));
+                } catch {}
+                return merged;
+              });
+            } catch {}
+          } else {
+            // Seed disk preferences file with current preferences immediately!
+            invoke('save_user_preferences', {
+              preferencesJson: JSON.stringify(preferences),
+            }).catch(() => {});
+          }
+        }).catch(() => {});
+      }).catch(() => {});
+    }
+  }, []);
 
   const updateSystemState = useCallback((patch: Partial<WindowsSystemState>) => {
     setSystemState((prev) => ({ ...prev, ...patch }));
@@ -649,11 +678,20 @@ export default function App() {
         const { listen } = await import('@tauri-apps/api/event');
         const { invoke } = await import('@tauri-apps/api/core');
 
-        // Alt+L: Toggle Island expand/collapse
+        // Alt+L: Toggle Island expand/collapse (Full Pill Studio)
         const u1 = await listen('pill://hotkey-toggle-pill', () => {
+          setStealthRevealedByShortcut(true);
           setIsExpanded((prev) => !prev);
         });
         unlistenList.push(u1);
+
+        // Alt+K: Reveal compact pill from top (2nd method to open without expanding full studio)
+        const uAltK = await listen('pill://hotkey-reveal-compact', () => {
+          setIsExpanded(false);
+          setStealthRevealedByShortcut((prev) => !prev);
+          playTactilePop('tab');
+        });
+        unlistenList.push(uAltK);
 
         // Alt+V: Summon Astra Voice Orb
         const u2 = await listen('pill://hotkey-summon-astra', () => {

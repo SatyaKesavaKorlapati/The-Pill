@@ -22,3 +22,4 @@ desktop.ini
 # Environment and sensitive keys
 .env
 .env.local
+user_preferences.json

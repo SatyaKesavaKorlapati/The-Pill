@@ -735,8 +735,8 @@ export const PillCapsule: React.FC<PillCapsuleProps> = ({
             setEdgeTouched(false);
           }}
           style={{
-            width: `${preferences.revealAreaWidth ?? 140}px`,
-            height: `${Math.max(2, preferences.revealAreaHeight ?? 4)}px`,
+            width: `${Math.max(1, preferences.revealAreaWidth ?? 140)}px`,
+            height: `${Math.max(1, preferences.revealAreaHeight ?? 4)}px`,
             left: '50%',
             transform: 'translateX(-50%)',
           }}

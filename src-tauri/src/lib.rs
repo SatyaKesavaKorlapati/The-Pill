@@ -20,6 +20,8 @@ pub fn run() {
                     if event.state() == ShortcutState::Pressed {
                         if shortcut.matches(Modifiers::ALT, Code::KeyL) {
                             let _ = app.emit("pill://hotkey-toggle-pill", ());
+                        } else if shortcut.matches(Modifiers::ALT, Code::KeyK) {
+                            let _ = app.emit("pill://hotkey-reveal-compact", ());
                         } else if shortcut.matches(Modifiers::ALT, Code::KeyV) {
                             let _ = app.emit("pill://hotkey-summon-astra", ());
                         }
@@ -57,11 +59,25 @@ pub fn run() {
                 let _ = settings_win.hide();
             }
 
-            // Register Alt+L (Toggle Pill) and Alt+V (Summon Astra Voice Orb)
+            // Register Alt+L (Toggle Pill), Alt+K (Reveal Compact Pill from Top), and Alt+V (Summon Astra Voice Orb)
             let alt_l = Shortcut::new(Some(Modifiers::ALT), Code::KeyL);
+            let alt_k = Shortcut::new(Some(Modifiers::ALT), Code::KeyK);
             let alt_v = Shortcut::new(Some(Modifiers::ALT), Code::KeyV);
             let _ = app.global_shortcut().register(alt_l);
+            let _ = app.global_shortcut().register(alt_k);
             let _ = app.global_shortcut().register(alt_v);
+
+            // Restore theme icon and anchor position from disk on startup
+            if let Some(saved) = window_manager::read_preferences_from_disk() {
+                if let Ok(val) = serde_json::from_str::<serde_json::Value>(&saved) {
+                    if let Some(theme) = val.get("themeId").and_then(|t| t.as_str()) {
+                        let _ = window_manager::update_window_theme_icon(app.handle().clone(), theme.to_string());
+                    }
+                    if let Some(anchor) = val.get("anchorPosition").and_then(|a| a.as_str()) {
+                        let _ = window_manager::reposition_pill_window(app.handle().clone(), anchor.to_string());
+                    }
+                }
+            }
 
             // Start live Windows Clipboard Watcher
             clipboard_watcher::start_clipboard_watcher(app.handle().clone());
@@ -80,6 +96,8 @@ pub fn run() {
             window_manager::broadcast_preferences_sync,
             window_manager::update_window_theme_icon,
             window_manager::update_pill_reveal_settings,
+            window_manager::get_saved_preferences,
+            window_manager::save_user_preferences,
             privacy_cloak::apply_privacy_cloak,
             dpapi_vault::save_custom_api_key,
             dpapi_vault::load_custom_api_key,

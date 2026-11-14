@@ -33,6 +33,31 @@ pub struct PillHitState {
     pub reveal_enabled: bool,
 }
 
+pub fn get_preferences_file_path() -> std::path::PathBuf {
+    let p = std::path::PathBuf::from("d:\\Pill\\user_preferences.json");
+    if let Some(parent) = p.parent() {
+        if parent.exists() {
+            return p;
+        }
+    }
+    if let Ok(appdata) = std::env::var("APPDATA") {
+        let dir = std::path::PathBuf::from(appdata).join("Pill");
+        let _ = std::fs::create_dir_all(&dir);
+        return dir.join("user_preferences.json");
+    }
+    p
+}
+
+pub fn save_preferences_to_disk(json_str: &str) {
+    let path = get_preferences_file_path();
+    let _ = std::fs::write(&path, json_str);
+}
+
+pub fn read_preferences_from_disk() -> Option<String> {
+    let path = get_preferences_file_path();
+    std::fs::read_to_string(&path).ok()
+}
+
 pub fn configure_pill_overlay_window(window: &WebviewWindow) -> Arc<Mutex<PillHitState>> {
     let hwnd_raw = window.hwnd().unwrap().0;
     let hwnd = HWND(hwnd_raw as _);
@@ -107,6 +132,19 @@ pub fn configure_pill_overlay_window(window: &WebviewWindow) -> Arc<Mutex<PillHi
     let stage_w = (960.0 * scale) as i32;
     let win_x = (screen_w - stage_w) / 2;
 
+    let (init_reveal_w, init_reveal_h, init_reveal_en) = if let Some(saved) = read_preferences_from_disk() {
+        if let Ok(val) = serde_json::from_str::<serde_json::Value>(&saved) {
+            let w = val.get("revealAreaWidth").and_then(|v| v.as_f64()).unwrap_or(140.0);
+            let h = val.get("revealAreaHeight").and_then(|v| v.as_f64()).unwrap_or(4.0);
+            let en = val.get("revealOnEdgeTouch").and_then(|v| v.as_bool()).unwrap_or(true);
+            (w, h, en)
+        } else {
+            (140.0, 4.0, true)
+        }
+    } else {
+        (140.0, 4.0, true)
+    };
+
     let state = Arc::new(Mutex::new(PillHitState {
         rect: HitRect {
             x: 375.0,
@@ -118,9 +156,9 @@ pub fn configure_pill_overlay_window(window: &WebviewWindow) -> Arc<Mutex<PillHi
         window_y: 0,
         scale_factor: scale,
         force_interactive: false,
-        reveal_width: 140.0,
-        reveal_height: 4.0,
-        reveal_enabled: true,
+        reveal_width: init_reveal_w.max(1.0),
+        reveal_height: init_reveal_h.max(1.0),
+        reveal_enabled: init_reveal_en,
     }));
 
     // 120Hz High-Precision Cursor Hit-Tester & Top-Bezel Auto-Reveal
@@ -406,6 +444,17 @@ pub fn update_window_theme_icon(app: AppHandle, theme_id: String) -> Result<(), 
 }
 
 #[tauri::command]
+pub fn get_saved_preferences() -> Result<Option<String>, String> {
+    Ok(read_preferences_from_disk())
+}
+
+#[tauri::command]
+pub fn save_user_preferences(preferences_json: String) -> Result<(), String> {
+    save_preferences_to_disk(&preferences_json);
+    Ok(())
+}
+
+#[tauri::command]
 pub fn update_pill_reveal_settings(
     state: tauri::State<'_, Arc<Mutex<PillHitState>>>,
     width: f64,
@@ -413,7 +462,7 @@ pub fn update_pill_reveal_settings(
     enabled: bool,
 ) -> Result<(), String> {
     if let Ok(mut st) = state.lock() {
-        st.reveal_width = width.max(40.0);
+        st.reveal_width = width.max(1.0);
         st.reveal_height = height.max(1.0);
         st.reveal_enabled = enabled;
     }
@@ -430,6 +479,7 @@ pub fn broadcast_preferences_sync(
     let json_str = preferences_json
         .or(prefs_json)
         .unwrap_or_else(|| "{}".to_string());
+    save_preferences_to_disk(&json_str);
     let _ = app.emit("pill://preferences-updated", json_str.clone());
     if let Ok(val) = serde_json::from_str::<serde_json::Value>(&json_str) {
         if let Some(anchor) = val.get("anchorPosition").and_then(|a| a.as_str()) {
@@ -440,7 +490,7 @@ pub fn broadcast_preferences_sync(
         }
         if let Ok(mut st) = state.lock() {
             if let Some(w) = val.get("revealAreaWidth").and_then(|v| v.as_f64()) {
-                st.reveal_width = w.max(40.0);
+                st.reveal_width = w.max(1.0);
             }
             if let Some(h) = val.get("revealAreaHeight").and_then(|v| v.as_f64()) {
                 st.reveal_height = h.max(1.0);
