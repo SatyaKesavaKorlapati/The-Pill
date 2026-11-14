@@ -68,6 +68,27 @@ export type AstraOrbStyle =
   | 'motorsport_gt'
   | 'cozy_woodland'
   | 'cupertino_silk'
+  // Naruto Jutsu & Shinobi Pack
+  | 'naruto_rasengan'
+  | 'naruto_rasenshuriken'
+  | 'naruto_sharingan'
+  | 'naruto_mangekyo_susano'
+  | 'naruto_akatsuki_cloud'
+  | 'naruto_white_cloud'
+  // Motorsport & Formula 1 Pack
+  | 'f1_telemetry_hud'
+  | 'f1_tyre_soft'
+  | 'f1_tyre_medium'
+  | 'f1_tyre_hard'
+  | 'f1_tyre_inter'
+  | 'f1_tyre_wet'
+  // Celestial Planets & Space Pack
+  | 'space_sun'
+  | 'space_earth'
+  | 'space_moon'
+  | 'space_mars'
+  | 'space_milkyway'
+  // Classic Fluid Siri Shaders
   | 'celestial_nebula'
   | 'cyber_plasma'
   | 'neon_pulse'
@@ -111,6 +132,7 @@ export type SoundProfileId =
   | 'retro_cassette'
   | 'mechanical_gt'
   | 'zen_garden'
+  | 'naruto_shinobi'
   | 'silent';
 
 export type SoundActionKind =

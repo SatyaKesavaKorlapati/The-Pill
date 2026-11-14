@@ -75,6 +75,7 @@ import {
 } from '../utils/themeAndSliders';
 import { AnimatedBatterySymbol, BatteryOperationalMode } from './AnimatedBatterySymbol';
 import { FluidEffectSlider } from './FluidEffectSlider';
+import { ThemedIcon, ThemedIconName } from './ThemedIcon';
 
 /* ============================================================================
  * 1. WINDOWS 11 QUICK SETTINGS + VERTICAL/HORIZONTAL BLOCKS & `>` SUBMENUS
@@ -1398,7 +1399,12 @@ export const ControlCenterPanel: React.FC<ControlCenterPanelProps> = ({
                                 onClick={() => handleTileToggle(id)}
                                 className="flex-1 flex items-center justify-center hover:brightness-95 active:scale-[0.98] transition-transform focus-visible:outline-2 focus-visible:outline-white"
                               >
-                                <Icon className="w-4 h-4" strokeWidth={iconMetrics.strokeWidth} />
+                                <ThemedIcon
+                                  name={id as ThemedIconName}
+                                  packStyle={preferences.iconPack}
+                                  size={16}
+                                  strokeWidth={iconMetrics.strokeWidth}
+                                />
                               </button>
                               <span
                                 aria-hidden="true"
@@ -1428,7 +1434,12 @@ export const ControlCenterPanel: React.FC<ControlCenterPanelProps> = ({
                               }
                               className="w-full h-full flex items-center justify-center gap-2 hover:brightness-95 active:scale-[0.98] transition-transform focus-visible:outline-2 focus-visible:outline-sky-400"
                             >
-                              <Icon className="w-4 h-4" strokeWidth={iconMetrics.strokeWidth} />
+                              <ThemedIcon
+                                name={id as ThemedIconName}
+                                packStyle={preferences.iconPack}
+                                size={16}
+                                strokeWidth={iconMetrics.strokeWidth}
+                              />
                               {showChevron && (
                                 <ChevronRight
                                   className="w-3.5 h-3.5 opacity-85"
@@ -1476,7 +1487,12 @@ export const ControlCenterPanel: React.FC<ControlCenterPanelProps> = ({
                               active ? palette.onPrimaryTextClass : 'bg-white/10 text-slate-200'
                             }`}
                           >
-                            <Icon className="w-3.5 h-3.5" strokeWidth={iconMetrics.strokeWidth} />
+                            <ThemedIcon
+                              name={id as ThemedIconName}
+                              packStyle={preferences.iconPack}
+                              size={14}
+                              strokeWidth={iconMetrics.strokeWidth}
+                            />
                           </span>
                           <span className="min-w-0">
                             <span className="block text-[11px] font-semibold truncate">
@@ -1510,10 +1526,12 @@ export const ControlCenterPanel: React.FC<ControlCenterPanelProps> = ({
                         onClick={() => handleTileToggle(id)}
                         className="flex items-center gap-2 min-w-0 flex-1 text-left"
                       >
-                        <Icon
-                          className="w-4 h-4 shrink-0"
+                        <ThemedIcon
+                          name={id as ThemedIconName}
+                          packStyle={preferences.iconPack}
+                          size={16}
+                          color={active ? palette.primaryHex : undefined}
                           strokeWidth={iconMetrics.strokeWidth}
-                          style={{ color: active ? palette.primaryHex : undefined }}
                         />
                         <span className="text-xs font-medium truncate">{caption}</span>
                       </button>

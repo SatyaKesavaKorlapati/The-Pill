@@ -262,6 +262,59 @@ export function playTactilePop(
       osc2.start(t0);
       osc1.stop(t0 + 0.1);
       osc2.stop(t0 + 0.1);
+    } else if (profile === 'naruto_shinobi') {
+      // Authentic Naruto Shinobi Jutsu acoustic synthesis: Rasengan chakra whistle, Chidori snap, Sharingan ocular chime
+      if (kind === 'expand') {
+        // Rasengan Chakra Vortex spin
+        filter.frequency.setValueAtTime(2400, t0);
+        const osc = ctx.createOscillator();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(260, t0);
+        osc.frequency.exponentialRampToValueAtTime(840, t0 + 0.08);
+
+        masterGain.gain.setValueAtTime(0.001, t0);
+        masterGain.gain.linearRampToValueAtTime(baseAmp * 0.95, t0 + 0.02);
+        masterGain.gain.exponentialRampToValueAtTime(0.0003, t0 + 0.085);
+
+        osc.connect(filter);
+        filter.connect(masterGain);
+        masterGain.connect(ctx.destination);
+        osc.start(t0);
+        osc.stop(t0 + 0.09);
+      } else if (kind === 'collapse') {
+        // Chidori lightning chirp snap
+        filter.frequency.setValueAtTime(3200, t0);
+        const osc = ctx.createOscillator();
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(740, t0);
+        osc.frequency.exponentialRampToValueAtTime(180, t0 + 0.04);
+
+        masterGain.gain.setValueAtTime(baseAmp * 0.85, t0);
+        masterGain.gain.exponentialRampToValueAtTime(0.0003, t0 + 0.045);
+
+        osc.connect(filter);
+        filter.connect(masterGain);
+        masterGain.connect(ctx.destination);
+        osc.start(t0);
+        osc.stop(t0 + 0.05);
+      } else {
+        // Sharingan ocular chime & hand-seal puff
+        filter.frequency.setValueAtTime(2800, t0);
+        const osc = ctx.createOscillator();
+        osc.type = 'sine';
+        const chimeHz = kind === 'toggleOn' ? 880 : kind === 'tab' ? 587.33 : 440;
+        osc.frequency.setValueAtTime(chimeHz, t0);
+        osc.frequency.exponentialRampToValueAtTime(chimeHz * 1.5, t0 + 0.06);
+
+        masterGain.gain.setValueAtTime(baseAmp * 0.9, t0);
+        masterGain.gain.exponentialRampToValueAtTime(0.0002, t0 + 0.075);
+
+        osc.connect(filter);
+        filter.connect(masterGain);
+        masterGain.connect(ctx.destination);
+        osc.start(t0);
+        osc.stop(t0 + 0.08);
+      }
     } else if (profile === 'taptic_thump') {
       filter.frequency.setValueAtTime(220, t0);
       const osc = ctx.createOscillator();

@@ -149,21 +149,898 @@ export function resolveOrbThemeColors(style: AstraOrbStyle = 'siri_rainbow') {
   };
 }
 
+/* ==========================================================================
+ * NARUTO SHINOBI & JUTSU PACK
+ * ======================================================================== */
+
 /**
- * 1. BOTANICAL SAKURA: Floating Glowing Cherry Blossom Flower & Orbiting Petals
- * Pure transparent background, 5 sculpted Sakura petals with notched tips,
- * breathing stamen filaments, and orbiting floral petal flakes.
+ * N1. NARUTO RASENGAN (螺旋丸)
+ * Swirling concentrated sphere of high-velocity chakra streams with brilliant white core.
  */
-function drawBotanicalSakura(
+function drawNarutoRasengan(
+  ctx: CanvasRenderingContext2D,
+  cx: number,
+  cy: number,
+  radius: number,
+  phase: number,
+  smoothEnergy: number
+) {
+  ctx.save();
+
+  // Chakra Blue Aura
+  const aura = ctx.createRadialGradient(cx, cy, radius * 0.2, cx, cy, radius * 1.15);
+  aura.addColorStop(0, `rgba(103, 232, 249, ${(0.45 + smoothEnergy * 0.3).toFixed(3)})`);
+  aura.addColorStop(0.55, `rgba(6, 182, 212, ${(0.3 + smoothEnergy * 0.25).toFixed(3)})`);
+  aura.addColorStop(0.85, `rgba(37, 99, 235, ${(0.15 + smoothEnergy * 0.2).toFixed(3)})`);
+  aura.addColorStop(1, 'rgba(6, 182, 212, 0)');
+  ctx.fillStyle = aura;
+  ctx.beginPath();
+  ctx.arc(cx, cy, radius * 1.15, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.globalCompositeOperation = 'lighter';
+
+  // 8 High-Velocity Logarithmic Chakra Stream Loops
+  const streams = 8;
+  for (let s = 0; s < streams; s++) {
+    const streamPhase = phase * 8.5 * (s % 2 === 0 ? 1 : -1) + (s * Math.PI * 2) / streams;
+    ctx.beginPath();
+    const steps = 36;
+    for (let st = 0; st <= steps; st++) {
+      const u = (st / steps) * 2 - 1;
+      const angle = u * Math.PI * 2 + streamPhase;
+      const rVal = radius * (0.35 + (1 - Math.abs(u)) * 0.45 * (0.8 + smoothEnergy * 0.4));
+      const x = cx + Math.cos(angle) * rVal;
+      const y = cy + Math.sin(angle) * rVal * 0.75;
+      if (st === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.strokeStyle = s % 2 === 0 ? 'rgba(255, 255, 255, 0.75)' : 'rgba(34, 211, 238, 0.85)';
+    ctx.lineWidth = 1.6 + smoothEnergy * 1.5;
+    ctx.shadowColor = '#22d3ee';
+    ctx.shadowBlur = 10;
+    ctx.stroke();
+  }
+
+  // Brilliant White-Hot Concentrated Chakra Core Sphere
+  const coreR = radius * (0.32 + smoothEnergy * 0.15);
+  const core = ctx.createRadialGradient(cx, cy, 0, cx, cy, coreR);
+  core.addColorStop(0, '#ffffff');
+  core.addColorStop(0.4, 'rgba(224, 242, 254, 0.95)');
+  core.addColorStop(0.8, 'rgba(56, 189, 248, 0.6)');
+  core.addColorStop(1, 'rgba(6, 182, 212, 0)');
+  ctx.fillStyle = core;
+  ctx.beginPath();
+  ctx.arc(cx, cy, coreR, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.restore();
+}
+
+/**
+ * N2. NARUTO RASENSHURIKEN (風遁・螺旋手裏剣)
+ * Concentrated Rasengan core enveloped by 4 gigantic razor-sharp rotating wind shuriken blades.
+ */
+function drawNarutoRasenshuriken(
+  ctx: CanvasRenderingContext2D,
+  cx: number,
+  cy: number,
+  radius: number,
+  phase: number,
+  smoothEnergy: number
+) {
+  ctx.save();
+  ctx.globalCompositeOperation = 'lighter';
+
+  // 4 Giant Spinning Aerodynamic Shuriken Wind Blades
+  const bladeRot = phase * 12;
+  const bladeR = radius * (0.92 + smoothEnergy * 0.22);
+
+  for (let b = 0; b < 4; b++) {
+    const bAngle = bladeRot + (b * Math.PI) / 2;
+    const cosA = Math.cos(bAngle);
+    const sinA = Math.sin(bAngle);
+    const perpCos = -sinA;
+    const perpSin = cosA;
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+
+    // Outer razor-sharp sweeping curve
+    const tipX = cx + cosA * bladeR;
+    const tipY = cy + sinA * bladeR;
+    const wingX = cx + cosA * (bladeR * 0.65) + perpCos * (bladeR * 0.45);
+    const wingY = cy + sinA * (bladeR * 0.65) + perpSin * (bladeR * 0.45);
+
+    ctx.quadraticCurveTo(cx + perpCos * (bladeR * 0.2), cy + perpSin * (bladeR * 0.2), wingX, wingY);
+    ctx.quadraticCurveTo(cx + cosA * (bladeR * 0.85) + perpCos * (bladeR * 0.15), cy + sinA * (bladeR * 0.85) + perpSin * (bladeR * 0.15), tipX, tipY);
+    ctx.quadraticCurveTo(cx + cosA * (bladeR * 0.5), cy + sinA * (bladeR * 0.5), cx, cy);
+
+    ctx.fillStyle = 'rgba(165, 243, 252, 0.45)';
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 2.2;
+    ctx.shadowColor = '#06b6d4';
+    ctx.shadowBlur = 12;
+    ctx.fill();
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  // Central Spinning Rasengan Sphere
+  drawNarutoRasengan(ctx, cx, cy, radius * 0.48, phase * 1.5, smoothEnergy);
+
+  ctx.restore();
+}
+
+/**
+ * N3. NARUTO SHARINGAN (写輪眼)
+ * Crimson red Uchiha iris, black pupil, concentric ring, and 3 rotating curved tomoe commas.
+ */
+function drawNarutoSharingan(
+  ctx: CanvasRenderingContext2D,
+  cx: number,
+  cy: number,
+  radius: number,
+  phase: number,
+  smoothEnergy: number
+) {
+  ctx.save();
+
+  // Crimson Red Iris Outer Glow
+  const irisR = radius * 0.86;
+  const iris = ctx.createRadialGradient(cx, cy, 0, cx, cy, irisR);
+  iris.addColorStop(0, '#ef4444');
+  iris.addColorStop(0.75, '#dc2626');
+  iris.addColorStop(1, '#7f1d1d');
+  ctx.fillStyle = iris;
+  ctx.beginPath();
+  ctx.arc(cx, cy, irisR, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Dark Outer Iris Perimeter Rim
+  ctx.beginPath();
+  ctx.arc(cx, cy, irisR, 0, Math.PI * 2);
+  ctx.strokeStyle = '#18181b';
+  ctx.lineWidth = 3;
+  ctx.stroke();
+
+  // Inner Black Concentric Ring where Tomoe reside
+  const tomoeTrackR = irisR * 0.54;
+  ctx.beginPath();
+  ctx.arc(cx, cy, tomoeTrackR, 0, Math.PI * 2);
+  ctx.strokeStyle = '#18181b';
+  ctx.lineWidth = 1.8;
+  ctx.stroke();
+
+  // Black Pupil in center
+  const pupilR = irisR * 0.22;
+  ctx.beginPath();
+  ctx.arc(cx, cy, pupilR, 0, Math.PI * 2);
+  ctx.fillStyle = '#09090b';
+  ctx.fill();
+
+  // 3 Curved Tomoe (巴) spaced at 120°
+  const tomoeRot = phase * 2.2;
+  for (let t = 0; t < 3; t++) {
+    const angle = tomoeRot + (t * Math.PI * 2) / 3;
+    const tx = cx + Math.cos(angle) * tomoeTrackR;
+    const ty = cy + Math.sin(angle) * tomoeTrackR;
+
+    ctx.save();
+    ctx.translate(tx, ty);
+    ctx.rotate(angle + Math.PI / 2);
+
+    // Tomoe round head
+    ctx.beginPath();
+    ctx.arc(0, 0, irisR * 0.11, 0, Math.PI * 2);
+    ctx.fillStyle = '#09090b';
+    ctx.fill();
+
+    // Curved tapering comma tail
+    ctx.beginPath();
+    ctx.moveTo(irisR * 0.08, 0);
+    ctx.quadraticCurveTo(irisR * 0.18, -irisR * 0.12, 0, -irisR * 0.26);
+    ctx.quadraticCurveTo(0, -irisR * 0.1, -irisR * 0.08, 0);
+    ctx.closePath();
+    ctx.fillStyle = '#09090b';
+    ctx.fill();
+
+    ctx.restore();
+  }
+
+  // Specular Reflection Arc
+  ctx.beginPath();
+  ctx.ellipse(cx - irisR * 0.28, cy - irisR * 0.32, irisR * 0.28, irisR * 0.14, -0.4, 0, Math.PI * 2);
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
+  ctx.fill();
+
+  ctx.restore();
+}
+
+/**
+ * N4. NARUTO MANGEKYO SHARINGAN & SUSANOO (万華鏡写輪眼・須佐能乎)
+ * Geometric Mangekyo pinwheel iris framed by ethereal spectral violet Susanoo ribcage flames.
+ */
+function drawNarutoMangekyoSusano(
+  ctx: CanvasRenderingContext2D,
+  cx: number,
+  cy: number,
+  radius: number,
+  phase: number,
+  smoothEnergy: number
+) {
+  ctx.save();
+
+  // Ethereal Purple Susanoo Chakra Aura & Flames
+  ctx.globalCompositeOperation = 'lighter';
+  const susanooAura = ctx.createRadialGradient(cx, cy, radius * 0.3, cx, cy, radius * 1.15);
+  susanooAura.addColorStop(0, `rgba(192, 132, 252, ${(0.45 + smoothEnergy * 0.35).toFixed(3)})`);
+  susanooAura.addColorStop(0.6, `rgba(147, 51, 234, ${(0.3 + smoothEnergy * 0.25).toFixed(3)})`);
+  susanooAura.addColorStop(1, 'rgba(126, 34, 206, 0)');
+  ctx.fillStyle = susanooAura;
+  ctx.beginPath();
+  ctx.arc(cx, cy, radius * 1.15, 0, Math.PI * 2);
+  ctx.fill();
+
+  // 4 Spectral Susanoo Rib Bones
+  for (let r = 0; r < 4; r++) {
+    const rAngle = (r * Math.PI) / 2 + Math.sin(phase * 2 + r) * 0.1;
+    const ribR = radius * (0.88 + smoothEnergy * 0.2);
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(rAngle);
+    ctx.beginPath();
+    ctx.moveTo(ribR * 0.3, -ribR * 0.7);
+    ctx.quadraticCurveTo(ribR * 0.85, -ribR * 0.5, ribR * 0.65, ribR * 0.65);
+    ctx.strokeStyle = 'rgba(216, 180, 254, 0.75)';
+    ctx.lineWidth = 2.8;
+    ctx.shadowColor = '#c084fc';
+    ctx.shadowBlur = 10;
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  ctx.globalCompositeOperation = 'source-over';
+
+  // Central Crimson Iris
+  const irisR = radius * 0.58;
+  ctx.beginPath();
+  ctx.arc(cx, cy, irisR, 0, Math.PI * 2);
+  ctx.fillStyle = '#dc2626';
+  ctx.fill();
+  ctx.strokeStyle = '#18181b';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // 3 Mangekyo Curved Pinwheel Blades (Sasuke / Itachi geometric pattern)
+  const pinRot = phase * 2.8;
+  for (let b = 0; b < 3; b++) {
+    const pAngle = pinRot + (b * Math.PI * 2) / 3;
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(pAngle);
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.quadraticCurveTo(irisR * 0.7, -irisR * 0.3, 0, -irisR * 0.95);
+    ctx.quadraticCurveTo(-irisR * 0.2, -irisR * 0.4, 0, 0);
+    ctx.fillStyle = '#09090b';
+    ctx.fill();
+    ctx.restore();
+  }
+
+  // Central Black Core
+  ctx.beginPath();
+  ctx.arc(cx, cy, irisR * 0.18, 0, Math.PI * 2);
+  ctx.fillStyle = '#09090b';
+  ctx.fill();
+
+  ctx.restore();
+}
+
+/**
+ * N5. NARUTO AKATSUKI RED CLOUD (暁の雲)
+ * Iconic crimson cloud with crisp white border, dark blood-chakra swirls, and drifting red embers.
+ */
+function drawNarutoAkatsukiCloud(
+  ctx: CanvasRenderingContext2D,
+  cx: number,
+  cy: number,
+  radius: number,
+  phase: number,
+  smoothEnergy: number
+) {
+  ctx.save();
+
+  // Crimson Aura
+  const aura = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius * 1.15);
+  aura.addColorStop(0, `rgba(220, 38, 38, ${(0.32 + smoothEnergy * 0.25).toFixed(3)})`);
+  aura.addColorStop(0.7, 'rgba(153, 27, 27, 0.15)');
+  aura.addColorStop(1, 'rgba(220, 38, 38, 0)');
+  ctx.fillStyle = aura;
+  ctx.beginPath();
+  ctx.arc(cx, cy, radius * 1.15, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Scale and translate for centered cloud
+  ctx.save();
+  ctx.translate(cx, cy);
+  const sc = (radius * 0.85 * (1 + Math.sin(phase * 1.5) * 0.04)) / 36;
+  ctx.scale(sc, sc);
+
+  // Path of the classic Akatsuki cloud
+  ctx.beginPath();
+  ctx.moveTo(-18, 8);
+  ctx.bezierCurveTo(-26, 8, -26, -4, -14, -6);
+  ctx.bezierCurveTo(-14, -16, 2, -18, 10, -8);
+  ctx.bezierCurveTo(22, -10, 24, 4, 16, 10);
+  ctx.bezierCurveTo(14, 16, -2, 16, -6, 12);
+  ctx.bezierCurveTo(-10, 16, -16, 14, -18, 8);
+  ctx.closePath();
+
+  // Crimson Red Fill with Gradient
+  const cloudGrad = ctx.createLinearGradient(0, -18, 0, 16);
+  cloudGrad.addColorStop(0, '#ef4444');
+  cloudGrad.addColorStop(0.5, '#dc2626');
+  cloudGrad.addColorStop(1, '#991b1b');
+  ctx.fillStyle = cloudGrad;
+  ctx.fill();
+
+  // Crisp White Outer Outline
+  ctx.strokeStyle = '#ffffff';
+  ctx.lineWidth = 2.4 / sc;
+  ctx.shadowColor = '#ffffff';
+  ctx.shadowBlur = 8;
+  ctx.stroke();
+
+  // Internal Stylized Cloud Swirl
+  ctx.beginPath();
+  ctx.arc(-2, 2, 5, 0.4, Math.PI * 1.6);
+  ctx.strokeStyle = '#ffffff';
+  ctx.lineWidth = 1.8 / sc;
+  ctx.stroke();
+
+  ctx.restore();
+
+  // Drifting Crimson Embers
+  for (let e = 0; e < 5; e++) {
+    const ePhase = phase * 2 + e * 1.4;
+    const ex = cx + Math.sin(ePhase) * radius * 0.65;
+    const ey = cy + radius * 0.5 - ((ePhase * 18) % (radius * 1.2));
+    ctx.beginPath();
+    ctx.arc(ex, ey, 1.8, 0, Math.PI * 2);
+    ctx.fillStyle = '#ef4444';
+    ctx.shadowColor = '#f87171';
+    ctx.shadowBlur = 6;
+    ctx.fill();
+  }
+
+  ctx.restore();
+}
+
+/**
+ * N6. NARUTO SHINOBI WHITE SMOKE CLOUD (変わり身の術・白煙)
+ * Stylized billowing white summon smoke with expanding swirls and curling wisps.
+ */
+function drawNarutoWhiteCloud(
+  ctx: CanvasRenderingContext2D,
+  cx: number,
+  cy: number,
+  radius: number,
+  phase: number,
+  smoothEnergy: number
+) {
+  ctx.save();
+
+  // Soft Silver-White Mist Aura
+  const aura = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius * 1.1);
+  aura.addColorStop(0, `rgba(248, 250, 252, ${(0.35 + smoothEnergy * 0.3).toFixed(3)})`);
+  aura.addColorStop(0.7, 'rgba(203, 213, 225, 0.15)');
+  aura.addColorStop(1, 'rgba(255, 255, 255, 0)');
+  ctx.fillStyle = aura;
+  ctx.beginPath();
+  ctx.arc(cx, cy, radius * 1.1, 0, Math.PI * 2);
+  ctx.fill();
+
+  // 5 Billowing Overlapping Smoke Lobes
+  const lobes = [
+    { x: 0, y: -0.25, r: 0.42 },
+    { x: -0.32, y: 0.05, r: 0.38 },
+    { x: 0.32, y: 0.08, r: 0.36 },
+    { x: -0.15, y: 0.28, r: 0.34 },
+    { x: 0.18, y: 0.26, r: 0.32 },
+  ];
+
+  for (let i = 0; i < lobes.length; i++) {
+    const l = lobes[i];
+    const osc = Math.sin(phase * 1.8 + i) * radius * 0.05 * (1 + smoothEnergy);
+    const lx = cx + l.x * radius + osc;
+    const ly = cy + l.y * radius - osc;
+    const lr = l.r * radius * (1 + smoothEnergy * 0.15);
+
+    const grad = ctx.createRadialGradient(lx - lr * 0.2, ly - lr * 0.25, 0, lx, ly, lr);
+    grad.addColorStop(0, '#ffffff');
+    grad.addColorStop(0.65, '#e2e8f0');
+    grad.addColorStop(1, '#94a3b8');
+
+    ctx.beginPath();
+    ctx.arc(lx, ly, lr, 0, Math.PI * 2);
+    ctx.fillStyle = grad;
+    ctx.fill();
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 1.2;
+    ctx.stroke();
+  }
+
+  // Curling Dissipation Smoke Spirals
+  ctx.beginPath();
+  ctx.arc(cx + radius * 0.35, cy - radius * 0.3, radius * 0.16, 0.2, Math.PI * 1.5);
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
+  ctx.lineWidth = 1.6;
+  ctx.stroke();
+
+  ctx.restore();
+}
+
+/* ==========================================================================
+ * MOTORSPORT & FORMULA 1 PACK
+ * ======================================================================== */
+
+/**
+ * F1. FORMULA 1 STEERING WHEEL TELEMETRY DASHBOARD
+ * Multi-segment LED rev shift lights (Green -> Amber -> Red -> Blue), digital gear readout [8], DRS indicator.
+ */
+function drawF1TelemetryHud(
+  ctx: CanvasRenderingContext2D,
+  cx: number,
+  cy: number,
+  radius: number,
+  phase: number,
+  smoothEnergy: number
+) {
+  ctx.save();
+
+  // Carbon-Fiber Bezel Plate
+  const boxW = radius * 1.65;
+  const boxH = radius * 1.35;
+  ctx.beginPath();
+  ctx.roundRect(cx - boxW / 2, cy - boxH / 2, boxW, boxH, 12);
+  ctx.fillStyle = '#09090b';
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // Top Shift Rev Lights: 15 LEDs (5 Green, 5 Amber, 5 Red)
+  const numLeds = 15;
+  const ledSpacing = (boxW - 24) / numLeds;
+  const activeCount = Math.round(smoothEnergy * (numLeds + 2));
+
+  for (let i = 0; i < numLeds; i++) {
+    const lx = cx - boxW / 2 + 12 + i * ledSpacing + ledSpacing / 2;
+    const ly = cy - boxH / 2 + 14;
+    const lit = i < activeCount;
+
+    let col = '#22c55e'; // Green 0..4
+    if (i >= 5 && i < 10) col = '#f59e0b'; // Amber 5..9
+    if (i >= 10) col = '#ef4444'; // Red 10..14
+
+    ctx.beginPath();
+    ctx.arc(lx, ly, 3, 0, Math.PI * 2);
+    ctx.fillStyle = lit ? col : 'rgba(255, 255, 255, 0.12)';
+    if (lit) {
+      ctx.shadowColor = col;
+      ctx.shadowBlur = 8;
+    } else {
+      ctx.shadowBlur = 0;
+    }
+    ctx.fill();
+  }
+
+  // Central Big Digital Gear Readout [8]
+  ctx.fillStyle = '#ffffff';
+  ctx.font = `bold ${Math.round(radius * 0.52)}px monospace`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('8', cx, cy + 4);
+
+  // Speed Counter "335 KM/H"
+  ctx.fillStyle = '#38bdf8';
+  ctx.font = `bold ${Math.round(radius * 0.18)}px monospace`;
+  const speed = 320 + Math.round(smoothEnergy * 28);
+  ctx.fillText(`${speed} KM/H`, cx, cy + boxH * 0.32);
+
+  // DRS Status Indicator
+  ctx.fillStyle = smoothEnergy > 0.4 ? '#22c55e' : 'rgba(255, 255, 255, 0.25)';
+  ctx.font = `bold ${Math.round(radius * 0.15)}px sans-serif`;
+  ctx.fillText('DRS ACTIVE', cx, cy - boxH * 0.14);
+
+  ctx.restore();
+}
+
+/**
+ * F2-F6. FORMULA 1 PIRELLI TYRE (Hard, Medium, Soft, Inter, Wet)
+ * Authentic rotating tyre sidewall ring with bold compound lettering (H, M, S, I, W).
+ */
+function drawF1Tyre(
   ctx: CanvasRenderingContext2D,
   cx: number,
   cy: number,
   radius: number,
   phase: number,
   smoothEnergy: number,
-  _curState: SiriOrbVisualState
+  compound: 'H' | 'M' | 'S' | 'I' | 'W'
 ) {
-  // Soft rosy aura bloom behind blossom
+  ctx.save();
+
+  const colors: Record<'H' | 'M' | 'S' | 'I' | 'W', { hex: string; name: string }> = {
+    H: { hex: '#ffffff', name: 'HARD' },
+    M: { hex: '#facc15', name: 'MEDIUM' },
+    S: { hex: '#ef4444', name: 'SOFT' },
+    I: { hex: '#22c55e', name: 'INTER' },
+    W: { hex: '#3b82f6', name: 'WET' },
+  };
+
+  const { hex, name } = colors[compound];
+
+  // Outer Black Tyre Tread
+  const tyreR = radius * 0.88;
+  ctx.beginPath();
+  ctx.arc(cx, cy, tyreR, 0, Math.PI * 2);
+  ctx.fillStyle = '#18181b';
+  ctx.fill();
+
+  // If Intermediate or Wet, draw grooved water dispersion tread marks
+  if (compound === 'I' || compound === 'W') {
+    const grooves = 16;
+    for (let g = 0; g < grooves; g++) {
+      const gAngle = phase * 3 + (g * Math.PI * 2) / grooves;
+      ctx.beginPath();
+      ctx.moveTo(cx + Math.cos(gAngle) * (tyreR - 8), cy + Math.sin(gAngle) * (tyreR - 8));
+      ctx.lineTo(cx + Math.cos(gAngle) * tyreR, cy + Math.sin(gAngle) * tyreR);
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+  }
+
+  // Colored Pirelli Compound Sidewall Ring
+  const sidewallR = tyreR * 0.72;
+  ctx.beginPath();
+  ctx.arc(cx, cy, sidewallR, 0, Math.PI * 2);
+  ctx.strokeStyle = hex;
+  ctx.shadowColor = hex;
+  ctx.shadowBlur = 10;
+  ctx.lineWidth = 4;
+  ctx.stroke();
+
+  // Rotating Wheel Rim in Center
+  const rimR = sidewallR * 0.58;
+  ctx.beginPath();
+  ctx.arc(cx, cy, rimR, 0, Math.PI * 2);
+  ctx.fillStyle = '#09090b';
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  // 5 Wheel Spokes
+  for (let sp = 0; sp < 5; sp++) {
+    const sAngle = phase * 4 + (sp * Math.PI * 2) / 5;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.lineTo(cx + Math.cos(sAngle) * rimR, cy + Math.sin(sAngle) * rimR);
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+  }
+
+  // Bold Compound Letter in Center
+  ctx.fillStyle = hex;
+  ctx.font = `bold ${Math.round(radius * 0.32)}px sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(compound, cx, cy);
+
+  ctx.restore();
+}
+
+/* ==========================================================================
+ * CELESTIAL PLANETS & SPACE PACK
+ * ======================================================================== */
+
+/**
+ * S1. SUN: Blazing Solar Sphere with Coronal Flares and Magnetic Loops
+ */
+function drawSpaceSun(
+  ctx: CanvasRenderingContext2D,
+  cx: number,
+  cy: number,
+  radius: number,
+  phase: number,
+  smoothEnergy: number
+) {
+  ctx.save();
+
+  // Solar Corona Glow
+  const corona = ctx.createRadialGradient(cx, cy, radius * 0.4, cx, cy, radius * 1.2);
+  corona.addColorStop(0, `rgba(254, 240, 138, ${(0.5 + smoothEnergy * 0.3).toFixed(3)})`);
+  corona.addColorStop(0.55, `rgba(249, 115, 22, ${(0.35 + smoothEnergy * 0.25).toFixed(3)})`);
+  corona.addColorStop(1, 'rgba(239, 68, 68, 0)');
+  ctx.fillStyle = corona;
+  ctx.beginPath();
+  ctx.arc(cx, cy, radius * 1.2, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Coronal Prominence Flares pulsing outwards
+  const flares = 8;
+  for (let f = 0; f < flares; f++) {
+    const fAngle = phase * 1.2 + (f * Math.PI * 2) / flares;
+    const fLen = radius * (0.8 + Math.sin(phase * 4 + f) * 0.25 * (1 + smoothEnergy));
+    ctx.beginPath();
+    ctx.moveTo(cx + Math.cos(fAngle) * (radius * 0.6), cy + Math.sin(fAngle) * (radius * 0.6));
+    ctx.lineTo(cx + Math.cos(fAngle) * fLen, cy + Math.sin(fAngle) * fLen);
+    ctx.strokeStyle = f % 2 === 0 ? '#facc15' : '#ef4444';
+    ctx.lineWidth = 2.5;
+    ctx.shadowColor = '#f97316';
+    ctx.shadowBlur = 10;
+    ctx.stroke();
+  }
+
+  // Brilliant Yellow Solar Core
+  const sunR = radius * 0.62;
+  const sunGrad = ctx.createRadialGradient(cx - sunR * 0.2, cy - sunR * 0.25, 0, cx, cy, sunR);
+  sunGrad.addColorStop(0, '#ffffff');
+  sunGrad.addColorStop(0.4, '#fde047');
+  sunGrad.addColorStop(0.8, '#f59e0b');
+  sunGrad.addColorStop(1, '#ea580c');
+  ctx.fillStyle = sunGrad;
+  ctx.beginPath();
+  ctx.arc(cx, cy, sunR, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.restore();
+}
+
+/**
+ * S2. EARTH: Blue Marble with Atmospheric Limb and Weather Clouds
+ */
+function drawSpaceEarth(
+  ctx: CanvasRenderingContext2D,
+  cx: number,
+  cy: number,
+  radius: number,
+  phase: number,
+  smoothEnergy: number
+) {
+  ctx.save();
+
+  const earthR = radius * 0.72;
+
+  // Atmospheric Blue Limb Ring
+  const atmo = ctx.createRadialGradient(cx, cy, earthR * 0.85, cx, cy, earthR * 1.15);
+  atmo.addColorStop(0, 'rgba(56, 189, 248, 0.45)');
+  atmo.addColorStop(1, 'rgba(56, 189, 248, 0)');
+  ctx.fillStyle = atmo;
+  ctx.beginPath();
+  ctx.arc(cx, cy, earthR * 1.15, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Azure Ocean Sphere
+  const ocean = ctx.createRadialGradient(cx - earthR * 0.25, cy - earthR * 0.25, 0, cx, cy, earthR);
+  ocean.addColorStop(0, '#38bdf8');
+  ocean.addColorStop(0.5, '#1d4ed8');
+  ocean.addColorStop(1, '#0f172a');
+  ctx.fillStyle = ocean;
+  ctx.beginPath();
+  ctx.arc(cx, cy, earthR, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Continents (Green/Amber landmasses moving slowly)
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(cx, cy, earthR, 0, Math.PI * 2);
+  ctx.clip();
+
+  const rotX = (phase * 8) % (earthR * 2);
+  ctx.fillStyle = '#10b981';
+  ctx.beginPath();
+  // Landmass 1
+  ctx.ellipse(cx - earthR + rotX, cy, earthR * 0.45, earthR * 0.28, 0.3, 0, Math.PI * 2);
+  ctx.fill();
+  // Landmass 2
+  ctx.beginPath();
+  ctx.ellipse(cx - earthR * 2 + rotX, cy + earthR * 0.15, earthR * 0.35, earthR * 0.22, -0.2, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Weather Cloud Swirls
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.72)';
+  ctx.beginPath();
+  ctx.ellipse(cx - earthR * 0.8 + rotX * 1.2, cy - earthR * 0.3, earthR * 0.5, earthR * 0.12, 0.1, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.restore();
+  ctx.restore();
+}
+
+/**
+ * S3. MOON: Silver Pearl Orb with Crater Mare Topography
+ */
+function drawSpaceMoon(
+  ctx: CanvasRenderingContext2D,
+  cx: number,
+  cy: number,
+  radius: number,
+  phase: number,
+  smoothEnergy: number
+) {
+  ctx.save();
+  const moonR = radius * 0.72;
+
+  // Silver Moonlight Glow
+  const glow = ctx.createRadialGradient(cx, cy, moonR * 0.8, cx, cy, moonR * 1.15);
+  glow.addColorStop(0, 'rgba(241, 245, 249, 0.35)');
+  glow.addColorStop(1, 'rgba(255, 255, 255, 0)');
+  ctx.fillStyle = glow;
+  ctx.beginPath();
+  ctx.arc(cx, cy, moonR * 1.15, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Lunar Surface Sphere
+  const surface = ctx.createRadialGradient(cx - moonR * 0.25, cy - moonR * 0.25, 0, cx, cy, moonR);
+  surface.addColorStop(0, '#ffffff');
+  surface.addColorStop(0.5, '#cbd5e1');
+  surface.addColorStop(1, '#64748b');
+  ctx.fillStyle = surface;
+  ctx.beginPath();
+  ctx.arc(cx, cy, moonR, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Shaded Craters
+  const craters = [
+    { x: -0.2, y: -0.25, r: 0.16 },
+    { x: 0.25, y: -0.1, r: 0.12 },
+    { x: -0.1, y: 0.25, r: 0.14 },
+    { x: 0.2, y: 0.28, r: 0.1 },
+  ];
+
+  for (const c of craters) {
+    const cxP = cx + c.x * moonR;
+    const cyP = cy + c.y * moonR;
+    const cR = c.r * moonR;
+    ctx.beginPath();
+    ctx.arc(cxP, cyP, cR, 0, Math.PI * 2);
+    ctx.fillStyle = '#94a3b8';
+    ctx.fill();
+    ctx.strokeStyle = '#64748b';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  }
+
+  ctx.restore();
+}
+
+/**
+ * S4. MARS: Crimson Red Planet with Dusty Surface and Polar Ice Cap
+ */
+function drawSpaceMars(
+  ctx: CanvasRenderingContext2D,
+  cx: number,
+  cy: number,
+  radius: number,
+  phase: number,
+  smoothEnergy: number
+) {
+  ctx.save();
+  const marsR = radius * 0.72;
+
+  // Rust-Orange Atmosphere Haze
+  const haze = ctx.createRadialGradient(cx, cy, marsR * 0.8, cx, cy, marsR * 1.15);
+  haze.addColorStop(0, 'rgba(234, 88, 12, 0.35)');
+  haze.addColorStop(1, 'rgba(234, 88, 12, 0)');
+  ctx.fillStyle = haze;
+  ctx.beginPath();
+  ctx.arc(cx, cy, marsR * 1.15, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Mars Red Surface
+  const surface = ctx.createRadialGradient(cx - marsR * 0.25, cy - marsR * 0.25, 0, cx, cy, marsR);
+  surface.addColorStop(0, '#f97316');
+  surface.addColorStop(0.5, '#c2410c');
+  surface.addColorStop(1, '#7c2d12');
+  ctx.fillStyle = surface;
+  ctx.beginPath();
+  ctx.arc(cx, cy, marsR, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Dark Canyon Surface Features
+  ctx.beginPath();
+  ctx.ellipse(cx, cy + marsR * 0.1, marsR * 0.55, marsR * 0.15, 0.1, 0, Math.PI * 2);
+  ctx.fillStyle = 'rgba(67, 20, 7, 0.45)';
+  ctx.fill();
+
+  // White Polar Ice Cap
+  ctx.beginPath();
+  ctx.ellipse(cx, cy - marsR * 0.88, marsR * 0.28, marsR * 0.1, 0, 0, Math.PI * 2);
+  ctx.fillStyle = '#ffffff';
+  ctx.fill();
+
+  ctx.restore();
+}
+
+/**
+ * S5. MILKY WAY: Deep Space Rotating Spiral Galaxy
+ */
+function drawSpaceMilkyway(
+  ctx: CanvasRenderingContext2D,
+  cx: number,
+  cy: number,
+  radius: number,
+  phase: number,
+  smoothEnergy: number
+) {
+  ctx.save();
+  ctx.globalCompositeOperation = 'lighter';
+
+  // Cosmic Dust Glow
+  const dust = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius * 1.15);
+  dust.addColorStop(0, `rgba(255, 255, 255, ${(0.6 + smoothEnergy * 0.3).toFixed(3)})`);
+  dust.addColorStop(0.35, 'rgba(192, 132, 252, 0.4)');
+  dust.addColorStop(0.7, 'rgba(56, 189, 248, 0.25)');
+  dust.addColorStop(1, 'rgba(99, 102, 241, 0)');
+  ctx.fillStyle = dust;
+  ctx.beginPath();
+  ctx.arc(cx, cy, radius * 1.15, 0, Math.PI * 2);
+  ctx.fill();
+
+  // 2 Majestic Logarithmic Spiral Galaxy Arms
+  const galRot = phase * 0.8;
+  const numArms = 2;
+  const starsPerArm = 24;
+
+  for (let a = 0; a < numArms; a++) {
+    const armBase = galRot + a * Math.PI;
+    for (let s = 1; s <= starsPerArm; s++) {
+      const frac = s / starsPerArm;
+      const angle = armBase + frac * Math.PI * 2.8;
+      const dist = frac * radius * 0.95;
+      const sx = cx + Math.cos(angle) * dist;
+      const sy = cy + Math.sin(angle) * dist * 0.65; // tilted perspective!
+
+      const starR = (1 - frac * 0.5) * (1.5 + Math.sin(phase * 3 + s) * 0.6);
+      ctx.beginPath();
+      ctx.arc(sx, sy, Math.max(1, starR), 0, Math.PI * 2);
+      ctx.fillStyle = frac < 0.3 ? '#ffffff' : frac < 0.7 ? '#c084fc' : '#38bdf8';
+      ctx.fill();
+    }
+  }
+
+  // Brilliant Galactic Center Core
+  const coreR = radius * (0.2 + smoothEnergy * 0.12);
+  const core = ctx.createRadialGradient(cx, cy, 0, cx, cy, coreR);
+  core.addColorStop(0, '#ffffff');
+  core.addColorStop(0.5, '#fef08a');
+  core.addColorStop(1, 'rgba(253, 224, 71, 0)');
+  ctx.fillStyle = core;
+  ctx.beginPath();
+  ctx.arc(cx, cy, coreR, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.restore();
+}
+
+/* ==========================================================================
+ * THEME STYLE KIT AVATARS
+ * ======================================================================== */
+
+function drawBotanicalSakura(
+  ctx: CanvasRenderingContext2D,
+  cx: number,
+  cy: number,
+  radius: number,
+  phase: number,
+  smoothEnergy: number
+) {
   const aura = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius * 1.15);
   aura.addColorStop(0, `rgba(244, 114, 182, ${(0.32 + smoothEnergy * 0.25).toFixed(3)})`);
   aura.addColorStop(0.65, `rgba(251, 113, 133, ${(0.15 + smoothEnergy * 0.15).toFixed(3)})`);
@@ -176,7 +1053,6 @@ function drawBotanicalSakura(
   const petalRadius = radius * (0.62 + smoothEnergy * 0.22);
   const rotation = phase * 0.45;
 
-  // Draw 5 Sakura petals
   for (let i = 0; i < 5; i++) {
     const angle = (i * (Math.PI * 2)) / 5 + rotation;
     const cosA = Math.cos(angle);
@@ -184,10 +1060,8 @@ function drawBotanicalSakura(
     const perpCos = -sinA;
     const perpSin = cosA;
 
-    // Outer notch coordinates
     const tipDist = petalRadius;
     const halfWidth = petalRadius * 0.54;
-
     const tipX = cx + cosA * tipDist;
     const tipY = cy + sinA * tipDist;
     const notchIndent = petalRadius * 0.16;
@@ -204,7 +1078,6 @@ function drawBotanicalSakura(
     ctx.beginPath();
     ctx.moveTo(cx, cy);
 
-    // Left curve to petal shoulder
     ctx.bezierCurveTo(
       cx + perpCos * (halfWidth * 0.3) + cosA * (tipDist * 0.35),
       cy + perpSin * (halfWidth * 0.3) + sinA * (tipDist * 0.35),
@@ -214,11 +1087,9 @@ function drawBotanicalSakura(
       leftY
     );
 
-    // Notched tip: Left lobe to center notch to right lobe
     ctx.quadraticCurveTo(tipX - perpCos * (halfWidth * 0.25), tipY - perpSin * (halfWidth * 0.25), notchCenterX, notchCenterY);
     ctx.quadraticCurveTo(tipX + perpCos * (halfWidth * 0.25), tipY + perpSin * (halfWidth * 0.25), rightX, rightY);
 
-    // Right curve back to center
     ctx.bezierCurveTo(
       rightX - cosA * (tipDist * 0.2),
       rightY - sinA * (tipDist * 0.2),
@@ -238,15 +1109,13 @@ function drawBotanicalSakura(
 
     ctx.fillStyle = petalGrad;
     ctx.fill();
-
-    // Petal delicate translucent highlight rim
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
     ctx.lineWidth = 1.2;
     ctx.stroke();
     ctx.restore();
   }
 
-  // Floral Center: Golden Stamen filaments radiating outward
+  // Golden Stamen filaments
   ctx.save();
   const stamenCount = 10;
   for (let s = 0; s < stamenCount; s++) {
@@ -262,7 +1131,6 @@ function drawBotanicalSakura(
     ctx.lineWidth = 1;
     ctx.stroke();
 
-    // Pollen anther dot
     ctx.beginPath();
     ctx.arc(sx, sy, 1.8, 0, Math.PI * 2);
     ctx.fillStyle = '#fef08a';
@@ -271,7 +1139,6 @@ function drawBotanicalSakura(
     ctx.fill();
   }
 
-  // Central Pistil Core
   const coreGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, petalRadius * 0.18);
   coreGrad.addColorStop(0, '#ffffff');
   coreGrad.addColorStop(0.5, '#f472b6');
@@ -282,7 +1149,7 @@ function drawBotanicalSakura(
   ctx.fill();
   ctx.restore();
 
-  // 4 Orbiting Petal Flakes spiraling gently around the flower
+  // Orbiting Petal Flakes
   for (let p = 0; p < 4; p++) {
     const orbAngle = phase * 0.9 + (p * Math.PI) / 2;
     const orbDist = radius * (0.82 + Math.sin(phase * 1.5 + p) * 0.15);
@@ -302,21 +1169,14 @@ function drawBotanicalSakura(
   }
 }
 
-/**
- * 2. CYBERPUNK HUD: Holographic Sci-Fi HUD Construct & Targeting Reticle
- * Pure transparent background, corner brackets, rotating segmented rings,
- * neon cyan/magenta glitch core, and sound-reactive laser targeting spikes.
- */
 function drawCyberpunkHud(
   ctx: CanvasRenderingContext2D,
   cx: number,
   cy: number,
   radius: number,
   phase: number,
-  smoothEnergy: number,
-  _curState: SiriOrbVisualState
+  smoothEnergy: number
 ) {
-  // Ambient Holographic Cyan/Magenta Bloom
   const halo = ctx.createRadialGradient(cx, cy, radius * 0.2, cx, cy, radius * 1.1);
   halo.addColorStop(0, `rgba(6, 182, 212, ${(0.22 + smoothEnergy * 0.25).toFixed(3)})`);
   halo.addColorStop(0.7, `rgba(236, 72, 153, ${(0.12 + smoothEnergy * 0.15).toFixed(3)})`);
@@ -327,71 +1187,50 @@ function drawCyberpunkHud(
   ctx.fill();
 
   ctx.save();
-
-  // 1. Four Sci-Fi Corner Targeting Brackets [  ]
   const brkDist = radius * 0.88;
   const brkLen = radius * 0.32;
-  const brkThick = 2;
   ctx.strokeStyle = '#22d3ee';
   ctx.shadowColor = '#06b6d4';
   ctx.shadowBlur = 8;
-  ctx.lineWidth = brkThick;
+  ctx.lineWidth = 2;
 
-  // Top-Left [
+  // 4 Corner Brackets
   ctx.beginPath();
   ctx.moveTo(cx - brkDist, cy - brkDist + brkLen);
   ctx.lineTo(cx - brkDist, cy - brkDist);
   ctx.lineTo(cx - brkDist + brkLen, cy - brkDist);
   ctx.stroke();
 
-  // Top-Right ]
   ctx.beginPath();
   ctx.moveTo(cx + brkDist - brkLen, cy - brkDist);
   ctx.lineTo(cx + brkDist, cy - brkDist);
   ctx.lineTo(cx + brkDist, cy - brkDist + brkLen);
   ctx.stroke();
 
-  // Bottom-Right ]
   ctx.beginPath();
   ctx.moveTo(cx + brkDist, cy + brkDist - brkLen);
   ctx.lineTo(cx + brkDist, cy + brkDist);
   ctx.lineTo(cx + brkDist - brkLen, cy + brkDist);
   ctx.stroke();
 
-  // Bottom-Left [
   ctx.beginPath();
   ctx.moveTo(cx - brkDist + brkLen, cy + brkDist);
   ctx.lineTo(cx - brkDist, cy + brkDist);
   ctx.lineTo(cx - brkDist, cy + brkDist - brkLen);
   ctx.stroke();
 
-  // 2. Rotating Segmented Outer Ring with Tick Marks
+  // Segmented Ring
   const ringR = radius * 0.72;
   ctx.lineWidth = 1.5;
   ctx.strokeStyle = '#06b6d4';
-  const segs = 4;
-  for (let s = 0; s < segs; s++) {
+  for (let s = 0; s < 4; s++) {
     const startA = phase * 1.2 + (s * Math.PI) / 2;
-    const arcLen = Math.PI * 0.32;
     ctx.beginPath();
-    ctx.arc(cx, cy, ringR, startA, startA + arcLen);
+    ctx.arc(cx, cy, ringR, startA, startA + Math.PI * 0.32);
     ctx.stroke();
   }
 
-  // Ticks along the ring
-  const numTicks = 12;
-  for (let t = 0; t < numTicks; t++) {
-    const tAngle = phase * 0.6 + (t * Math.PI * 2) / numTicks;
-    const innerR = ringR - (t % 3 === 0 ? 5 : 2.5);
-    ctx.beginPath();
-    ctx.moveTo(cx + Math.cos(tAngle) * innerR, cy + Math.sin(tAngle) * innerR);
-    ctx.lineTo(cx + Math.cos(tAngle) * (ringR + 2), cy + Math.sin(tAngle) * (ringR + 2));
-    ctx.strokeStyle = t % 3 === 0 ? '#facc15' : '#06b6d4';
-    ctx.lineWidth = 1;
-    ctx.stroke();
-  }
-
-  // 3. Counter-Rotating Inner Hexagon
+  // Inner Hexagon
   const hexR = radius * (0.42 + smoothEnergy * 0.16);
   ctx.save();
   ctx.translate(cx, cy);
@@ -412,7 +1251,7 @@ function drawCyberpunkHud(
   ctx.stroke();
   ctx.restore();
 
-  // 4. Central Pulsing Glitch Data Core & Targeting Crosshairs
+  // Core & Crosshairs
   const coreR = radius * (0.2 + smoothEnergy * 0.22);
   const coreGlow = ctx.createRadialGradient(cx, cy, 0, cx, cy, coreR);
   coreGlow.addColorStop(0, '#ffffff');
@@ -424,7 +1263,6 @@ function drawCyberpunkHud(
   ctx.arc(cx, cy, coreR, 0, Math.PI * 2);
   ctx.fill();
 
-  // Crosshair laser lines
   const crossLen = radius * (0.24 + smoothEnergy * 0.18);
   ctx.strokeStyle = '#facc15';
   ctx.lineWidth = 1.5;
@@ -438,10 +1276,6 @@ function drawCyberpunkHud(
   ctx.restore();
 }
 
-/**
- * 3. FLUENT FLUID: Windows 11 Floating Aurora Wave Ribbon
- * Borderless, fluid ribbons floating organically on transparent canvas.
- */
 function drawFluentFluid(
   ctx: CanvasRenderingContext2D,
   cx: number,
@@ -463,7 +1297,7 @@ function drawFluentFluid(
     ctx.beginPath();
     const steps = 40;
     for (let s = 0; s <= steps; s++) {
-      const u = (s / steps) * 2 - 1; // -1 .. 1
+      const u = (s / steps) * 2 - 1;
       const x = cx + u * radius * 0.95;
       const env = Math.cos((u * Math.PI) / 2);
       const y = cy + Math.sin(u * Math.PI * w.freq + phase * w.speed + w.offset) * w.amp * env;
@@ -478,7 +1312,6 @@ function drawFluentFluid(
     ctx.stroke();
   }
 
-  // Central brilliant caustic intersection hotspot
   const core = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius * (0.3 + smoothEnergy * 0.2));
   core.addColorStop(0, `rgba(255, 255, 255, ${(0.65 + smoothEnergy * 0.3).toFixed(3)})`);
   core.addColorStop(0.5, 'rgba(56, 189, 248, 0.4)');
@@ -491,9 +1324,6 @@ function drawFluentFluid(
   ctx.restore();
 }
 
-/**
- * 4. RETRO CASSETTE & VU: 80s Synthwave Dual Spools & Neon VU Meters
- */
 function drawRetroCassette(
   ctx: CanvasRenderingContext2D,
   cx: number,
@@ -503,8 +1333,6 @@ function drawRetroCassette(
   smoothEnergy: number
 ) {
   ctx.save();
-
-  // Amber/Magenta Synthwave Background Aura
   const aura = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius * 1.1);
   aura.addColorStop(0, `rgba(245, 158, 11, ${(0.25 + smoothEnergy * 0.2).toFixed(3)})`);
   aura.addColorStop(0.7, `rgba(236, 72, 153, ${(0.15 + smoothEnergy * 0.15).toFixed(3)})`);
@@ -517,19 +1345,16 @@ function drawRetroCassette(
   const spoolOffset = radius * 0.42;
   const spoolR = radius * 0.28;
 
-  // Draw 2 Spools (Left & Right)
   for (const dir of [-1, 1]) {
     const sx = cx + dir * spoolOffset;
     const sy = cy;
 
-    // Spool Outer Rim
     ctx.beginPath();
     ctx.arc(sx, sy, spoolR, 0, Math.PI * 2);
     ctx.strokeStyle = '#f59e0b';
     ctx.lineWidth = 2;
     ctx.stroke();
 
-    // 3 Rotating Spokes
     for (let sp = 0; sp < 3; sp++) {
       const spAngle = dir * phase * 2.5 + (sp * Math.PI * 2) / 3;
       ctx.beginPath();
@@ -540,14 +1365,12 @@ function drawRetroCassette(
       ctx.stroke();
     }
 
-    // Spool Hub
     ctx.beginPath();
     ctx.arc(sx, sy, spoolR * 0.35, 0, Math.PI * 2);
     ctx.fillStyle = '#ec4899';
     ctx.fill();
   }
 
-  // Connecting Tape Line with voice vibration
   ctx.beginPath();
   ctx.moveTo(cx - spoolOffset, cy + spoolR * 0.85);
   ctx.quadraticCurveTo(cx, cy + spoolR * 0.85 + Math.sin(phase * 8) * 4 * smoothEnergy, cx + spoolOffset, cy + spoolR * 0.85);
@@ -555,7 +1378,6 @@ function drawRetroCassette(
   ctx.lineWidth = 1.8;
   ctx.stroke();
 
-  // Radial VU Meter Segments around the top
   const vuSegments = 9;
   for (let v = 0; v < vuSegments; v++) {
     const vAngle = Math.PI + 0.35 + (v * (Math.PI - 0.7)) / (vuSegments - 1);
@@ -572,9 +1394,6 @@ function drawRetroCassette(
   ctx.restore();
 }
 
-/**
- * 5. PAPER INK ENSO: Zen Calligraphy Brush Enso & Vermilion Seal
- */
 function drawPaperInkEnso(
   ctx: CanvasRenderingContext2D,
   cx: number,
@@ -586,7 +1405,6 @@ function drawPaperInkEnso(
   ctx.save();
   const ensoR = radius * 0.74;
 
-  // Calligraphic brush enso circle with breathing stroke taper
   ctx.beginPath();
   const startAngle = -0.3 + Math.sin(phase * 0.5) * 0.1;
   const endAngle = Math.PI * 1.85 + Math.sin(phase * 0.6) * 0.12;
@@ -596,7 +1414,6 @@ function drawPaperInkEnso(
   ctx.lineCap = 'round';
   ctx.stroke();
 
-  // Inner organic ink wash
   const inkWash = ctx.createRadialGradient(cx, cy, 0, cx, cy, ensoR);
   inkWash.addColorStop(0, `rgba(220, 38, 38, ${(0.18 + smoothEnergy * 0.25).toFixed(3)})`);
   inkWash.addColorStop(0.65, 'rgba(68, 64, 60, 0.1)');
@@ -606,7 +1423,6 @@ function drawPaperInkEnso(
   ctx.arc(cx, cy, ensoR, 0, Math.PI * 2);
   ctx.fill();
 
-  // Vermilion Cinnabar Stamp Seal [印] at center
   const stampSize = radius * (0.28 + smoothEnergy * 0.1);
   ctx.save();
   ctx.translate(cx, cy);
@@ -616,7 +1432,6 @@ function drawPaperInkEnso(
   ctx.shadowBlur = 8;
   ctx.fillRect(-stampSize / 2, -stampSize / 2, stampSize, stampSize);
 
-  // Inked character outline inside stamp
   ctx.strokeStyle = '#ffffff';
   ctx.lineWidth = 1.4;
   ctx.strokeRect(-stampSize * 0.38, -stampSize * 0.38, stampSize * 0.76, stampSize * 0.76);
@@ -625,9 +1440,6 @@ function drawPaperInkEnso(
   ctx.restore();
 }
 
-/**
- * 6. MOTORSPORT GT: High-RPM Tachometer Redline & Turbo Turbine
- */
 function drawMotorsportGt(
   ctx: CanvasRenderingContext2D,
   cx: number,
@@ -637,20 +1449,16 @@ function drawMotorsportGt(
   smoothEnergy: number
 ) {
   ctx.save();
-
-  // Tachometer 270° gauge arc
   const gaugeR = radius * 0.8;
   const startA = Math.PI * 0.75;
   const endA = Math.PI * 2.25;
 
-  // Track arc
   ctx.beginPath();
   ctx.arc(cx, cy, gaugeR, startA, endA);
   ctx.strokeStyle = 'rgba(255, 255, 255, 0.18)';
   ctx.lineWidth = 4;
   ctx.stroke();
 
-  // Redline section
   ctx.beginPath();
   ctx.arc(cx, cy, gaugeR, Math.PI * 1.85, endA);
   ctx.strokeStyle = '#ef4444';
@@ -659,7 +1467,6 @@ function drawMotorsportGt(
   ctx.lineWidth = 5;
   ctx.stroke();
 
-  // Needle responding to smoothEnergy
   const needleAngle = startA + (endA - startA) * Math.min(1, Math.max(0, 0.15 + smoothEnergy * 0.85));
   ctx.beginPath();
   ctx.moveTo(cx, cy);
@@ -671,7 +1478,6 @@ function drawMotorsportGt(
   ctx.shadowBlur = 10;
   ctx.stroke();
 
-  // Center Turbine Hub with rotating blades
   const hubR = radius * 0.32;
   ctx.beginPath();
   ctx.arc(cx, cy, hubR, 0, Math.PI * 2);
@@ -691,9 +1497,6 @@ function drawMotorsportGt(
   ctx.restore();
 }
 
-/**
- * 7. COZY WOODLAND: Organic Leaf & Swirling Fireflies
- */
 function drawCozyWoodland(
   ctx: CanvasRenderingContext2D,
   cx: number,
@@ -703,8 +1506,6 @@ function drawCozyWoodland(
   smoothEnergy: number
 ) {
   ctx.save();
-
-  // Soft Emerald Aura
   const aura = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius * 1.1);
   aura.addColorStop(0, `rgba(16, 185, 129, ${(0.28 + smoothEnergy * 0.25).toFixed(3)})`);
   aura.addColorStop(0.7, `rgba(245, 158, 11, ${(0.14 + smoothEnergy * 0.15).toFixed(3)})`);
@@ -714,7 +1515,6 @@ function drawCozyWoodland(
   ctx.arc(cx, cy, radius * 1.1, 0, Math.PI * 2);
   ctx.fill();
 
-  // Floating Curved Leaf
   const leafR = radius * (0.65 + smoothEnergy * 0.15);
   ctx.save();
   ctx.translate(cx, cy);
@@ -735,25 +1535,19 @@ function drawCozyWoodland(
   ctx.fillStyle = leafGrad;
   ctx.fill();
 
-  // Center Vein
   ctx.beginPath();
   ctx.moveTo(0, -leafR * 0.85);
   ctx.lineTo(0, leafR * 0.8);
   ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
   ctx.lineWidth = 1.2;
   ctx.stroke();
-
   ctx.restore();
 
-  // Swirling Fireflies
   for (let f = 0; f < 5; f++) {
     const fAngle = phase * 1.2 + (f * Math.PI * 2) / 5;
     const fDist = radius * (0.75 + Math.sin(phase * 2 + f) * 0.18);
-    const fx = cx + Math.cos(fAngle) * fDist;
-    const fy = cy + Math.sin(fAngle) * fDist;
-
     ctx.beginPath();
-    ctx.arc(fx, fy, 2, 0, Math.PI * 2);
+    ctx.arc(cx + Math.cos(fAngle) * fDist, cy + Math.sin(fAngle) * fDist, 2, 0, Math.PI * 2);
     ctx.fillStyle = '#fde047';
     ctx.shadowColor = '#eab308';
     ctx.shadowBlur = 8;
@@ -763,9 +1557,6 @@ function drawCozyWoodland(
   ctx.restore();
 }
 
-/**
- * 8. CUPERTINO SILK: Liquid Pearlescent Knot
- */
 function drawCupertinoSilk(
   ctx: CanvasRenderingContext2D,
   cx: number,
@@ -777,9 +1568,8 @@ function drawCupertinoSilk(
   ctx.save();
   ctx.globalCompositeOperation = 'lighter';
 
-  const loops = 3;
-  for (let l = 0; l < loops; l++) {
-    const lPhase = phase * 1.1 + (l * Math.PI * 2) / loops;
+  for (let l = 0; l < 3; l++) {
+    const lPhase = phase * 1.1 + (l * Math.PI * 2) / 3;
     ctx.beginPath();
     const steps = 36;
     for (let s = 0; s <= steps; s++) {
@@ -801,9 +1591,6 @@ function drawCupertinoSilk(
   ctx.restore();
 }
 
-/**
- * 9. SIRI MULTI-RIBBON: Pure Transparent Canvas (NO Black Circle!)
- */
 function drawSiriRibbons(
   ctx: CanvasRenderingContext2D,
   cx: number,
@@ -814,9 +1601,8 @@ function drawSiriRibbons(
   ribbons: RibbonLayerSpec[],
   orbColors: ReturnType<typeof resolveOrbThemeColors>,
   lowPowerEco: boolean,
-  dpr: number
+  _dpr: number
 ) {
-  // Soft External Aura
   const outerHalo = ctx.createRadialGradient(cx, cy, radius * 0.45, cx, cy, radius * 1.1);
   outerHalo.addColorStop(0, 'rgba(255, 255, 255, 0)');
   outerHalo.addColorStop(0.75, `${orbColors.haloMid}${(0.22 + smoothEnergy * 0.22).toFixed(3)})`);
@@ -826,7 +1612,6 @@ function drawSiriRibbons(
   ctx.arc(cx, cy, radius * 1.1, 0, Math.PI * 2);
   ctx.fill();
 
-  // Additive 3D Parametric Silk Ribbons on Transparent Background
   ctx.save();
   ctx.globalCompositeOperation = 'lighter';
 
@@ -853,7 +1638,6 @@ function drawSiriRibbons(
 
       const rx = rawX * cosZ - waveY * sinZ;
       const ry = (rawX * sinZ + waveY * cosZ) * cosX;
-
       pts.push({ x: cx + rx, y: cy + ry });
     }
 
@@ -878,9 +1662,7 @@ function drawSiriRibbons(
         const yc = (pts[k].y + pts[k + 1].y) * 0.5;
         ctx.quadraticCurveTo(pts[k].x, pts[k].y, xc, yc);
       }
-      const last = pts[pts.length - 1];
-      ctx.lineTo(last.x, last.y);
-
+      ctx.lineTo(pts[pts.length - 1].x, pts[pts.length - 1].y);
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
       ctx.lineWidth = Math.max(1, baseThick * p.mult);
@@ -889,7 +1671,6 @@ function drawSiriRibbons(
     }
   }
 
-  // Central Luminous Caustic Bloom
   const coreRadius = radius * (0.44 + smoothEnergy * 0.22);
   const coreGlow = ctx.createRadialGradient(
     cx + Math.sin(phase * 1.3) * radius * 0.08,
@@ -909,7 +1690,6 @@ function drawSiriRibbons(
 
   ctx.restore();
 
-  // Delicate Specular Glass Arc (Transparent, no solid border)
   ctx.save();
   const specGrad = ctx.createLinearGradient(
     cx - radius * 0.5,
@@ -922,31 +1702,15 @@ function drawSiriRibbons(
   specGrad.addColorStop(1, 'rgba(255, 255, 255, 0)');
   ctx.fillStyle = specGrad;
   ctx.beginPath();
-  ctx.ellipse(
-    cx - radius * 0.14,
-    cy - radius * 0.52,
-    radius * 0.56,
-    radius * 0.28,
-    -0.24,
-    0,
-    Math.PI * 2
-  );
+  ctx.ellipse(cx - radius * 0.14, cy - radius * 0.52, radius * 0.56, radius * 0.28, -0.24, 0, Math.PI * 2);
   ctx.fill();
   ctx.restore();
 }
 
 /**
- * Authentic 60fps Canvas2D Astra AI Assistant Manifestations:
- * - botanical_sakura: Floating 5-petal glowing cherry blossom flower with stamen filaments & orbiting petal flakes
- * - cyberpunk_hud: Sci-fi holographic HUD construct with targeting reticle, segmented rotating rings & glitch laser core
- * - fluent_fluid: Floating pure aurora ribbon wave with borderless transparency
- * - retro_cassette_vu: 80s synthwave cassette spools & dancing neon VU meters
- * - paper_ink_enso: Zen calligraphy sumi-e ink enso & vermilion seal
- * - motorsport_gt: High-RPM tachometer redline & turbo turbine
- * - cozy_woodland: Organic forest leaf & swirling fireflies
- * - cupertino_silk: Liquid pearlescent silk knot
- * - siri_rainbow / celestial / cyber_plasma / neon_pulse / emerald / pearl: Fluid silk ribbons
- * ALL rendered on a 100% transparent canvas with ZERO black background circles!
+ * Master Astra AI Assistant 60fps Canvas2D Manifestations:
+ * - 100% transparent backgrounds with ZERO black circles or bounding edges.
+ * - Categorized packs: Naruto Jutsu, Motorsport & F1, Celestial Cosmos, Style Kits, and Apple Siri Orbs.
  */
 export const AstraSiriOrbCanvas: React.FC<AstraSiriOrbCanvasProps> = ({
   state,
@@ -1015,15 +1779,76 @@ export const AstraSiriOrbCanvas: React.FC<AstraSiriOrbCanvasProps> = ({
       const cy = h * 0.5;
       const radius = Math.min(w, h) * 0.46;
 
-      // 100% TRANSPARENT CANVAS CLEAR - Zero black background or outline
+      // 100% TRANSPARENT CANVAS CLEAR
       ctx.clearRect(0, 0, w, h);
 
       switch (curStyle) {
+        // Naruto Shinobi & Jutsu
+        case 'naruto_rasengan':
+          drawNarutoRasengan(ctx, cx, cy, radius, phase, smoothEnergy);
+          break;
+        case 'naruto_rasenshuriken':
+          drawNarutoRasenshuriken(ctx, cx, cy, radius, phase, smoothEnergy);
+          break;
+        case 'naruto_sharingan':
+          drawNarutoSharingan(ctx, cx, cy, radius, phase, smoothEnergy);
+          break;
+        case 'naruto_mangekyo_susano':
+          drawNarutoMangekyoSusano(ctx, cx, cy, radius, phase, smoothEnergy);
+          break;
+        case 'naruto_akatsuki_cloud':
+          drawNarutoAkatsukiCloud(ctx, cx, cy, radius, phase, smoothEnergy);
+          break;
+        case 'naruto_white_cloud':
+          drawNarutoWhiteCloud(ctx, cx, cy, radius, phase, smoothEnergy);
+          break;
+
+        // Motorsport & Formula 1
+        case 'f1_telemetry_hud':
+          drawF1TelemetryHud(ctx, cx, cy, radius, phase, smoothEnergy);
+          break;
+        case 'f1_tyre_soft':
+          drawF1Tyre(ctx, cx, cy, radius, phase, smoothEnergy, 'S');
+          break;
+        case 'f1_tyre_medium':
+          drawF1Tyre(ctx, cx, cy, radius, phase, smoothEnergy, 'M');
+          break;
+        case 'f1_tyre_hard':
+          drawF1Tyre(ctx, cx, cy, radius, phase, smoothEnergy, 'H');
+          break;
+        case 'f1_tyre_inter':
+          drawF1Tyre(ctx, cx, cy, radius, phase, smoothEnergy, 'I');
+          break;
+        case 'f1_tyre_wet':
+          drawF1Tyre(ctx, cx, cy, radius, phase, smoothEnergy, 'W');
+          break;
+        case 'motorsport_gt':
+          drawMotorsportGt(ctx, cx, cy, radius, phase, smoothEnergy);
+          break;
+
+        // Celestial Planets & Space
+        case 'space_sun':
+          drawSpaceSun(ctx, cx, cy, radius, phase, smoothEnergy);
+          break;
+        case 'space_earth':
+          drawSpaceEarth(ctx, cx, cy, radius, phase, smoothEnergy);
+          break;
+        case 'space_moon':
+          drawSpaceMoon(ctx, cx, cy, radius, phase, smoothEnergy);
+          break;
+        case 'space_mars':
+          drawSpaceMars(ctx, cx, cy, radius, phase, smoothEnergy);
+          break;
+        case 'space_milkyway':
+          drawSpaceMilkyway(ctx, cx, cy, radius, phase, smoothEnergy);
+          break;
+
+        // Themed Style Kits
         case 'botanical_sakura':
-          drawBotanicalSakura(ctx, cx, cy, radius, phase, smoothEnergy, curState);
+          drawBotanicalSakura(ctx, cx, cy, radius, phase, smoothEnergy);
           break;
         case 'cyberpunk_hud':
-          drawCyberpunkHud(ctx, cx, cy, radius, phase, smoothEnergy, curState);
+          drawCyberpunkHud(ctx, cx, cy, radius, phase, smoothEnergy);
           break;
         case 'fluent_fluid':
           drawFluentFluid(ctx, cx, cy, radius, phase, smoothEnergy);
@@ -1034,15 +1859,14 @@ export const AstraSiriOrbCanvas: React.FC<AstraSiriOrbCanvasProps> = ({
         case 'paper_ink_enso':
           drawPaperInkEnso(ctx, cx, cy, radius, phase, smoothEnergy);
           break;
-        case 'motorsport_gt':
-          drawMotorsportGt(ctx, cx, cy, radius, phase, smoothEnergy);
-          break;
         case 'cozy_woodland':
           drawCozyWoodland(ctx, cx, cy, radius, phase, smoothEnergy);
           break;
         case 'cupertino_silk':
           drawCupertinoSilk(ctx, cx, cy, radius, phase, smoothEnergy);
           break;
+
+        // Classic Apple Siri Shaders
         default: {
           const ribbons = resolveRibbonSpecs(curStyle);
           const orbColors = resolveOrbThemeColors(curStyle);

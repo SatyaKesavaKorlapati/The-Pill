@@ -34,6 +34,7 @@ import {
   AiAssistantModelId,
   AppearanceMaterial,
   AstraDisplayMode,
+  AstraOrbStyle,
   BuiltinLedgeTab,
   ClipboardGroupBy,
   ClipboardLayoutMode,
@@ -81,6 +82,7 @@ import {
 } from '../utils/themeAndSliders';
 import { AnimatedBatterySymbol } from './AnimatedBatterySymbol';
 import { AstraSiriOrbCanvas } from './AstraSiriOrbCanvas';
+import { ThemedIcon } from './ThemedIcon';
 import { ALL_CONTROL_TILES } from './ControlAndMonitorPanels';
 import { CustomPopdown, PopdownOption } from './CustomPopdown';
 import { FluidEffectSlider } from './FluidEffectSlider';
@@ -344,6 +346,277 @@ const SLIDER_STYLE_CATALOG: {
   },
 ];
 
+export type AstraCategory = 'all' | 'naruto' | 'motorsport' | 'cosmos' | 'style_kits' | 'siri_orbs';
+
+export interface AstraOrbDefinition {
+  id: AstraOrbStyle;
+  name: string;
+  category: 'naruto' | 'motorsport' | 'cosmos' | 'style_kits' | 'siri_orbs';
+  desc: string;
+  hex: string;
+  tag?: string;
+}
+
+export const ALL_ASTRA_ORB_DEFINITIONS: AstraOrbDefinition[] = [
+  // --- Naruto Shinobi & Jutsu Pack ---
+  {
+    id: 'naruto_rasengan',
+    name: 'Rasengan (Spiraling Sphere)',
+    category: 'naruto',
+    desc: 'Dense high-velocity swirling chakra spheres with turquoise orbital trails and micro-core',
+    hex: '#38bdf8',
+    tag: 'Chakra Jutsu',
+  },
+  {
+    id: 'naruto_rasenshuriken',
+    name: 'Wind Style: Rasenshuriken',
+    category: 'naruto',
+    desc: '4 rotating aerodynamic wind-blade scythes humming around ultra-compressed chakra core',
+    hex: '#67e8f9',
+    tag: 'Wind Blade',
+  },
+  {
+    id: 'naruto_sharingan',
+    name: 'Sharingan (3-Tomoe Ocular)',
+    category: 'naruto',
+    desc: 'Crimson iris with triple spinning black tomoe seals and pupil tracking aura',
+    hex: '#dc2626',
+    tag: 'Dojutsu',
+  },
+  {
+    id: 'naruto_mangekyo_susano',
+    name: 'Mangekyo & Susanoo Ribcage',
+    category: 'naruto',
+    desc: 'Pinwheel kaleidoscope Mangekyo with flaming violet Susanoo ethereal ribcage aura',
+    hex: '#a855f7',
+    tag: 'Ethereal Armor',
+  },
+  {
+    id: 'naruto_akatsuki_cloud',
+    name: 'Akatsuki Crimson Cloud',
+    category: 'naruto',
+    desc: 'Iconic stylized crimson cloud with crisp white border and drifting red ember particles',
+    hex: '#ef4444',
+    tag: 'Rogue Shinobi',
+  },
+  {
+    id: 'naruto_white_cloud',
+    name: 'Shinobi Replacement Smoke',
+    category: 'naruto',
+    desc: 'Volumetric puffy white ninja substitution smoke puff with drifting vapor rings',
+    hex: '#e2e8f0',
+    tag: 'Substitution',
+  },
+
+  // --- Motorsport & Formula 1 Pack ---
+  {
+    id: 'f1_telemetry_hud',
+    name: 'F1 Steering Telemetry HUD',
+    category: 'motorsport',
+    desc: 'Full F1 carbon cockpit HUD with shift rev LEDs (Green/Amber/Red/Blue) and gear [8]',
+    hex: '#ef4444',
+    tag: 'Formula 1',
+  },
+  {
+    id: 'f1_tyre_soft',
+    name: 'Pirelli P-Zero Red [S] Soft',
+    category: 'motorsport',
+    desc: 'F1 Red Soft compound slick tyre with spinning directional rim and Pirelli lettering',
+    hex: '#ef4444',
+    tag: 'Compound C5',
+  },
+  {
+    id: 'f1_tyre_medium',
+    name: 'Pirelli P-Zero Yellow [M] Med',
+    category: 'motorsport',
+    desc: 'F1 Yellow Medium compound balanced slick tyre with high-spin speed rings',
+    hex: '#eab308',
+    tag: 'Compound C3',
+  },
+  {
+    id: 'f1_tyre_hard',
+    name: 'Pirelli P-Zero White [H] Hard',
+    category: 'motorsport',
+    desc: 'F1 White Hard compound endurance slick tyre with titanium hub bolt',
+    hex: '#f8fafc',
+    tag: 'Compound C1',
+  },
+  {
+    id: 'f1_tyre_inter',
+    name: 'Cinturato Green [I] Inter',
+    category: 'motorsport',
+    desc: 'F1 Intermediate damp weather tyre with visible water evacuation tread sipes',
+    hex: '#22c55e',
+    tag: 'Intermediate',
+  },
+  {
+    id: 'f1_tyre_wet',
+    name: 'Cinturato Blue [W] Full Wet',
+    category: 'motorsport',
+    desc: 'F1 Extreme Rain tyre with deep grooved monsoon aquachannel grooves',
+    hex: '#3b82f6',
+    tag: 'Monsoon Wet',
+  },
+  {
+    id: 'motorsport_gt',
+    name: 'Motorsport GT Tachometer',
+    category: 'motorsport',
+    desc: 'Automotive 9000-RPM redline sweep arc, twin-scroll turbo turbine and carbon face',
+    hex: '#f97316',
+    tag: 'GT Endurance',
+  },
+
+  // --- Celestial Planets & Cosmos Pack ---
+  {
+    id: 'space_sun',
+    name: 'Sol (Solar Prominence)',
+    category: 'cosmos',
+    desc: 'Turbulent thermonuclear plasma surface with coronal prominence magnetic loops',
+    hex: '#f59e0b',
+    tag: 'Star G2V',
+  },
+  {
+    id: 'space_earth',
+    name: 'Terra (Blue Marble Earth)',
+    category: 'cosmos',
+    desc: 'Deep blue oceans, lush green continents, atmospheric haze, and swirling white clouds',
+    hex: '#06b6d4',
+    tag: 'Habitable Zone',
+  },
+  {
+    id: 'space_moon',
+    name: 'Luna (Lunar Orb)',
+    category: 'cosmos',
+    desc: 'Silver-grey lunar highlands, maria basalts, impact craters, and soft moonlight halo',
+    hex: '#cbd5e1',
+    tag: 'Satellite',
+  },
+  {
+    id: 'space_mars',
+    name: 'Ares (Red Planet Mars)',
+    category: 'cosmos',
+    desc: 'Iron oxide red desert dunes, bright polar ice cap, and drifting dust storms',
+    hex: '#ea580c',
+    tag: 'Terrestrial',
+  },
+  {
+    id: 'space_milkyway',
+    name: 'Milky Way Spiral Galaxy',
+    category: 'cosmos',
+    desc: 'Dual spiral stellar arms with supermassive luminous core and star dust particles',
+    hex: '#8b5cf6',
+    tag: 'Spiral Galaxy',
+  },
+
+  // --- Style Kits & Bespoke Themes ---
+  {
+    id: 'botanical_sakura',
+    name: 'Botanical Sakura Blossom',
+    category: 'style_kits',
+    desc: 'Floating 5-petal cherry blossom with golden stamen filaments and orbital drifting petals',
+    hex: '#f472b6',
+    tag: 'Flora',
+  },
+  {
+    id: 'cyberpunk_hud',
+    name: 'Cyberpunk Sci-Fi Reticle',
+    category: 'style_kits',
+    desc: 'Holographic targeting brackets, rotating telemetry rings and pulsing laser core',
+    hex: '#22d3ee',
+    tag: 'Sci-Fi HUD',
+  },
+  {
+    id: 'fluent_fluid',
+    name: 'Fluent Aurora Wave',
+    category: 'style_kits',
+    desc: 'Border-free organic aurora ribbon wave floating over transparent canvas',
+    hex: '#38bdf8',
+    tag: 'Windows 11',
+  },
+  {
+    id: 'retro_cassette_vu',
+    name: 'Retro Cassette Deck',
+    category: 'style_kits',
+    desc: 'Dual spinning analog tape spools with reactive neon VU volume meters',
+    hex: '#f59e0b',
+    tag: '80s Analog',
+  },
+  {
+    id: 'paper_ink_enso',
+    name: 'Paper & Sumi-e Enso',
+    category: 'style_kits',
+    desc: 'Zen calligraphy enso ink circle with vermilion cinnabar seal imprint',
+    hex: '#dc2626',
+    tag: 'Zen Ink',
+  },
+  {
+    id: 'cozy_woodland',
+    name: 'Woodland Nature Leaf',
+    category: 'style_kits',
+    desc: 'Lush organic emerald forest leaf with floating luminescent fireflies',
+    hex: '#10b981',
+    tag: 'Cozy Flora',
+  },
+  {
+    id: 'cupertino_silk',
+    name: 'Cupertino Liquid Silk',
+    category: 'style_kits',
+    desc: 'Pearlescent Möbius ribbon knot with fluid caustic light reflections',
+    hex: '#818cf8',
+    tag: 'Liquid Glass',
+  },
+
+  // --- Classic Fluid Siri Shaders ---
+  {
+    id: 'siri_rainbow',
+    name: 'Apple Siri Rainbow',
+    category: 'siri_orbs',
+    desc: 'Apple iridescent silk bands with prismatic spectrum aura and fluid morphing',
+    hex: '#38bdf8',
+    tag: 'Apple Siri',
+  },
+  {
+    id: 'celestial_nebula',
+    name: 'Interstellar Nebula',
+    category: 'siri_orbs',
+    desc: 'Deep violet interstellar cosmic dust with spiral plasma filaments',
+    hex: '#a855f7',
+    tag: 'Deep Cosmic',
+  },
+  {
+    id: 'cyber_plasma',
+    name: 'Cyber Magenta Plasma',
+    category: 'siri_orbs',
+    desc: 'Electric hot magenta with high-frequency neon energy arcs and plasma core',
+    hex: '#f43f5e',
+    tag: 'High Energy',
+  },
+  {
+    id: 'neon_pulse',
+    name: 'Neon Lime Pulse',
+    category: 'siri_orbs',
+    desc: 'Vibrant acoustic lime-cyan laser pulse with acoustic reactive wavelets',
+    hex: '#84cc16',
+    tag: 'Reactive',
+  },
+  {
+    id: 'emerald_solar',
+    name: 'Emerald Solar Flare',
+    category: 'siri_orbs',
+    desc: 'Radiant mint and emerald coronal flares with warm energetic core',
+    hex: '#10b981',
+    tag: 'Solar Flare',
+  },
+  {
+    id: 'minimal_pearl',
+    name: 'Minimal Titanium Pearl',
+    category: 'siri_orbs',
+    desc: 'Clean monochrome titanium sheen with pearl white bloom and specular glint',
+    hex: '#e2e8f0',
+    tag: 'Monochrome',
+  },
+];
+
 export const FullSettingsView: React.FC<FullSettingsViewProps> = ({
   preferences,
   onUpdatePreferences,
@@ -353,6 +626,7 @@ export const FullSettingsView: React.FC<FullSettingsViewProps> = ({
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [recordingShortcut, setRecordingShortcut] = useState(false);
   const [recordingAgentShortcut, setRecordingAgentShortcut] = useState(false);
+  const [astraCategoryFilter, setAstraCategoryFilter] = useState<AstraCategory>('all');
 
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [testBounce, setTestBounce] = useState(false);
@@ -1222,27 +1496,13 @@ export const FullSettingsView: React.FC<FullSettingsViewProps> = ({
                       </div>
 
                       {/* Interactive Orb Style Selector Pills */}
-                      <div className="flex flex-wrap items-center justify-between gap-1.5 pt-1">
-                        <span className="text-[11px] font-mono text-slate-400">Orb Styles:</span>
-                        <div className="flex flex-wrap items-center gap-1.5">
-                          {(
-                            [
-                              { id: 'siri_rainbow', label: 'Siri Rainbow', color: '#38bdf8' },
-                              { id: 'cyberpunk_hud', label: 'Cyberpunk HUD', color: '#22d3ee' },
-                              { id: 'botanical_sakura', label: 'Botanical Sakura', color: '#f472b6' },
-                              { id: 'fluent_fluid', label: 'Fluent Aurora', color: '#38bdf8' },
-                              { id: 'retro_cassette_vu', label: 'Retro Cassette', color: '#f59e0b' },
-                              { id: 'paper_ink_enso', label: 'Paper Ink Enso', color: '#dc2626' },
-                              { id: 'motorsport_gt', label: 'Motorsport GT', color: '#ef4444' },
-                              { id: 'cozy_woodland', label: 'Woodland Leaf', color: '#10b981' },
-                              { id: 'cupertino_silk', label: 'Cupertino Silk', color: '#818cf8' },
-                              { id: 'celestial_nebula', label: 'Celestial Nebula', color: '#a855f7' },
-                              { id: 'cyber_plasma', label: 'Cyber Plasma', color: '#f43f5e' },
-                              { id: 'neon_pulse', label: 'Neon Pulse', color: '#84cc16' },
-                              { id: 'emerald_solar', label: 'Emerald Solar', color: '#10b981' },
-                              { id: 'minimal_pearl', label: 'Minimal Pearl', color: '#e2e8f0' },
-                            ] as const
-                          ).map((st) => {
+                      <div className="flex flex-col gap-1.5 pt-1">
+                        <div className="flex items-center justify-between text-[11px] font-mono text-slate-400">
+                          <span>Avatar Manifestations ({ALL_ASTRA_ORB_DEFINITIONS.length}):</span>
+                          <span className="text-cyan-400">Scroll to preview</span>
+                        </div>
+                        <div className="flex items-center gap-1.5 overflow-x-auto pb-1.5 ledge-scroll">
+                          {ALL_ASTRA_ORB_DEFINITIONS.map((st) => {
                             const isSelected = (preferences.astraOrbStyle || 'siri_rainbow') === st.id;
                             return (
                               <button
@@ -1252,13 +1512,13 @@ export const FullSettingsView: React.FC<FullSettingsViewProps> = ({
                                   playTactilePop('tab');
                                   onUpdatePreferences({ astraOrbStyle: st.id });
                                 }}
-                                style={isSelected ? { borderColor: st.color, backgroundColor: `${st.color}22` } : undefined}
-                                className={`px-2 py-0.5 rounded-lg text-[10px] font-medium border transition-colors flex items-center gap-1 ${
+                                style={isSelected ? { borderColor: st.hex, backgroundColor: `${st.hex}22` } : undefined}
+                                className={`px-2 py-0.5 rounded-lg text-[10px] font-medium border transition-colors flex items-center gap-1 shrink-0 ${
                                   isSelected ? 'text-white' : 'bg-white/5 border-white/10 text-slate-400 hover:text-white'
                                 }`}
                               >
-                                <span style={{ backgroundColor: st.color }} className="w-2 h-2 rounded-full" />
-                                <span>{st.label}</span>
+                                <span style={{ backgroundColor: st.hex }} className="w-2 h-2 rounded-full shrink-0" />
+                                <span className="whitespace-nowrap">{st.name.split(' (')[0]}</span>
                               </button>
                             );
                           })}
@@ -1533,13 +1793,21 @@ export const FullSettingsView: React.FC<FullSettingsViewProps> = ({
                               : 'bg-white/[0.02] border-white/10 text-slate-300 hover:bg-white/[0.05]'
                           }`}
                         >
-                          <div className="flex items-center gap-2 mb-1.5">
-                            <Wifi
-                              className="w-4 h-4"
+                          <div className="flex items-center gap-2.5 mb-2">
+                            <ThemedIcon
+                              name="wifi"
+                              packStyle={pk.id}
+                              size={18}
+                              color={active ? palette.primaryHex : undefined}
                               strokeWidth={m.strokeWidth}
-                              style={{ color: palette.primaryHex }}
                             />
-                            <Bluetooth className="w-4 h-4" strokeWidth={m.strokeWidth} />
+                            <ThemedIcon
+                              name="bluetooth"
+                              packStyle={pk.id}
+                              size={18}
+                              color={active ? '#38bdf8' : undefined}
+                              strokeWidth={m.strokeWidth}
+                            />
                           </div>
                           <div className="text-xs font-semibold">{pk.label}</div>
                           <div className="text-[10px] text-slate-400">{pk.sub}</div>
@@ -2661,6 +2929,7 @@ export const FullSettingsView: React.FC<FullSettingsViewProps> = ({
                       { id: 'retro_cassette', name: 'Retro Cassette Latch', desc: 'Warm 80s analog tape-deck click' },
                       { id: 'mechanical_gt', name: 'Motorsport GT Paddle', desc: 'Precision carbon paddle-shift detent' },
                       { id: 'zen_garden', name: 'Botanical & Paper Chime', desc: 'Soft bamboo & sumi-ink bell harmonic' },
+                      { id: 'naruto_shinobi', name: 'Shinobi Jutsu Acoustic', desc: 'Rasengan chakra spin whistle, Chidori snap, Sharingan ocular chime' },
                       { id: 'silent', name: 'Silent (Muted)', desc: 'Disables all sound effects' },
                     ] as { id: SoundProfileId; name: string; desc: string }[]
                   ).map((snd) => {
@@ -2828,35 +3097,62 @@ export const FullSettingsView: React.FC<FullSettingsViewProps> = ({
                   </div>
                 </div>
 
-                {/* 6 Live Animated Siri Orb Style Previews */}
-                <div className="pt-2 border-t border-white/10 space-y-2.5">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-semibold text-white flex items-center gap-2">
-                      <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
-                      <span>3D Siri Sphere Orb Styles &amp; Real-Time Fluid Shaders</span>
-                    </span>
-                    <span className="text-[11px] font-mono text-cyan-400 capitalize">
+                {/* 30 Live Animated Siri Orb, Naruto Shinobi, F1 HUD & Cosmos Avatars */}
+                <div className="pt-2 border-t border-white/10 space-y-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div>
+                      <span className="text-xs font-semibold text-white flex items-center gap-2">
+                        <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
+                        <span>3D Siri Spheres, Naruto Shinobi Jutsu, F1 HUD &amp; Cosmos Pack</span>
+                      </span>
+                      <p className="text-[11px] text-slate-400 mt-0.5">
+                        Real-time 60fps canvas shaders with transparent floating alpha and acoustic mic reactivity
+                      </p>
+                    </div>
+                    <span className="text-[11px] font-mono text-cyan-400 capitalize bg-white/[0.04] px-2.5 py-1 rounded-lg border border-white/10">
                       Active: {String(preferences.astraOrbStyle || 'siri_rainbow').replace(/_/g, ' ')}
                     </span>
                   </div>
 
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
-                    {[
-                      { id: 'siri_rainbow', name: 'Siri Rainbow', desc: 'Apple iridescent silk bands with prismatic spectrum aura', hex: '#38bdf8' },
-                      { id: 'cyberpunk_hud', name: 'Cyberpunk HUD', desc: 'Sci-fi holographic HUD construct with targeting reticle, rotating rings & laser core', hex: '#22d3ee' },
-                      { id: 'botanical_sakura', name: 'Botanical Sakura', desc: 'Floating 5-petal cherry blossom flower with stamen filaments & orbiting petals', hex: '#f472b6' },
-                      { id: 'fluent_fluid', name: 'Fluent Aurora', desc: 'Floating pure aurora ribbon wave with borderless transparency', hex: '#38bdf8' },
-                      { id: 'retro_cassette_vu', name: 'Retro Cassette', desc: 'Dual spinning tape spools with acoustic neon VU meter spikes', hex: '#f59e0b' },
-                      { id: 'paper_ink_enso', name: 'Paper Ink Enso', desc: 'Zen calligraphy sumi-e ink enso brush circle & vermilion cinnabar seal', hex: '#dc2626' },
-                      { id: 'motorsport_gt', name: 'Motorsport GT', desc: 'High-RPM tachometer redline arc & spinning turbo turbine hub', hex: '#ef4444' },
-                      { id: 'cozy_woodland', name: 'Woodland Leaf', desc: 'Organic emerald forest leaf with floating firefly wisps', hex: '#10b981' },
-                      { id: 'cupertino_silk', name: 'Cupertino Silk', desc: 'Liquid pearlescent Möbius silk knot with frosted sheen', hex: '#818cf8' },
-                      { id: 'celestial_nebula', name: 'Celestial Nebula', desc: 'Deep violet interstellar cosmic dust with spiral plasma', hex: '#a855f7' },
-                      { id: 'cyber_plasma', name: 'Cyber Plasma', desc: 'Electric hot magenta with high-frequency neon energy arcs', hex: '#f43f5e' },
-                      { id: 'neon_pulse', name: 'Neon Pulse', desc: 'Vibrant lime-cyan laser pulse with acoustic reactivity', hex: '#84cc16' },
-                      { id: 'emerald_solar', name: 'Emerald Solar', desc: 'Radiant mint and emerald coronal flares with warm core', hex: '#10b981' },
-                      { id: 'minimal_pearl', name: 'Minimal Pearl', desc: 'Clean monochrome titanium sheen with pearl white bloom', hex: '#e2e8f0' },
-                    ].map((orb) => {
+                  {/* Category Filter Pills */}
+                  <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                    {(
+                      [
+                        { id: 'all', label: 'All Avatars (30)', icon: '✨' },
+                        { id: 'naruto', label: 'Naruto Shinobi (6)', icon: '🍥' },
+                        { id: 'motorsport', label: 'F1 & Motorsport (7)', icon: '🏎️' },
+                        { id: 'cosmos', label: 'Cosmos & Planets (5)', icon: '🪐' },
+                        { id: 'style_kits', label: 'Theme Kits (7)', icon: '🎨' },
+                        { id: 'siri_orbs', label: 'Siri Spheres (5)', icon: '🔮' },
+                      ] as const
+                    ).map((cat) => {
+                      const active = astraCategoryFilter === cat.id;
+                      return (
+                        <button
+                          key={cat.id}
+                          type="button"
+                          onClick={() => {
+                            playTactilePop('tab');
+                            setAstraCategoryFilter(cat.id);
+                          }}
+                          className={`px-3 py-1.5 rounded-xl text-xs font-medium border transition-colors flex items-center gap-1.5 ${
+                            active
+                              ? 'bg-cyan-500/20 border-cyan-400 text-white font-semibold shadow-sm'
+                              : 'bg-white/[0.03] border-white/10 text-slate-400 hover:text-white hover:bg-white/[0.06]'
+                          }`}
+                        >
+                          <span>{cat.icon}</span>
+                          <span>{cat.label}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* 3-Column Avatar Cards Grid */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
+                    {ALL_ASTRA_ORB_DEFINITIONS.filter(
+                      (o) => astraCategoryFilter === 'all' || o.category === astraCategoryFilter
+                    ).map((orb) => {
                       const isSel = (preferences.astraOrbStyle || 'siri_rainbow') === orb.id;
                       return (
                         <button
@@ -2864,30 +3160,37 @@ export const FullSettingsView: React.FC<FullSettingsViewProps> = ({
                           type="button"
                           onClick={() => {
                             playTactilePop('tab');
-                            onUpdatePreferences({ astraOrbStyle: orb.id as any });
+                            onUpdatePreferences({ astraOrbStyle: orb.id });
                           }}
                           style={isSel ? { borderColor: orb.hex, backgroundColor: `${orb.hex}18` } : undefined}
-                          className={`p-3 rounded-xl border text-left transition-all flex items-center gap-3 ${
+                          className={`p-3 rounded-xl border text-left transition-all flex items-center gap-3 relative ${
                             isSel
-                              ? 'border-cyan-400 text-white shadow-lg'
+                              ? 'border-cyan-400 text-white shadow-lg ring-1 ring-cyan-400/40'
                               : 'bg-white/[0.02] border-white/10 text-slate-300 hover:bg-white/[0.05]'
                           }`}
                         >
-                          <div className="shrink-0">
+                          <div className="shrink-0 flex items-center justify-center w-11 h-11">
                             <AstraSiriOrbCanvas
-                              size={38}
+                              size={42}
                               state="listening"
-                              audioLevel={0.44}
-                              style={orb.id as any}
+                              audioLevel={0.46}
+                              style={orb.id}
                               lowPowerEco={preferences.featureFlags.lowRamEcoMode}
                             />
                           </div>
-                          <div className="min-w-0">
-                            <div className="text-xs font-semibold truncate flex items-center gap-1.5">
-                              <span style={{ backgroundColor: orb.hex }} className="w-2 h-2 rounded-full shrink-0" />
-                              <span className="truncate">{orb.name}</span>
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center justify-between gap-1">
+                              <span className="text-xs font-semibold truncate flex items-center gap-1.5">
+                                <span style={{ backgroundColor: orb.hex }} className="w-2 h-2 rounded-full shrink-0" />
+                                <span className="truncate">{orb.name}</span>
+                              </span>
+                              {orb.tag && (
+                                <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-white/10 text-slate-300 shrink-0">
+                                  {orb.tag}
+                                </span>
+                              )}
                             </div>
-                            <div className="text-[10px] text-slate-400 leading-tight mt-0.5 line-clamp-2">
+                            <div className="text-[10.5px] text-slate-400 leading-tight mt-1 line-clamp-2">
                               {orb.desc}
                             </div>
                           </div>
