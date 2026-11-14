@@ -87,8 +87,8 @@ export default function App() {
 
   // Media Player State
   const [trackIndex, setTrackIndex] = useState(0);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [trackProgressSec, setTrackProgressSec] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(true);
+  const [trackProgressSec, setTrackProgressSec] = useState(48);
   const [audioDevice, setAudioDevice] = useState<AudioOutputDevice>('Surface Studio Speakers');
 
   // Secondary Live Activity: Countdown Timer

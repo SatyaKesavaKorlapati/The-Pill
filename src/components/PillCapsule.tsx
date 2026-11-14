@@ -708,6 +708,9 @@ export const PillCapsule: React.FC<PillCapsuleProps> = ({
           onMouseEnter={() => {
             setEdgeTouched(true);
           }}
+          onMouseLeave={() => {
+            setEdgeTouched(false);
+          }}
           className={`fixed left-0 right-0 z-40 h-4 ${
             isBottomAnchor ? 'bottom-0' : 'top-0'
           } flex items-center justify-center group cursor-pointer bg-transparent border-0`}

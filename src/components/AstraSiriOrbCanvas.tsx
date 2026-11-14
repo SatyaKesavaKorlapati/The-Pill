@@ -81,6 +81,92 @@ export function resolveRibbonSpecs(style: AstraOrbStyle = 'siri_rainbow'): Ribbo
   ];
 }
 
+export function resolveOrbThemeColors(style: AstraOrbStyle = 'siri_rainbow') {
+  if (style === 'celestial_nebula') {
+    return {
+      haloMid: 'rgba(217, 70, 239, ',
+      haloEnd: 'rgba(99, 102, 241, 0)',
+      rimMid: 'rgba(217, 70, 239, 0.45)',
+      rimEnd: 'rgba(99, 102, 241, 0.55)',
+      sphereBase0: '#1e1035',
+      sphereBase1: '#0e0820',
+      sphereBase2: '#060310',
+      coreMid: 'rgba(232, 121, 249, 0.28)',
+      coreEnd: 'rgba(168, 85, 247, 0)',
+      innerGlow: 'rgba(192, 132, 252, 0.38)',
+    };
+  }
+  if (style === 'cyber_plasma') {
+    return {
+      haloMid: 'rgba(244, 63, 94, ',
+      haloEnd: 'rgba(245, 158, 11, 0)',
+      rimMid: 'rgba(6, 182, 212, 0.5)',
+      rimEnd: 'rgba(244, 63, 94, 0.55)',
+      sphereBase0: '#260a1c',
+      sphereBase1: '#140510',
+      sphereBase2: '#080208',
+      coreMid: 'rgba(251, 113, 133, 0.32)',
+      coreEnd: 'rgba(244, 63, 94, 0)',
+      innerGlow: 'rgba(251, 146, 60, 0.38)',
+    };
+  }
+  if (style === 'neon_pulse') {
+    return {
+      haloMid: 'rgba(34, 197, 94, ',
+      haloEnd: 'rgba(163, 230, 53, 0)',
+      rimMid: 'rgba(163, 230, 53, 0.5)',
+      rimEnd: 'rgba(20, 184, 166, 0.55)',
+      sphereBase0: '#0a2215',
+      sphereBase1: '#04130b',
+      sphereBase2: '#020905',
+      coreMid: 'rgba(134, 239, 172, 0.28)',
+      coreEnd: 'rgba(34, 197, 94, 0)',
+      innerGlow: 'rgba(74, 222, 128, 0.38)',
+    };
+  }
+  if (style === 'emerald_solar') {
+    return {
+      haloMid: 'rgba(245, 158, 11, ',
+      haloEnd: 'rgba(16, 185, 129, 0)',
+      rimMid: 'rgba(16, 185, 129, 0.5)',
+      rimEnd: 'rgba(251, 191, 36, 0.55)',
+      sphereBase0: '#0c221a',
+      sphereBase1: '#05140e',
+      sphereBase2: '#020906',
+      coreMid: 'rgba(253, 224, 71, 0.28)',
+      coreEnd: 'rgba(245, 158, 11, 0)',
+      innerGlow: 'rgba(52, 211, 153, 0.38)',
+    };
+  }
+  if (style === 'minimal_pearl') {
+    return {
+      haloMid: 'rgba(186, 230, 253, ',
+      haloEnd: 'rgba(226, 232, 240, 0)',
+      rimMid: 'rgba(255, 255, 255, 0.65)',
+      rimEnd: 'rgba(186, 230, 253, 0.45)',
+      sphereBase0: '#1a1f2e',
+      sphereBase1: '#0f121a',
+      sphereBase2: '#07080d',
+      coreMid: 'rgba(241, 245, 249, 0.35)',
+      coreEnd: 'rgba(148, 163, 184, 0)',
+      innerGlow: 'rgba(226, 232, 240, 0.34)',
+    };
+  }
+  // Default: siri_rainbow
+  return {
+    haloMid: 'rgba(139, 92, 246, ',
+    haloEnd: 'rgba(236, 72, 153, 0)',
+    rimMid: 'rgba(56, 189, 248, 0.34)',
+    rimEnd: 'rgba(236, 72, 153, 0.48)',
+    sphereBase0: '#121936',
+    sphereBase1: '#080c1d',
+    sphereBase2: '#03050c',
+    coreMid: 'rgba(165, 243, 252, 0.22)',
+    coreEnd: 'rgba(56, 189, 248, 0)',
+    innerGlow: 'rgba(125, 211, 252, 0.36)',
+  };
+}
+
 /**
  * Authentic 60fps Canvas2D 3D Refractive Apple Siri Fluid Sphere.
  * Renders 5 volumetric 3D parametric silk ribbons inside a crystal glass sphere
@@ -100,7 +186,8 @@ export const AstraSiriOrbCanvas: React.FC<AstraSiriOrbCanvasProps> = ({
   stateRef.current = state;
   const audioRef = useRef(audioLevel);
   audioRef.current = audioLevel;
-  const ribbons = resolveRibbonSpecs(style);
+  const styleRef = useRef(style);
+  styleRef.current = style;
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -122,6 +209,9 @@ export const AstraSiriOrbCanvas: React.FC<AstraSiriOrbCanvasProps> = ({
       lastTs = now;
 
       const curState = stateRef.current;
+      const curStyle = styleRef.current;
+      const ribbons = resolveRibbonSpecs(curStyle);
+      const orbColors = resolveOrbThemeColors(curStyle);
       const micLvl = Math.max(0, Math.min(1, audioRef.current));
 
       const targetEnergy =
@@ -156,9 +246,9 @@ export const AstraSiriOrbCanvas: React.FC<AstraSiriOrbCanvasProps> = ({
 
       // 1. Soft External Siri Aura Halo
       const outerHalo = ctx.createRadialGradient(cx, cy, radius * 0.55, cx, cy, radius * 1.09);
-      outerHalo.addColorStop(0, 'rgba(56, 189, 248, 0)');
-      outerHalo.addColorStop(0.75, `rgba(139, 92, 246, ${(0.18 + smoothEnergy * 0.18).toFixed(3)})`);
-      outerHalo.addColorStop(1, 'rgba(236, 72, 153, 0)');
+      outerHalo.addColorStop(0, 'rgba(255, 255, 255, 0)');
+      outerHalo.addColorStop(0.75, `${orbColors.haloMid}${(0.22 + smoothEnergy * 0.22).toFixed(3)})`);
+      outerHalo.addColorStop(1, orbColors.haloEnd);
       ctx.fillStyle = outerHalo;
       ctx.beginPath();
       ctx.arc(cx, cy, radius * 1.09, 0, Math.PI * 2);
@@ -179,9 +269,9 @@ export const AstraSiriOrbCanvas: React.FC<AstraSiriOrbCanvasProps> = ({
         cy,
         radius
       );
-      sphereBg.addColorStop(0, '#121936');
-      sphereBg.addColorStop(0.58, '#080c1d');
-      sphereBg.addColorStop(1, '#03050c');
+      sphereBg.addColorStop(0, orbColors.sphereBase0);
+      sphereBg.addColorStop(0.58, orbColors.sphereBase1);
+      sphereBg.addColorStop(1, orbColors.sphereBase2);
       ctx.fillStyle = sphereBg;
       ctx.fillRect(cx - radius, cy - radius, radius * 2, radius * 2);
 
@@ -264,8 +354,8 @@ export const AstraSiriOrbCanvas: React.FC<AstraSiriOrbCanvasProps> = ({
         coreRadius
       );
       coreGlow.addColorStop(0, `rgba(255, 255, 255, ${(0.42 + smoothEnergy * 0.38).toFixed(3)})`);
-      coreGlow.addColorStop(0.38, 'rgba(165, 243, 252, 0.22)');
-      coreGlow.addColorStop(1, 'rgba(56, 189, 248, 0)');
+      coreGlow.addColorStop(0.38, orbColors.coreMid);
+      coreGlow.addColorStop(1, orbColors.coreEnd);
       ctx.fillStyle = coreGlow;
       ctx.beginPath();
       ctx.arc(cx, cy, coreRadius, 0, Math.PI * 2);
@@ -278,7 +368,7 @@ export const AstraSiriOrbCanvas: React.FC<AstraSiriOrbCanvasProps> = ({
       const innerShadow = ctx.createRadialGradient(cx, cy, radius * 0.62, cx, cy, radius);
       innerShadow.addColorStop(0, 'rgba(2, 6, 23, 0)');
       innerShadow.addColorStop(0.84, 'rgba(2, 6, 23, 0.18)');
-      innerShadow.addColorStop(1, 'rgba(125, 211, 252, 0.36)');
+      innerShadow.addColorStop(1, orbColors.innerGlow);
       ctx.fillStyle = innerShadow;
       ctx.fillRect(cx - radius, cy - radius, radius * 2, radius * 2);
 
@@ -311,8 +401,8 @@ export const AstraSiriOrbCanvas: React.FC<AstraSiriOrbCanvasProps> = ({
       ctx.lineWidth = 1.15 * dpr;
       const rimGrad = ctx.createLinearGradient(0, cy - radius, w, cy + radius);
       rimGrad.addColorStop(0, 'rgba(255, 255, 255, 0.62)');
-      rimGrad.addColorStop(0.5, 'rgba(56, 189, 248, 0.34)');
-      rimGrad.addColorStop(1, 'rgba(236, 72, 153, 0.48)');
+      rimGrad.addColorStop(0.5, orbColors.rimMid);
+      rimGrad.addColorStop(1, orbColors.rimEnd);
       ctx.strokeStyle = rimGrad;
       ctx.stroke();
 
@@ -327,7 +417,7 @@ export const AstraSiriOrbCanvas: React.FC<AstraSiriOrbCanvasProps> = ({
     return () => {
       if (rafId) cancelAnimationFrame(rafId);
     };
-  }, [size, lowPowerEco]);
+  }, [size, lowPowerEco, style]);
 
   return (
     <canvas
