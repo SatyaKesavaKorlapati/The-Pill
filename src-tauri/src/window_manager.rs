@@ -28,6 +28,9 @@ pub struct PillHitState {
     pub window_y: i32,
     pub scale_factor: f64,
     pub force_interactive: bool,
+    pub reveal_width: f64,
+    pub reveal_height: f64,
+    pub reveal_enabled: bool,
 }
 
 pub fn configure_pill_overlay_window(window: &WebviewWindow) -> Arc<Mutex<PillHitState>> {
@@ -115,6 +118,9 @@ pub fn configure_pill_overlay_window(window: &WebviewWindow) -> Arc<Mutex<PillHi
         window_y: 0,
         scale_factor: scale,
         force_interactive: false,
+        reveal_width: 140.0,
+        reveal_height: 4.0,
+        reveal_enabled: true,
     }));
 
     // 120Hz High-Precision Cursor Hit-Tester & Top-Bezel Auto-Reveal
@@ -134,14 +140,19 @@ pub fn configure_pill_overlay_window(window: &WebviewWindow) -> Arc<Mutex<PillHi
                 if let Ok(st) = state_clone.lock() {
                     let s = st.scale_factor;
 
-                    // Top-edge bezel auto-reveal: only reveal once when mouse enters the top edge (y <= 4) of the middle section
-                    let center_x = st.window_x + ((st.rect.x + (st.rect.width / 2.0)) * s) as i32;
-                    let middle_radius = (240.0 * s) as i32;
-                    let is_at_top_edge = if st.window_y == 0 {
-                        pt.y <= 6 && pt.x >= (center_x - middle_radius) && pt.x <= (center_x + middle_radius)
+                    // Top-edge bezel auto-reveal: only reveal when mouse enters user-defined hit bounds
+                    let is_at_top_edge = if st.reveal_enabled {
+                        let center_x = st.window_x + ((st.rect.x + (st.rect.width / 2.0)) * s) as i32;
+                        let half_width = ((st.reveal_width / 2.0) * s).round().max(20.0) as i32;
+                        let height_limit = (st.reveal_height * s).round().max(1.0) as i32;
+                        if st.window_y == 0 {
+                            pt.y <= height_limit && pt.x >= (center_x - half_width) && pt.x <= (center_x + half_width)
+                        } else {
+                            let screen_h = unsafe { GetSystemMetrics(SM_CYSCREEN) };
+                            pt.y >= (screen_h - height_limit) && pt.x >= (center_x - half_width) && pt.x <= (center_x + half_width)
+                        }
                     } else {
-                        let screen_h = unsafe { GetSystemMetrics(SM_CYSCREEN) };
-                        pt.y >= (screen_h - 10) && pt.x >= (center_x - middle_radius) && pt.x <= (center_x + middle_radius)
+                        false
                     };
 
                     if is_at_top_edge && !was_at_top_edge {
@@ -395,8 +406,24 @@ pub fn update_window_theme_icon(app: AppHandle, theme_id: String) -> Result<(), 
 }
 
 #[tauri::command]
+pub fn update_pill_reveal_settings(
+    state: tauri::State<'_, Arc<Mutex<PillHitState>>>,
+    width: f64,
+    height: f64,
+    enabled: bool,
+) -> Result<(), String> {
+    if let Ok(mut st) = state.lock() {
+        st.reveal_width = width.max(40.0);
+        st.reveal_height = height.max(1.0);
+        st.reveal_enabled = enabled;
+    }
+    Ok(())
+}
+
+#[tauri::command]
 pub fn broadcast_preferences_sync(
     app: AppHandle,
+    state: tauri::State<'_, Arc<Mutex<PillHitState>>>,
     preferences_json: Option<String>,
     prefs_json: Option<String>,
 ) -> Result<(), String> {
@@ -410,6 +437,17 @@ pub fn broadcast_preferences_sync(
         }
         if let Some(theme) = val.get("themeId").and_then(|t| t.as_str()) {
             let _ = update_window_theme_icon(app.clone(), theme.to_string());
+        }
+        if let Ok(mut st) = state.lock() {
+            if let Some(w) = val.get("revealAreaWidth").and_then(|v| v.as_f64()) {
+                st.reveal_width = w.max(40.0);
+            }
+            if let Some(h) = val.get("revealAreaHeight").and_then(|v| v.as_f64()) {
+                st.reveal_height = h.max(1.0);
+            }
+            if let Some(en) = val.get("revealOnEdgeTouch").and_then(|v| v.as_bool()) {
+                st.reveal_enabled = en;
+            }
         }
     }
     Ok(())

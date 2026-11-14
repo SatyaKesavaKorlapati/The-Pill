@@ -734,7 +734,13 @@ export const PillCapsule: React.FC<PillCapsuleProps> = ({
           onMouseLeave={() => {
             setEdgeTouched(false);
           }}
-          className={`fixed left-0 right-0 z-40 h-4 ${
+          style={{
+            width: `${preferences.revealAreaWidth ?? 140}px`,
+            height: `${Math.max(2, preferences.revealAreaHeight ?? 4)}px`,
+            left: '50%',
+            transform: 'translateX(-50%)',
+          }}
+          className={`fixed z-40 ${
             isBottomAnchor ? 'bottom-0' : 'top-0'
           } flex items-center justify-center group cursor-pointer bg-transparent border-0`}
           onClick={() => {
@@ -797,7 +803,7 @@ export const PillCapsule: React.FC<PillCapsuleProps> = ({
           style={{
             transformOrigin: isBottomAnchor ? '50% 100%' : '50% 0%',
           }}
-          className="relative flex items-center pointer-events-auto will-change-transform max-w-[calc(100vw-16px)] before:absolute before:-top-4 before:left-0 before:right-0 before:h-6 before:content-['']"
+          className="relative flex items-center pointer-events-auto will-change-transform max-w-[calc(100vw-16px)] before:absolute before:-top-1 before:left-0 before:right-0 before:h-2 before:content-['']"
           data-testid="dynamic-ledge-root"
         >
           {/* Concave Top-Bezel Meniscus Fillets (only when shape is TopBezelLedge) */}

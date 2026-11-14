@@ -2852,6 +2852,147 @@ export const FullSettingsView: React.FC<FullSettingsViewProps> = ({
                     />
                   </label>
                 </div>
+
+                {/* Cursor Reveal Area Geometry & Bezel Radar (Configurable Length & Height Limits) */}
+                {preferences.revealOnEdgeTouch && (
+                  <div className="p-4 rounded-xl bg-white/[0.02] border border-white/10 space-y-4">
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <div className="text-xs font-semibold text-white flex items-center gap-2">
+                          <Sliders className="w-3.5 h-3.5 text-cyan-400" />
+                          <span>Screen-Edge Reveal Trigger Zone (Cursor Hit Bounds)</span>
+                        </div>
+                        <p className="text-[11px] text-slate-400 mt-0.5">
+                          Controls the horizontal length and edge depth required to reveal the Pill. Tight limits prevent accidental triggers when using browser tabs.
+                        </p>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-300 border border-cyan-500/20">
+                          {preferences.revealAreaWidth ?? 140}px × {preferences.revealAreaHeight ?? 4}px
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Interactive Monitor Bezel Radar Preview */}
+                    <div className="relative h-20 w-full rounded-xl bg-gradient-to-b from-[#0c0f17] to-[#07090e] border border-white/10 overflow-hidden flex flex-col items-center">
+                      <div className="w-full h-3 bg-slate-900/90 border-b border-white/10 flex items-center justify-center">
+                        <span className="text-[9px] font-mono text-slate-500 uppercase tracking-widest">Top Monitor Bezel</span>
+                      </div>
+                      <div className="flex-1 w-full relative flex items-start justify-center">
+                        {/* Dynamic Radar Trigger Zone */}
+                        <div
+                          style={{
+                            width: `${Math.min(100, Math.max(12, ((preferences.revealAreaWidth ?? 140) / 400) * 100))}%`,
+                            height: `${Math.min(32, Math.max(6, (preferences.revealAreaHeight ?? 4) * 3))}px`,
+                            borderColor: palette.primaryHex,
+                            boxShadow: `0 0 16px ${palette.primaryHex}50`,
+                          }}
+                          className="border-b-2 border-x-2 rounded-b-lg bg-cyan-500/15 flex items-center justify-center transition-all duration-150"
+                        >
+                          <span className="text-[9px] font-mono font-medium text-cyan-200">
+                            {preferences.revealAreaWidth ?? 140}px Reveal Zone
+                          </span>
+                        </div>
+                        <div className="absolute top-1 right-3 text-[10px] text-slate-500 font-mono">
+                          Height Limit: {preferences.revealAreaHeight ?? 4}px
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Dual Sliders: Length Limit & Height Limit */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {/* Length / Width Limit Slider */}
+                      <div className="space-y-2 p-3 rounded-xl bg-black/20 border border-white/5">
+                        <div className="flex items-center justify-between">
+                          <label className="text-xs font-medium text-white flex items-center gap-1.5">
+                            <span>Reveal Trigger Length Limit</span>
+                          </label>
+                          <span className="text-xs font-mono font-bold text-cyan-400">
+                            {preferences.revealAreaWidth ?? 140}px
+                          </span>
+                        </div>
+                        <input
+                          type="range"
+                          min={50}
+                          max={380}
+                          step={5}
+                          value={preferences.revealAreaWidth ?? 140}
+                          onChange={(e) => {
+                            const val = Number(e.target.value);
+                            onUpdatePreferences({ revealAreaWidth: val });
+                          }}
+                          className="w-full accent-cyan-400 cursor-pointer"
+                        />
+                        <div className="flex items-center justify-between gap-1 pt-1">
+                          {[
+                            { label: 'Ultra (80px)', val: 80 },
+                            { label: 'Compact (140px)', val: 140 },
+                            { label: 'Medium (220px)', val: 220 },
+                            { label: 'Wide (320px)', val: 320 },
+                          ].map((preset) => (
+                            <button
+                              key={preset.val}
+                              type="button"
+                              onClick={() => onUpdatePreferences({ revealAreaWidth: preset.val })}
+                              className={`px-2 py-0.5 text-[10px] rounded-lg border font-mono transition-all ${
+                                (preferences.revealAreaWidth ?? 140) === preset.val
+                                  ? 'bg-cyan-500/20 border-cyan-400 text-cyan-200 font-semibold'
+                                  : 'bg-white/5 border-white/10 text-slate-400 hover:text-white hover:bg-white/10'
+                              }`}
+                            >
+                              {preset.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Height Limit (Edge Distance) Slider */}
+                      <div className="space-y-2 p-3 rounded-xl bg-black/20 border border-white/5">
+                        <div className="flex items-center justify-between">
+                          <label className="text-xs font-medium text-white flex items-center gap-1.5">
+                            <span>Edge Depth / Height Limit</span>
+                          </label>
+                          <span className="text-xs font-mono font-bold text-cyan-400">
+                            {preferences.revealAreaHeight ?? 4}px
+                          </span>
+                        </div>
+                        <input
+                          type="range"
+                          min={1}
+                          max={16}
+                          step={1}
+                          value={preferences.revealAreaHeight ?? 4}
+                          onChange={(e) => {
+                            const val = Number(e.target.value);
+                            onUpdatePreferences({ revealAreaHeight: val });
+                          }}
+                          className="w-full accent-cyan-400 cursor-pointer"
+                        />
+                        <div className="flex items-center justify-between gap-1 pt-1">
+                          {[
+                            { label: 'Razor (2px)', val: 2 },
+                            { label: 'Subtle (4px)', val: 4 },
+                            { label: 'Standard (8px)', val: 8 },
+                            { label: 'Deep (12px)', val: 12 },
+                          ].map((preset) => (
+                            <button
+                              key={preset.val}
+                              type="button"
+                              onClick={() => onUpdatePreferences({ revealAreaHeight: preset.val })}
+                              className={`px-2 py-0.5 text-[10px] rounded-lg border font-mono transition-all ${
+                                (preferences.revealAreaHeight ?? 4) === preset.val
+                                  ? 'bg-cyan-500/20 border-cyan-400 text-cyan-200 font-semibold'
+                                  : 'bg-white/5 border-white/10 text-slate-400 hover:text-white hover:bg-white/10'
+                              }`}
+                            >
+                              {preset.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </section>
             </div>
           )}

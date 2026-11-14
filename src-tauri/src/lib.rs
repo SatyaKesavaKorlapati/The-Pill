@@ -79,6 +79,7 @@ pub fn run() {
             window_manager::toggle_fullscreen_settings_window,
             window_manager::broadcast_preferences_sync,
             window_manager::update_window_theme_icon,
+            window_manager::update_pill_reveal_settings,
             privacy_cloak::apply_privacy_cloak,
             dpapi_vault::save_custom_api_key,
             dpapi_vault::load_custom_api_key,

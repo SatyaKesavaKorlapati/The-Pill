@@ -321,6 +321,8 @@ export const DEFAULT_PREFERENCES: LedgePreferences = {
 
   stealthAutoHide: true,
   revealOnEdgeTouch: true,
+  revealAreaWidth: 140,
+  revealAreaHeight: 4,
   toggleShortcut: 'Alt+L',
   voiceAgentShortcut: 'Alt+V',
   voiceAgentSpeakReplies: true,

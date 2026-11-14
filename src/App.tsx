@@ -186,6 +186,17 @@ export default function App() {
           if (patch.themeId) {
             invoke('update_window_theme_icon', { themeId: patch.themeId }).catch(() => {});
           }
+          if (
+            patch.revealAreaWidth !== undefined ||
+            patch.revealAreaHeight !== undefined ||
+            patch.revealOnEdgeTouch !== undefined
+          ) {
+            invoke('update_pill_reveal_settings', {
+              width: next.revealAreaWidth ?? 140,
+              height: next.revealAreaHeight ?? 4,
+              enabled: next.revealOnEdgeTouch ?? true,
+            }).catch(() => {});
+          }
         }).catch(() => {});
       }
       return next;
@@ -216,6 +227,21 @@ export default function App() {
         .catch(() => {});
     }
   }, [preferences.themeId]);
+
+  // Synchronize Screen-Edge Auto-Reveal Hit Bounds (Length & Height limit) with Rust
+  useEffect(() => {
+    if (typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window) {
+      import('@tauri-apps/api/core')
+        .then(({ invoke }) => {
+          invoke('update_pill_reveal_settings', {
+            width: preferences.revealAreaWidth ?? 140,
+            height: preferences.revealAreaHeight ?? 4,
+            enabled: preferences.revealOnEdgeTouch ?? true,
+          }).catch(() => {});
+        })
+        .catch(() => {});
+    }
+  }, [preferences.revealAreaWidth, preferences.revealAreaHeight, preferences.revealOnEdgeTouch]);
 
   const updateSystemState = useCallback((patch: Partial<WindowsSystemState>) => {
     setSystemState((prev) => ({ ...prev, ...patch }));

@@ -390,6 +390,8 @@ export interface PillPreferences {
   // Stealth Hide, Reveal & Astra (అస్త్రం / Astram) In-Pill Agent
   stealthAutoHide: boolean;
   revealOnEdgeTouch: boolean;
+  revealAreaWidth?: number;
+  revealAreaHeight?: number;
   toggleShortcut: string;
   voiceAgentShortcut: string;
   voiceAgentSpeakReplies: boolean;
