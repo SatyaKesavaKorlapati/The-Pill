@@ -353,6 +353,18 @@ export const FullSettingsView: React.FC<FullSettingsViewProps> = ({
 
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [testBounce, setTestBounce] = useState(false);
+  const [isRazorSlicing, setIsRazorSlicing] = useState(false);
+
+  React.useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'F11') {
+        e.preventDefault();
+        handleToggleFullscreen();
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, []);
 
   const handleMinimize = async () => {
     if (typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window) {
@@ -763,9 +775,15 @@ export const FullSettingsView: React.FC<FullSettingsViewProps> = ({
                       <button
                         type="button"
                         onClick={() => {
-                          setTestBounce(true);
-                          playTactilePop(preferences.shapeStyle === LedgeShapeStyle.MinimalistBar ? 'confirm' : 'expand');
-                          window.setTimeout(() => setTestBounce(false), 380);
+                          if (preferences.shapeStyle === LedgeShapeStyle.MinimalistBar) {
+                            setIsRazorSlicing(true);
+                            playTactilePop('confirm');
+                            window.setTimeout(() => setIsRazorSlicing(false), 550);
+                          } else {
+                            setTestBounce(true);
+                            playTactilePop(preferences.shapeStyle === LedgeShapeStyle.SplitDualCapsule ? 'tab' : 'expand');
+                            window.setTimeout(() => setTestBounce(false), 450);
+                          }
                         }}
                         className="px-2.5 py-1 text-[11px] font-medium bg-white/10 hover:bg-white/20 text-sky-300 rounded-lg transition-colors flex items-center gap-1"
                       >
@@ -931,7 +949,7 @@ export const FullSettingsView: React.FC<FullSettingsViewProps> = ({
                   {section === 'island_geometry' && (
                     <div className="space-y-3">
                       {/* Interactive Mini-Desktop Screen Frame */}
-                      <div className="relative w-full h-32 rounded-xl bg-[#0a0d14] border border-white/10 overflow-hidden shadow-inner flex flex-col justify-between p-2">
+                      <div className="relative w-full h-40 rounded-xl bg-[#0a0d14] border border-white/10 overflow-hidden shadow-inner flex flex-col justify-between p-2">
                         {/* Top Screen Bezel with Notch Anchor */}
                         <div className="w-full relative flex items-center justify-between border-b border-white/5 pb-1">
                           <span className="text-[9px] font-mono text-slate-500 uppercase tracking-widest pl-1">Top Screen Bezel</span>
@@ -943,28 +961,24 @@ export const FullSettingsView: React.FC<FullSettingsViewProps> = ({
                         </div>
 
                         {/* Positioned Island Capsule Preview inside Virtual Display */}
-                        <div className="relative flex-1 w-full flex items-center justify-center">
+                        <div className="relative flex-1 w-full">
                           {/* Anchor Container */}
                           <div
-                            className={`absolute transition-all duration-200 ${
+                            className={`absolute transition-all duration-300 ${
                               preferences.anchorPosition === 'top_left'
-                                ? 'left-3 top-0'
+                                ? 'left-3 top-1'
                                 : preferences.anchorPosition === 'top_right'
-                                ? 'right-3 top-0'
+                                ? 'right-3 top-1'
                                 : preferences.anchorPosition === 'bottom_taskbar'
                                 ? 'bottom-1 left-1/2 -translate-x-1/2'
-                                : 'top-0 left-1/2 -translate-x-1/2'
+                                : 'top-1 left-1/2 -translate-x-1/2'
                             }`}
                           >
                             {preferences.shapeStyle === LedgeShapeStyle.SplitDualCapsule ? (
                               /* PERMANENT DUAL SPLIT: Main Capsule + Detached Satellite Droplet separated by gap */
-                              <div className="flex items-center gap-2.5">
+                              <div className={`flex items-center gap-2.5 ${testBounce ? 'animate-spring-wobble' : ''}`}>
                                 <div
-                                  style={{
-                                    transform: testBounce ? 'scale(1.06) translateY(2px)' : 'none',
-                                    transition: 'transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1)',
-                                  }}
-                                  className={`relative flex items-center justify-between px-3 text-slate-100 shadow-lg bg-[#050609] border border-white/20 rounded-full py-1 mt-1.5 ${
+                                  className={`relative flex items-center justify-between px-3 text-slate-100 shadow-lg bg-[#050609] border border-white/20 rounded-full py-1 ${
                                     preferences.sizeScale === LedgeSizeScale.Small
                                       ? 'w-36 text-[10px]'
                                       : preferences.sizeScale === LedgeSizeScale.Large
@@ -984,11 +998,7 @@ export const FullSettingsView: React.FC<FullSettingsViewProps> = ({
 
                                 {/* Completely Detached Companion Satellite Droplet */}
                                 <div
-                                  style={{
-                                    transform: testBounce ? 'scale(1.12) translateY(2px)' : 'none',
-                                    transition: 'transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1)',
-                                  }}
-                                  className="relative flex items-center justify-center w-8 h-8 rounded-full bg-[#050609] border border-white/20 mt-1.5 shadow-lg text-[9px] font-mono text-amber-300 font-semibold"
+                                  className="relative flex items-center justify-center w-8 h-8 rounded-full bg-[#050609] border border-white/20 shadow-lg text-[9px] font-mono text-amber-300 font-semibold"
                                 >
                                   <span>5m</span>
                                 </div>
@@ -996,18 +1006,16 @@ export const FullSettingsView: React.FC<FullSettingsViewProps> = ({
                             ) : (
                               /* The Simulated Capsule for DynamicPill, Squircle, TopBezelLedge, and MinimalistBar */
                               <div
-                                style={{
-                                  transform: testBounce ? 'scale(1.08) translateY(3px)' : 'none',
-                                  transition: 'transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1)',
-                                }}
                                 className={`relative flex items-center justify-between px-3 text-slate-100 shadow-lg ${
+                                  testBounce ? 'animate-spring-wobble' : ''
+                                } ${
                                   preferences.shapeStyle === LedgeShapeStyle.TopBezelLedge || preferences.dockFlushBezel
                                     ? 'bg-[#050609] border-x border-b border-white/20 rounded-b-2xl pt-1 pb-1.5'
                                     : preferences.shapeStyle === LedgeShapeStyle.SuperellipseSquircle
-                                    ? 'bg-[#050609] border border-white/20 rounded-[14px] py-1 mt-1.5'
+                                    ? 'bg-[#050609] border border-white/20 rounded-[14px] py-1'
                                     : preferences.shapeStyle === LedgeShapeStyle.MinimalistBar
-                                    ? 'bg-[#050609] border border-cyan-400/40 rounded-[6px] py-0.5 mt-2 h-[26px] shadow-[0_0_12px_rgba(34,211,238,0.2)] overflow-hidden'
-                                    : 'bg-[#050609] border border-white/20 rounded-full py-1 mt-1.5'
+                                    ? 'bg-[#050609] border border-cyan-400/40 rounded-[6px] py-0.5 h-[26px] shadow-[0_0_12px_rgba(34,211,238,0.2)] overflow-hidden'
+                                    : 'bg-[#050609] border border-white/20 rounded-full py-1'
                                 } ${
                                   preferences.sizeScale === LedgeSizeScale.Small
                                     ? 'w-44 text-[10px]'
@@ -1016,9 +1024,14 @@ export const FullSettingsView: React.FC<FullSettingsViewProps> = ({
                                     : 'w-48 text-[11px]'
                                 }`}
                               >
-                                {/* Minimalist Razor Specular Edge Line */}
+                                {/* Minimalist Razor Specular Edge Line & Slice Flare */}
                                 {preferences.shapeStyle === LedgeShapeStyle.MinimalistBar && (
-                                  <span className="absolute top-0 left-0 right-0 h-[1.5px] bg-gradient-to-r from-transparent via-cyan-300/80 to-transparent pointer-events-none" />
+                                  <>
+                                    <span className="absolute top-0 left-0 right-0 h-[1.5px] bg-gradient-to-r from-transparent via-cyan-300/80 to-transparent pointer-events-none" />
+                                    {isRazorSlicing && (
+                                      <span className="absolute inset-y-0 w-24 bg-gradient-to-r from-transparent via-cyan-200 to-transparent animate-razor-slice pointer-events-none" />
+                                    )}
+                                  </>
                                 )}
 
                                 {/* Concave Meniscus Fillets for Docked Bezel */}
@@ -2177,14 +2190,39 @@ export const FullSettingsView: React.FC<FullSettingsViewProps> = ({
                           });
                         }}
                         style={selected ? { borderColor: palette.primaryHex } : undefined}
-                        className={`p-3 rounded-xl border text-left transition-colors ${
+                        className={`p-3 rounded-xl border text-left transition-colors flex flex-col justify-between gap-2 ${
                           selected
-                            ? 'bg-white/[0.09] text-white'
+                            ? 'bg-white/[0.09] text-white shadow-lg'
                             : 'bg-white/[0.02] border-white/10 text-slate-300 hover:bg-white/[0.05]'
                         }`}
                       >
-                        <div className="text-xs font-semibold">{sh.name}</div>
-                        <div className="text-[11px] text-slate-400 mt-1 leading-snug">
+                        <div className="w-full flex items-center justify-between">
+                          <div className="text-xs font-semibold">{sh.name}</div>
+                          {/* Miniature Visual Shape Representation */}
+                          <div className="h-5 flex items-center justify-center shrink-0">
+                            {sh.id === LedgeShapeStyle.DynamicPill && (
+                              <div className="w-12 h-3.5 rounded-full bg-slate-800 border border-white/30" />
+                            )}
+                            {sh.id === LedgeShapeStyle.TopBezelLedge && (
+                              <div className="w-12 h-3 rounded-b-md bg-slate-800 border-x border-b border-white/30" />
+                            )}
+                            {sh.id === LedgeShapeStyle.SuperellipseSquircle && (
+                              <div className="w-10 h-4 rounded-[6px] bg-slate-800 border border-white/30" />
+                            )}
+                            {sh.id === LedgeShapeStyle.MinimalistBar && (
+                              <div className="w-14 h-2 rounded-[2px] bg-slate-800 border border-cyan-400/60 relative overflow-hidden">
+                                <span className="absolute top-0 left-0 right-0 h-[1px] bg-cyan-300" />
+                              </div>
+                            )}
+                            {sh.id === LedgeShapeStyle.SplitDualCapsule && (
+                              <div className="flex items-center gap-1.5">
+                                <div className="w-8 h-3.5 rounded-full bg-slate-800 border border-white/30" />
+                                <div className="w-3.5 h-3.5 rounded-full bg-slate-800 border border-white/30" />
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        <div className="text-[11px] text-slate-400 leading-snug">
                           {sh.desc}
                         </div>
                       </button>
@@ -2728,6 +2766,67 @@ export const FullSettingsView: React.FC<FullSettingsViewProps> = ({
                         All Gemini calls route securely via <span className="font-mono">/api/ai/*</span> using your attached key in <strong>Settings &gt; Secrets</strong>, while Windows NativeAOT uses DPAPI (<span className="font-mono">AstraOrbAndVaultService.cs</span>).
                       </div>
                     </div>
+                  </div>
+                </div>
+
+                {/* 6 Live Animated Siri Orb Style Previews */}
+                <div className="pt-2 border-t border-white/10 space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-semibold text-white flex items-center gap-2">
+                      <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
+                      <span>3D Siri Sphere Orb Styles &amp; Real-Time Fluid Shaders</span>
+                    </span>
+                    <span className="text-[11px] font-mono text-cyan-400 capitalize">
+                      Active: {String(preferences.astraOrbStyle || 'siri_rainbow').replace(/_/g, ' ')}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                    {[
+                      { id: 'siri_rainbow', name: 'Siri Rainbow', desc: 'Apple iridescent silk bands with prismatic spectrum aura', hex: '#38bdf8' },
+                      { id: 'celestial_nebula', name: 'Celestial Nebula', desc: 'Deep violet interstellar cosmic dust with spiral plasma', hex: '#a855f7' },
+                      { id: 'cyber_plasma', name: 'Cyber Plasma', desc: 'Electric hot magenta with high-frequency neon energy arcs', hex: '#f43f5e' },
+                      { id: 'neon_pulse', name: 'Neon Pulse', desc: 'Vibrant lime-cyan laser pulse with acoustic reactivity', hex: '#84cc16' },
+                      { id: 'emerald_solar', name: 'Emerald Solar', desc: 'Radiant mint and emerald coronal flares with warm core', hex: '#10b981' },
+                      { id: 'minimal_pearl', name: 'Minimal Pearl', desc: 'Clean monochrome titanium sheen with pearl white bloom', hex: '#e2e8f0' },
+                    ].map((orb) => {
+                      const isSel = (preferences.astraOrbStyle || 'siri_rainbow') === orb.id;
+                      return (
+                        <button
+                          key={orb.id}
+                          type="button"
+                          onClick={() => {
+                            playTactilePop('tab');
+                            onUpdatePreferences({ astraOrbStyle: orb.id as any });
+                          }}
+                          style={isSel ? { borderColor: orb.hex, backgroundColor: `${orb.hex}18` } : undefined}
+                          className={`p-3 rounded-xl border text-left transition-all flex items-center gap-3 ${
+                            isSel
+                              ? 'border-cyan-400 text-white shadow-lg'
+                              : 'bg-white/[0.02] border-white/10 text-slate-300 hover:bg-white/[0.05]'
+                          }`}
+                        >
+                          <div className="shrink-0">
+                            <AstraSiriOrbCanvas
+                              size={38}
+                              state="listening"
+                              audioLevel={0.44}
+                              style={orb.id as any}
+                              lowPowerEco={preferences.featureFlags.lowRamEcoMode}
+                            />
+                          </div>
+                          <div className="min-w-0">
+                            <div className="text-xs font-semibold truncate flex items-center gap-1.5">
+                              <span style={{ backgroundColor: orb.hex }} className="w-2 h-2 rounded-full shrink-0" />
+                              <span className="truncate">{orb.name}</span>
+                            </div>
+                            <div className="text-[10px] text-slate-400 leading-tight mt-0.5 line-clamp-2">
+                              {orb.desc}
+                            </div>
+                          </div>
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               </section>

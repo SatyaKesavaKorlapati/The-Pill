@@ -326,9 +326,9 @@ export const DEFAULT_PREFERENCES: LedgePreferences = {
   voiceAgentSpeakReplies: true,
   aiEnabled: true,
   astraWakeWordEnabled: true,
-  astraMode: 'orb_with_chat',
+  astraMode: 'orb_only',
   astraOrbStyle: 'siri_rainbow',
-  closeSettingsOnMouseLeave: true,
+  closeSettingsOnMouseLeave: false,
   autoHideIdle: false,
 
   privacyMaskEnabled: true,

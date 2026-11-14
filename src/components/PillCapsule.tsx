@@ -210,6 +210,9 @@ export const PillCapsule: React.FC<PillCapsuleProps> = ({
   const [astraHasResult, setAstraHasResult] = useState(false);
   const [contextMenuPos, setContextMenuPos] = useState<{ x: number; y: number } | null>(null);
 
+  const isExpandedRef = useRef(isExpanded);
+  isExpandedRef.current = isExpanded;
+
   const palette = resolveThemePalette(
     preferences.themeId,
     preferences.customPrimaryHex,
@@ -697,7 +700,7 @@ export const PillCapsule: React.FC<PillCapsuleProps> = ({
               if (collapseTimerRef.current !== null) window.clearTimeout(collapseTimerRef.current);
               collapseTimerRef.current = window.setTimeout(() => {
                 collapseTimerRef.current = null;
-                if (isExpanded) {
+                if (isExpandedRef.current) {
                   onCollapse();
                 }
               }, 420);

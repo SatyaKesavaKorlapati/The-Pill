@@ -10,8 +10,8 @@ use windows::Win32::Graphics::Dwm::{
 use windows::Win32::UI::Input::KeyboardAndMouse::{GetAsyncKeyState, VK_LBUTTON};
 use windows::Win32::UI::WindowsAndMessaging::{
     GetCursorPos, GetSystemMetrics, GetWindowLongPtrW, SetForegroundWindow, SetWindowLongPtrW,
-    SetWindowPos, GWL_EXSTYLE, HWND_TOPMOST, SM_CXSCREEN, SM_CYSCREEN,
-    WS_EX_NOACTIVATE, WS_EX_TOOLWINDOW, WS_EX_TOPMOST,
+    SetWindowPos, GWL_EXSTYLE, GWL_STYLE, HWND_TOPMOST, SM_CXSCREEN, SM_CYSCREEN,
+    WS_BORDER, WS_DLGFRAME, WS_EX_NOACTIVATE, WS_EX_TOOLWINDOW, WS_EX_TOPMOST, WS_THICKFRAME,
 };
 
 #[derive(Debug, Clone, Copy, Deserialize)]
@@ -69,6 +69,14 @@ pub fn configure_pill_overlay_window(window: &WebviewWindow) -> Arc<Mutex<PillHi
             DWMWA_WINDOW_CORNER_PREFERENCE,
             &corner_pref as *const _ as *const _,
             std::mem::size_of_val(&corner_pref) as u32,
+        );
+
+        // Completely strip any standard Win32 window border styles
+        let style = GetWindowLongPtrW(hwnd, GWL_STYLE);
+        SetWindowLongPtrW(
+            hwnd,
+            GWL_STYLE,
+            style & !(WS_BORDER.0 as isize) & !(WS_THICKFRAME.0 as isize) & !(WS_DLGFRAME.0 as isize),
         );
 
         // Strip taskbar footprint
@@ -368,6 +376,11 @@ pub fn broadcast_preferences_sync(
     let json_str = preferences_json
         .or(prefs_json)
         .unwrap_or_else(|| "{}".to_string());
-    let _ = app.emit("pill://preferences-updated", json_str);
+    let _ = app.emit("pill://preferences-updated", json_str.clone());
+    if let Ok(val) = serde_json::from_str::<serde_json::Value>(&json_str) {
+        if let Some(anchor) = val.get("anchorPosition").and_then(|a| a.as_str()) {
+            let _ = reposition_pill_window(app, anchor.to_string());
+        }
+    }
     Ok(())
 }

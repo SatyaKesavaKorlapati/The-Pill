@@ -43,6 +43,30 @@
   background: rgba(255, 255, 255, 0.28);
 }
 
+@keyframes pillSpringWobble {
+  0% { transform: scale(1, 1); }
+  20% { transform: scale(1.14, 0.88); }
+  40% { transform: scale(0.9, 1.1); }
+  60% { transform: scale(1.05, 0.96); }
+  80% { transform: scale(0.98, 1.02); }
+  100% { transform: scale(1, 1); }
+}
+
+.animate-spring-wobble {
+  animation: pillSpringWobble 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes razorSliceAnim {
+  0% { transform: translateX(-100%); opacity: 0; }
+  20% { opacity: 1; }
+  80% { opacity: 1; }
+  100% { transform: translateX(250%); opacity: 0; }
+}
+
+.animate-razor-slice {
+  animation: razorSliceAnim 0.55s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

@@ -180,6 +180,9 @@ export default function App() {
             preferences_json: payloadStr,
             prefs_json: payloadStr,
           }).catch(() => {});
+          if (patch.anchorPosition) {
+            invoke('reposition_pill_window', { anchor: patch.anchorPosition }).catch(() => {});
+          }
         }).catch(() => {});
       }
       return next;
@@ -576,6 +579,11 @@ export default function App() {
   });
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
 
+  const isExpandedRef = useRef(isExpanded);
+  isExpandedRef.current = isExpanded;
+  const isVoiceAgentOpenRef = useRef(isVoiceAgentOpen);
+  isVoiceAgentOpenRef.current = isVoiceAgentOpen;
+
   // Tauri hardware bridge integration
   useEffect(() => {
     const isTauri = typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window;
@@ -657,6 +665,9 @@ export default function App() {
           try {
             const parsed = JSON.parse(event.payload) as Partial<LedgePreferences>;
             setPreferences((prev) => ({ ...prev, ...parsed }));
+            if (parsed.anchorPosition) {
+              invoke('reposition_pill_window', { anchor: parsed.anchorPosition }).catch(() => {});
+            }
           } catch {}
         });
         unlistenList.push(uPrefs);
@@ -692,7 +703,7 @@ export default function App() {
     return () => {
       unlistenList.forEach((un) => un());
     };
-  }, [preferences.privacyMaskEnabled, preferences.privacyPublicPassthroughHud, isExpanded, isVoiceAgentOpen, summonAstraInPill]);
+  }, [summonAstraInPill]);
 
   // Standalone Settings Window Mode
   if (isSettingsWindow || isSettingsModalOpen) {
@@ -734,7 +745,9 @@ export default function App() {
           playTactilePop('collapse');
         }
       }}
-      className="relative w-screen h-screen flex flex-col items-center justify-start pointer-events-none select-none overflow-hidden bg-transparent pt-0"
+      className={`relative w-screen h-screen flex flex-col ${
+        preferences.anchorPosition === 'bottom_taskbar' ? 'justify-end pb-3' : 'justify-start pt-0'
+      } items-center pointer-events-none select-none overflow-hidden bg-transparent border-0 outline-none shadow-none`}
     >
       <PillCapsule
         isExpanded={isExpanded}
@@ -742,6 +755,10 @@ export default function App() {
           clearAutoHudTimer();
           setTransientHud('none');
           setIsVoiceAgentOpen(false);
+          if (collapseTimerRef.current !== null) {
+            window.clearTimeout(collapseTimerRef.current);
+            collapseTimerRef.current = null;
+          }
           if (tab) {
             setIsLauncherOpen(false);
             if (isTabEnabledInPrefs(tab, preferences)) {
@@ -751,7 +768,11 @@ export default function App() {
           setIsExpanded(true);
         }}
         onCollapse={() => {
-          if (!isExpanded && !isVoiceAgentOpen) return;
+          if (collapseTimerRef.current !== null) {
+            window.clearTimeout(collapseTimerRef.current);
+            collapseTimerRef.current = null;
+          }
+          if (!isExpandedRef.current && !isVoiceAgentOpenRef.current) return;
           setIsExpanded(false);
           setStealthRevealedByShortcut(false);
           playTactilePop('collapse');
@@ -761,6 +782,10 @@ export default function App() {
         isLauncherOpen={isLauncherOpen}
         onToggleLauncher={() => setIsLauncherOpen((v) => !v)}
         onOpenFullSettings={() => {
+          if (collapseTimerRef.current !== null) {
+            window.clearTimeout(collapseTimerRef.current);
+            collapseTimerRef.current = null;
+          }
           setIsExpanded(false);
           setStealthRevealedByShortcut(false);
           playTactilePop('collapse');

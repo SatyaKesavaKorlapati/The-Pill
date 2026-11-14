@@ -696,13 +696,14 @@ export const InPillAstraPanel: React.FC<InPillAstraPanelProps> = ({
   const activeTranscriptBubble = liveInterimText || lastPrompt;
 
   /* ==========================================================================
-   * IN-PILL MODE 1: `orb_only` — Sleek, Clean Big Astra Orb Capsule
+   * IN-PILL MODE 1: `orb_only` — Sleek, Clean Big Astra Orb (Only Orb, Zero Overhead)
+   * Single tap: Speak / Listen · Long press (>450ms): Open Chat Studio
    * ======================================================================== */
   if (preferences.astraMode === 'orb_only') {
     return (
       <div
         onClick={(e) => e.stopPropagation()}
-        className="w-full h-full flex flex-col items-center justify-center p-1 text-slate-100 select-none relative"
+        className="w-full h-full flex flex-col items-center justify-center p-0 text-slate-100 select-none relative"
       >
         <button
           type="button"
@@ -724,7 +725,7 @@ export const InPillAstraPanel: React.FC<InPillAstraPanelProps> = ({
           <AstraSiriOrbCanvas
             state={orbVisualState}
             audioLevel={micAudioLevel}
-            size={52}
+            size={56}
             style={preferences.astraOrbStyle}
             lowPowerEco={preferences.featureFlags.lowRamEcoMode}
           />
@@ -744,12 +745,13 @@ export const InPillAstraPanel: React.FC<InPillAstraPanelProps> = ({
 
   /* ==========================================================================
    * IN-PILL MODE 2: `orb_with_captions` — Compact Orb + Live Streaming Subtitles
+   * Frosted acrylic background matching the exact design language of the Pill
    * ======================================================================== */
   if (preferences.astraMode === 'orb_with_captions') {
     return (
       <div
         onClick={(e) => e.stopPropagation()}
-        className="w-full h-full flex items-center justify-between px-2.5 py-1.5 gap-2.5 text-slate-100 select-text"
+        className="w-full h-full flex items-center justify-between px-3 py-1.5 gap-2.5 text-slate-100 select-text"
       >
         {/* Compact Orb on the left */}
         <button
@@ -768,15 +770,15 @@ export const InPillAstraPanel: React.FC<InPillAstraPanelProps> = ({
           <AstraSiriOrbCanvas
             state={orbVisualState}
             audioLevel={micAudioLevel}
-            size={42}
+            size={40}
             style={preferences.astraOrbStyle}
             lowPowerEco={preferences.featureFlags.lowRamEcoMode}
           />
         </button>
 
-        {/* Dynamic Glassmorphism Live Captions Stream */}
+        {/* Dynamic Glassmorphism Live Captions Stream matching Pill Design Language */}
         <div className="flex-1 min-w-0 flex items-center">
-          <div className="w-full px-3 py-1.5 rounded-xl bg-white/[0.04] border border-white/10 backdrop-blur-md flex items-center gap-2 overflow-hidden shadow-inner">
+          <div className="w-full px-3 py-1.5 rounded-xl bg-[#05070c]/85 border border-white/15 backdrop-blur-xl flex items-center gap-2 overflow-hidden shadow-2xl">
             {isProcessing ? (
               <div className="flex items-center gap-2 text-xs font-medium text-sky-200 truncate">
                 <Loader2 className="w-3.5 h-3.5 animate-spin text-sky-400 shrink-0" />
@@ -784,17 +786,17 @@ export const InPillAstraPanel: React.FC<InPillAstraPanelProps> = ({
               </div>
             ) : liveInterimText ? (
               <div className="text-xs font-medium text-white truncate flex items-center gap-1.5">
-                <span className="text-[10px] uppercase font-mono text-cyan-400 shrink-0">You:</span>
+                <span style={{ color: palette.primaryHex }} className="text-[10px] uppercase font-mono font-bold shrink-0">You:</span>
                 <span className="truncate">&ldquo;{liveInterimText}&rdquo;</span>
               </div>
             ) : replyMarkdown ? (
               <div className="text-xs text-slate-200 truncate flex items-center gap-1.5">
-                <span className="text-[10px] uppercase font-mono text-purple-400 shrink-0">Astra:</span>
-                <span className="truncate">{replyMarkdown.replace(/[#*_`]/g, '')}</span>
+                <span className="text-[10px] uppercase font-mono font-bold text-purple-400 shrink-0">Astra:</span>
+                <span className="truncate">{String(replyMarkdown || '').replace(/[#*_`]/g, '')}</span>
               </div>
             ) : lastPrompt ? (
               <div className="text-xs text-slate-300 truncate flex items-center gap-1.5">
-                <span className="text-[10px] uppercase font-mono text-cyan-400 shrink-0">You:</span>
+                <span style={{ color: palette.primaryHex }} className="text-[10px] uppercase font-mono font-bold shrink-0">You:</span>
                 <span className="truncate">{lastPrompt}</span>
               </div>
             ) : (

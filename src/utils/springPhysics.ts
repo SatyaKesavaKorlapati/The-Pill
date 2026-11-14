@@ -274,8 +274,8 @@ export function resolveLedgeGeometry(input: LedgeGeometryInput): LedgeGeometryOu
   // 0.5 In-Pill Astra (అస్త్రం) Morph — Uses the existing Pill directly instead of a separate box!
   if (input.isAstraActive && !input.isExpanded) {
     if (input.astraMode === 'orb_only') {
-      const baseW = input.astraExpandedResult ? 420 : 76;
-      const baseH = input.astraExpandedResult ? 138 : 58;
+      const baseW = input.astraExpandedResult ? 420 : 70;
+      const baseH = input.astraExpandedResult ? 138 : 70;
       const h = Math.round(baseH * mult);
       return {
         width: Math.round(baseW * mult),

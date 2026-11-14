@@ -41,6 +41,7 @@ if (typeof window !== 'undefined') {
         src.buffer = buf;
         src.connect(ctx.destination);
         src.start(0);
+        console.log(`[AudioEngine] Hardware clock pre-warmed at ${performance.now().toFixed(2)}ms`);
       }
     } catch {}
     window.removeEventListener('pointerdown', warmUp);
@@ -52,6 +53,8 @@ if (typeof window !== 'undefined') {
   window.addEventListener('keydown', warmUp, { passive: true, capture: true });
   window.addEventListener('pointerenter', warmUp, { passive: true, capture: true });
   window.addEventListener('mousemove', warmUp, { passive: true, capture: true });
+  // Also try immediate pre-warm on load
+  setTimeout(warmUp, 100);
 }
 
 /**
@@ -67,8 +70,8 @@ export function playTactilePop(
   if (profile === 'silent' || currentVolume <= 0.01) return;
 
   const nowPerf = typeof performance !== 'undefined' ? performance.now() : Date.now();
-  // Enforce crisp single collapse sound (reject duplicate collapse triggers within 420ms unless overrideProfile provided)
-  if (!overrideProfile && kind === 'collapse' && nowPerf - lastCollapseTimestamp < 420) return;
+  // Enforce crisp single collapse sound (reject duplicate collapse triggers within 500ms unless overrideProfile provided)
+  if (!overrideProfile && kind === 'collapse' && nowPerf - lastCollapseTimestamp < 500) return;
   if (kind === 'collapse') lastCollapseTimestamp = nowPerf;
   if (!overrideProfile && nowPerf - lastSoundTimestamp < 15) return;
   lastSoundTimestamp = nowPerf;
@@ -81,7 +84,8 @@ export function playTactilePop(
       ctx.resume().catch(() => {});
     }
 
-    const t0 = ctx.currentTime + 0.001;
+    const t0 = ctx.currentTime + 0.0005;
+    console.log(`[AudioEngine] 🔊 ${kind} | profile: ${profile} | perf: ${nowPerf.toFixed(2)}ms | audioTime: ${t0.toFixed(4)}s`);
     const masterGain = ctx.createGain();
     const filter = ctx.createBiquadFilter();
     filter.type = 'lowpass';
