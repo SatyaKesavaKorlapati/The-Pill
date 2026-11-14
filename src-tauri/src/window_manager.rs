@@ -149,10 +149,12 @@ pub fn configure_pill_overlay_window(window: &WebviewWindow) -> Arc<Mutex<PillHi
                     }
                     was_at_top_edge = is_at_top_edge;
 
-                    let pill_left = st.window_x + (st.rect.x * s) as i32 - 12;
-                    let pill_right = st.window_x + ((st.rect.x + st.rect.width) * s) as i32 + 12;
-                    let pill_top = st.window_y + (st.rect.y * s) as i32 - 12;
-                    let pill_bottom = st.window_y + ((st.rect.y + st.rect.height) * s) as i32 + 12;
+                    // Hysteresis deadband: 16px when already inside, 10px when outside to eliminate boundary oscillation
+                    let pad = if was_inside { 16 } else { 10 };
+                    let pill_left = st.window_x + (st.rect.x * s) as i32 - pad;
+                    let pill_right = st.window_x + ((st.rect.x + st.rect.width) * s) as i32 + pad;
+                    let pill_top = st.window_y + (st.rect.y * s) as i32 - pad;
+                    let pill_bottom = st.window_y + ((st.rect.y + st.rect.height) * s) as i32 + pad;
 
                     let inside = st.force_interactive
                         || (pt.x >= pill_left
@@ -194,15 +196,6 @@ pub fn update_pill_hit_rect(
     state: tauri::State<'_, Arc<Mutex<PillHitState>>>,
     rect: HitRect,
 ) -> Result<(), String> {
-    if let Ok(mut f) = std::fs::OpenOptions::new()
-        .create(true)
-        .append(true)
-        .open("d:\\Pill\\events.log")
-    {
-        use std::io::Write;
-        let _ = writeln!(f, "HIT RECT RECEIVED: {:?}", rect);
-        let _ = f.flush();
-    }
     if let Ok(mut st) = state.lock() {
         st.rect = rect;
     }

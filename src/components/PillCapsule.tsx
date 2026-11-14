@@ -302,6 +302,12 @@ export const PillCapsule: React.FC<PillCapsuleProps> = ({
   const dropletGooPillRef = useRef<HTMLDivElement | null>(null);
   const dropletInteractiveRef = useRef<HTMLButtonElement | null>(null);
 
+  const preferencesRef = useRef(preferences);
+  preferencesRef.current = preferences;
+
+  const contextMenuPosRef = useRef(contextMenuPos);
+  contextMenuPosRef.current = contextMenuPos;
+
   const targetGeoRef = useRef(targetGeometry);
   targetGeoRef.current = targetGeometry;
 
@@ -368,11 +374,11 @@ export const PillCapsule: React.FC<PillCapsuleProps> = ({
 
       if (wrapperRef.current) {
         const yTranslate = isBottom ? -offsetPx : offsetPx;
-        wrapperRef.current.style.transform = `translate3d(0, ${yTranslate.toFixed(2)}px, 0) scale3d(${deform.scaleX}, ${deform.scaleY}, 1)`;
+        wrapperRef.current.style.transform = `translate3d(0, ${yTranslate.toFixed(2)}px, 0)`;
 
         if (typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window) {
           const r = wrapperRef.current.getBoundingClientRect();
-          const extraH = contextMenuPos ? 290 : 0;
+          const extraH = contextMenuPosRef.current ? 290 : 0;
           if (
             Math.abs(r.x - lastHitRect.current.x) > 1 ||
             Math.abs(r.y - lastHitRect.current.y) > 1 ||
@@ -389,8 +395,24 @@ export const PillCapsule: React.FC<PillCapsuleProps> = ({
         }
       }
 
-      const borderBottomRadius = `${rPx.toFixed(1)}px`;
-      const borderTopRadius = target.isDockedFlushTop ? '0px' : `${rPx.toFixed(1)}px`;
+      // Enforce true 360-degree semicircular pill curvature when compact (NEVER square)
+      // Clamped strictly to target.borderRadius when expanded (NEVER an oval/egg abomination)
+      let effectiveRadius = rPx;
+      const currentShape = preferencesRef.current.shapeStyle;
+      if (!isExpandedRef.current && hPx <= 60) {
+        if (
+          currentShape === LedgeShapeStyle.DynamicPill ||
+          currentShape === LedgeShapeStyle.SplitDualCapsule ||
+          currentShape === LedgeShapeStyle.TopBezelLedge
+        ) {
+          effectiveRadius = Math.max(effectiveRadius, Math.round(hPx / 2));
+        }
+      } else {
+        effectiveRadius = Math.min(rPx, target.borderRadius || 34);
+      }
+
+      const borderBottomRadius = `${effectiveRadius.toFixed(1)}px`;
+      const borderTopRadius = target.isDockedFlushTop ? '0px' : `${effectiveRadius.toFixed(1)}px`;
       const fullRadius = `${borderTopRadius} ${borderTopRadius} ${borderBottomRadius} ${borderBottomRadius}`;
 
       if (mainSurfaceRef.current) {

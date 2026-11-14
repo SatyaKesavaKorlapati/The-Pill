@@ -247,10 +247,11 @@ export function resolveLedgeGeometry(input: LedgeGeometryInput): LedgeGeometryOu
     !input.isAstraActive &&
     input.transientKind === 'none'
   ) {
+    const h = 6;
     return {
       width: Math.round(140 * mult),
-      height: 6,
-      borderRadius: 999,
+      height: h,
+      borderRadius: Math.round(h / 2),
       topOffset: anchor === LedgeAnchorPosition.BottomTaskbar ? 52 : -48,
       satelliteGap: 0,
       satelliteSize: 0,
@@ -428,8 +429,8 @@ export function resolveLedgeGeometry(input: LedgeGeometryInput): LedgeGeometryOu
   const forceSplit = effectiveShape === LedgeShapeStyle.SplitDualCapsule;
   if (input.hasPrimaryActivity) {
     const isMinimal = effectiveShape === LedgeShapeStyle.MinimalistBar;
-    const baseW = isMinimal ? (input.isHovered ? 290 : 272) : input.isHovered ? 276 : 258;
-    const baseH = isMinimal ? (input.isHovered ? 30 : 28) : input.isHovered ? 40 : 37;
+    const baseW = isMinimal ? 272 : 258;
+    const baseH = isMinimal ? 28 : 37;
     const h = Math.round(baseH * mult);
     const showSat = input.hasSecondaryDroplet || forceSplit;
     return {
@@ -445,8 +446,8 @@ export function resolveLedgeGeometry(input: LedgeGeometryInput): LedgeGeometryOu
 
   // 5. Quiet Idle Capsule
   const isMinimalIdle = effectiveShape === LedgeShapeStyle.MinimalistBar;
-  const idleW = isMinimalIdle ? (input.isHovered ? 196 : 164) : input.isHovered ? 202 : 176;
-  const idleH = isMinimalIdle ? (input.isHovered ? 28 : 24) : input.isHovered ? 36 : 33;
+  const idleW = isMinimalIdle ? 164 : 176;
+  const idleH = isMinimalIdle ? 24 : 33;
   const h = Math.round(idleH * mult);
   return {
     width: Math.round(idleW * mult),
