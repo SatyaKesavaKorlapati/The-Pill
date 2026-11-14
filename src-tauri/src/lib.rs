@@ -86,6 +86,7 @@ pub fn run() {
         })
         .invoke_handler(tauri::generate_handler![
             window_manager::update_pill_hit_rect,
+            window_manager::set_pill_force_interactive,
             window_manager::set_pill_focusable,
             window_manager::reposition_pill_window,
             window_manager::open_settings_window,

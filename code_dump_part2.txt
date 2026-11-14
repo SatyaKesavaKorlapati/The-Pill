@@ -1,4 +1,4 @@
-=== FILE: src-tauri/src/audio_loopback.rs ===
+﻿=== FILE: src-tauri/src/audio_loopback.rs ===
 use std::sync::atomic::{AtomicBool, Ordering};
 use tauri::{AppHandle, Emitter};
 
@@ -27,6 +27,7 @@ pub fn stop_audio_capture() -> Result<bool, String> {
     IS_RECORDING.store(false, Ordering::SeqCst);
     Ok(false)
 }
+
 === FILE: src-tauri/src/bluetooth_wifi.rs ===
 use serde::Serialize;
 use windows::Devices::Bluetooth::{BluetoothAdapter, BluetoothConnectionStatus, BluetoothDevice};
@@ -135,6 +136,7 @@ pub async fn toggle_bluetooth_radio(enable: bool) -> Result<bool, String> {
     let _ = radio.SetStateAsync(state).and_then(|o| o.get());
     Ok(enable)
 }
+
 === FILE: src-tauri/src/clipboard_watcher.rs ===
 use base64::{engine::general_purpose::STANDARD as BASE64, Engine as _};
 use regex::Regex;
@@ -283,6 +285,7 @@ pub fn start_clipboard_watcher(app: AppHandle) {
         }
     });
 }
+
 === FILE: src-tauri/src/dpapi_vault.rs ===
 use std::fs;
 use std::path::PathBuf;
@@ -399,6 +402,7 @@ pub fn clear_custom_api_key() -> Result<bool, String> {
     }
     Ok(false)
 }
+
 === FILE: src-tauri/src/lib.rs ===
 pub mod audio_loopback;
 pub mod bluetooth_wifi;
@@ -488,6 +492,7 @@ pub fn run() {
         })
         .invoke_handler(tauri::generate_handler![
             window_manager::update_pill_hit_rect,
+            window_manager::set_pill_force_interactive,
             window_manager::set_pill_focusable,
             window_manager::reposition_pill_window,
             window_manager::open_settings_window,
@@ -541,6 +546,7 @@ pub fn run() {
             }
         });
 }
+
 === FILE: src-tauri/src/main.rs ===
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
@@ -552,6 +558,7 @@ fn main() {
     }));
     pill_for_windows::run();
 }
+
 === FILE: src-tauri/src/media_gsmtc.rs ===
 use base64::{engine::general_purpose::STANDARD as BASE64, Engine as _};
 use serde::Serialize;
@@ -661,6 +668,7 @@ pub async fn media_control_action(action: String, seek_sec: Option<f64>) -> Resu
     }
     Ok(())
 }
+
 === FILE: src-tauri/src/privacy_cloak.rs ===
 use tauri::{AppHandle, Manager};
 use windows::Win32::Foundation::HWND;
@@ -731,6 +739,7 @@ pub fn apply_privacy_cloak(
 
     Ok(should_cloak)
 }
+
 === FILE: src-tauri/src/system_controls.rs ===
 use serde::Serialize;
 use sysinfo::System;
@@ -878,6 +887,7 @@ pub fn toggle_night_light() -> Result<bool, String> {
     let _ = key.set_raw_value("Data", &raw);
     Ok(!currently_active)
 }
+
 === FILE: src-tauri/src/window_manager.rs ===
 use serde::Deserialize;
 use std::sync::{Arc, Mutex};
@@ -888,7 +898,7 @@ use windows::Win32::Graphics::Dwm::{
     DwmSetWindowAttribute, DWMWA_BORDER_COLOR, DWMWA_WINDOW_CORNER_PREFERENCE,
     DWMWCP_DONOTROUND,
 };
-use windows::Win32::UI::Input::KeyboardAndMouse::{GetAsyncKeyState, VK_LBUTTON};
+use windows::Win32::UI::Input::KeyboardAndMouse::{GetAsyncKeyState, VK_LBUTTON, VK_RBUTTON};
 use windows::Win32::UI::WindowsAndMessaging::{
     GetCursorPos, GetSystemMetrics, GetWindowLongPtrW, SetForegroundWindow, SetWindowLongPtrW,
     SetWindowPos, GWL_EXSTYLE, GWL_STYLE, HWND_TOPMOST, SM_CXSCREEN, SM_CYSCREEN,
@@ -1103,10 +1113,20 @@ pub fn configure_pill_overlay_window(window: &WebviewWindow) -> Arc<Mutex<PillHi
 
                     // Detect global outside click when cursor is outside the pill
                     let lbutton_down = unsafe { GetAsyncKeyState(VK_LBUTTON.0 as i32) < 0 };
-                    if !inside && lbutton_down && !was_lbutton_down {
+                    let rbutton_down = unsafe { GetAsyncKeyState(VK_RBUTTON.0 as i32) < 0 };
+                    let is_mouse_down = lbutton_down || rbutton_down;
+
+                    let outside_stage = pt.x < st.window_x
+                        || pt.x > st.window_x + (960.0 * s) as i32
+                        || pt.y < st.window_y
+                        || pt.y > st.window_y + (600.0 * s) as i32;
+
+                    if ((!inside && lbutton_down) || (st.force_interactive && outside_stage && is_mouse_down))
+                        && !was_lbutton_down
+                    {
                         let _ = win_clone.emit("pill://outside-click", ());
                     }
-                    was_lbutton_down = lbutton_down;
+                    was_lbutton_down = is_mouse_down;
 
                     let should_ignore = !inside;
                     if should_ignore != last_ignore {
@@ -1128,6 +1148,17 @@ pub fn update_pill_hit_rect(
 ) -> Result<(), String> {
     if let Ok(mut st) = state.lock() {
         st.rect = rect;
+    }
+    Ok(())
+}
+
+#[tauri::command]
+pub fn set_pill_force_interactive(
+    state: tauri::State<'_, Arc<Mutex<PillHitState>>>,
+    force: bool,
+) -> Result<(), String> {
+    if let Ok(mut st) = state.lock() {
+        st.force_interactive = force;
     }
     Ok(())
 }
@@ -1383,6 +1414,7 @@ pub fn broadcast_preferences_sync(
     }
     Ok(())
 }
+
 === FILE: src-tauri/tauri.conf.json ===
 {
   "$schema": "https://schema.tauri.app/config/2",
@@ -1441,6 +1473,7 @@ pub fn broadcast_preferences_sync(
     ]
   }
 }
+
 === FILE: src/App.tsx ===
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { PillCapsule } from './components/PillCapsule';
@@ -1556,7 +1589,7 @@ export default function App() {
   const [nightLight, setNightLight] = useState(false);
   const [statusBanner, setStatusBanner] = useState<string | null>(null);
 
-  // Productivity Data: Tray, Universal A–Z Clipboard, Notes, Reminders
+  // Productivity Data: Tray, Universal Aâ€“Z Clipboard, Notes, Reminders
   const [trayFiles, setTrayFiles] = useState<TrayFileItem[]>(INITIAL_TRAY_FILES);
   const [clipboardItems, setClipboardItems] = useState<ClipboardItem[]>(INITIAL_CLIPBOARD_ITEMS);
   const [reminders, setReminders] = useState<ReminderTask[]>(INITIAL_REMINDERS);
@@ -1878,7 +1911,7 @@ export default function App() {
 
       if (summaries.length > 0) {
         playTactilePop('confirm');
-        showTransientToast(`Astra executed: ${summaries.join(' · ')}`);
+        showTransientToast(`Astra executed: ${summaries.join(' Â· ')}`);
       }
     },
     [showTransientToast]
@@ -2488,7 +2521,7 @@ export default function App() {
         </div>
       )}
 
-      {/* Zero-UI Wake-Word Listener ("Astra" / "Astram" / "అస్త్రం") */}
+      {/* Zero-UI Wake-Word Listener ("Astra" / "Astram" / "à°…à°¸à±à°¤à±à°°à°‚") */}
       <AstraWakeWordDaemon
         isAstraOpen={isVoiceAgentOpen}
         aiEnabled={preferences.aiEnabled}
@@ -2498,6 +2531,7 @@ export default function App() {
     </div>
   );
 }
+
 === FILE: src/components/AnimatedBatterySymbol.tsx ===
 import React, { useId } from 'react';
 
@@ -2570,7 +2604,7 @@ export const AnimatedBatterySymbol: React.FC<AnimatedBatterySymbolProps> = ({
         effectiveMode === 'charging'
           ? `Charging (${clamped}%)`
           : effectiveMode === 'idle_full'
-            ? `Plugged In · Idle Full (${clamped}%)`
+            ? `Plugged In Â· Idle Full (${clamped}%)`
             : effectiveMode === 'low'
               ? `Low Battery (${clamped}%)`
               : `Discharging on Battery (${clamped}%)`
@@ -2657,7 +2691,7 @@ export const AnimatedBatterySymbol: React.FC<AnimatedBatterySymbolProps> = ({
         <g clipPath={`url(#bat-clip-${uid})`}>
           <rect x="3.5" y="3.5" width="30" height="4.5" rx="2" fill="#ffffff" opacity="0.22" />
 
-          {/* CASE 1: CHARGING — Travelling Liquid Current Wave */}
+          {/* CASE 1: CHARGING â€” Travelling Liquid Current Wave */}
           {!lowPowerEco && effectiveMode === 'charging' && (
             <rect x="-14" y="3.5" width="14" height="13" fill={`url(#bat-shimmer-${uid})`}>
               <animate
@@ -2670,7 +2704,7 @@ export const AnimatedBatterySymbol: React.FC<AnimatedBatterySymbolProps> = ({
             </rect>
           )}
 
-          {/* CASE 2: DISCHARGING — Gentle Energy Micro-Pulse Toward Load */}
+          {/* CASE 2: DISCHARGING â€” Gentle Energy Micro-Pulse Toward Load */}
           {!lowPowerEco && effectiveMode === 'discharging' && (
             <circle cx={Math.max(6, fillWidth)} cy="10" r="3.5" fill="#ffffff" opacity="0.2">
               <animate
@@ -2738,6 +2772,7 @@ export const AnimatedBatterySymbol: React.FC<AnimatedBatterySymbolProps> = ({
     </span>
   );
 };
+
 === FILE: src/components/ArchitectureAndSourceView.tsx ===
 import React, { useState } from 'react';
 import { Check, Copy, Download, FileCode2 } from 'lucide-react';
@@ -2763,7 +2798,7 @@ const BENCHMARK_ROWS = [
     winui: '0.0%',
     wpf: '0.2%',
     electron: '1.8%',
-    note: 'Event-driven WinRT SMTC & WM_CLIPBOARDUPDATE — zero polling timers',
+    note: 'Event-driven WinRT SMTC & WM_CLIPBOARDUPDATE â€” zero polling timers',
   },
   {
     metric: '120Hz Morph Frame CPU',
@@ -2815,7 +2850,7 @@ export const ArchitectureAndSourceView: React.FC<ArchitectureAndSourceViewProps>
         <section className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 pb-8 border-b border-white/10">
           <div className="max-w-2xl">
             <div className="text-xs text-sky-300 font-medium mb-2">
-              Pill for Windows · WinUI 3 · DirectComposition · .NET 8 NativeAOT · Direct2D HLSL
+              Pill for Windows Â· WinUI 3 Â· DirectComposition Â· .NET 8 NativeAOT Â· Direct2D HLSL
             </div>
             <h1
               style={{ textWrap: 'balance' }}
@@ -2950,7 +2985,7 @@ export const ArchitectureAndSourceView: React.FC<ArchitectureAndSourceViewProps>
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-white/10">
         <div>
           <div className="text-xs text-sky-300 font-medium mb-1">
-            C# 12 · WinUI 3 · Direct2D HLSL · PowerShell Build
+            C# 12 Â· WinUI 3 Â· Direct2D HLSL Â· PowerShell Build
           </div>
           <h1 className="text-2xl font-bold text-white tracking-tight">
             Native Windows Source Repository
@@ -3037,6 +3072,7 @@ export const ArchitectureAndSourceView: React.FC<ArchitectureAndSourceViewProps>
     </div>
   );
 };
+
 === FILE: src/components/AstraSiriOrbCanvas.tsx ===
 import React, { useEffect, useRef } from 'react';
 import { AstraOrbStyle } from '../types/pill';
@@ -3204,7 +3240,7 @@ export function resolveOrbThemeColors(style: AstraOrbStyle = 'siri_rainbow') {
  * ======================================================================== */
 
 /**
- * N1. NARUTO RASENGAN (螺旋丸)
+ * N1. NARUTO RASENGAN (èžºæ—‹ä¸¸)
  * Swirling concentrated sphere of high-velocity chakra streams with brilliant white core.
  */
 function drawNarutoRasengan(
@@ -3268,7 +3304,7 @@ function drawNarutoRasengan(
 }
 
 /**
- * N2. NARUTO RASENSHURIKEN (風遁・螺旋手裏剣)
+ * N2. NARUTO RASENSHURIKEN (é¢¨éãƒ»èžºæ—‹æ‰‹è£å‰£)
  * Concentrated Rasengan core enveloped by 4 gigantic razor-sharp rotating wind shuriken blades.
  */
 function drawNarutoRasenshuriken(
@@ -3324,7 +3360,7 @@ function drawNarutoRasenshuriken(
 }
 
 /**
- * N3. NARUTO SHARINGAN (写輪眼)
+ * N3. NARUTO SHARINGAN (å†™è¼ªçœ¼)
  * Crimson red Uchiha iris, black pupil, concentric ring, and 3 rotating curved tomoe commas.
  */
 function drawNarutoSharingan(
@@ -3370,7 +3406,7 @@ function drawNarutoSharingan(
   ctx.fillStyle = '#09090b';
   ctx.fill();
 
-  // 3 Curved Tomoe (巴) spaced at 120°
+  // 3 Curved Tomoe (å·´) spaced at 120Â°
   const tomoeRot = phase * 2.2;
   for (let t = 0; t < 3; t++) {
     const angle = tomoeRot + (t * Math.PI * 2) / 3;
@@ -3409,7 +3445,7 @@ function drawNarutoSharingan(
 }
 
 /**
- * N4. NARUTO MANGEKYO SHARINGAN & SUSANOO (万華鏡写輪眼・須佐能乎)
+ * N4. NARUTO MANGEKYO SHARINGAN & SUSANOO (ä¸‡è¯é¡å†™è¼ªçœ¼ãƒ»é ˆä½èƒ½ä¹Ž)
  * Geometric Mangekyo pinwheel iris framed by ethereal spectral violet Susanoo ribcage flames.
  */
 function drawNarutoMangekyoSusano(
@@ -3489,7 +3525,7 @@ function drawNarutoMangekyoSusano(
 }
 
 /**
- * N5. NARUTO AKATSUKI RED CLOUD (暁の雲)
+ * N5. NARUTO AKATSUKI RED CLOUD (æšã®é›²)
  * Iconic crimson cloud with crisp white border, dark blood-chakra swirls, and drifting red embers.
  */
 function drawNarutoAkatsukiCloud(
@@ -3572,7 +3608,7 @@ function drawNarutoAkatsukiCloud(
 }
 
 /**
- * N6. NARUTO SHINOBI WHITE SMOKE CLOUD (変わり身の術・白煙)
+ * N6. NARUTO SHINOBI WHITE SMOKE CLOUD (å¤‰ã‚ã‚Šèº«ã®è¡“ãƒ»ç™½ç…™)
  * Stylized billowing white summon smoke with expanding swirls and curling wisps.
  */
 function drawNarutoWhiteCloud(
@@ -5105,6 +5141,7 @@ export const AstraSiriOrbCanvas: React.FC<AstraSiriOrbCanvasProps> = ({
     />
   );
 };
+
 === FILE: src/components/ControlAndMonitorPanels.tsx ===
 import React, { useEffect, useRef, useState } from 'react';
 import {
@@ -5650,7 +5687,7 @@ export const ControlCenterPanel: React.FC<ControlCenterPanelProps> = ({
                         {net.secured && <Lock className={`w-2.5 h-2.5 ${subMutedText}`} />}
                       </div>
                       <div className={`text-[10px] ${subMutedText} font-mono tabular-nums`}>
-                        {connected ? 'Connected, secured' : 'Available'} · {net.band} ·{' '}
+                        {connected ? 'Connected, secured' : 'Available'} Â· {net.band} Â·{' '}
                         {net.signalPct}%
                       </div>
                     </div>
@@ -5702,7 +5739,7 @@ export const ControlCenterPanel: React.FC<ControlCenterPanelProps> = ({
                     <div className="text-xs font-semibold truncate">{dev.name}</div>
                     <div className={`text-[10px] ${subMutedText} font-mono tabular-nums`}>
                       {dev.category}
-                      {dev.batteryPct !== undefined ? ` · Battery ${dev.batteryPct}%` : ''}
+                      {dev.batteryPct !== undefined ? ` Â· Battery ${dev.batteryPct}%` : ''}
                     </div>
                   </div>
                 </div>
@@ -5995,7 +6032,7 @@ export const ControlCenterPanel: React.FC<ControlCenterPanelProps> = ({
           )}
           {playgroundMode && (
             <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-amber-400/20 text-amber-300">
-              Playground: Drag blocks or tap 1×1/2×1
+              Playground: Drag blocks or tap 1Ã—1/2Ã—1
             </span>
           )}
         </span>
@@ -6097,7 +6134,7 @@ export const ControlCenterPanel: React.FC<ControlCenterPanelProps> = ({
           <div className="flex items-center gap-2 flex-1 min-h-0">
             {preferences.controlLayoutMode === 'squarish_blocks' ||
             preferences.controlLayoutMode === 'circular_orbs' ? (
-              /* COMPACT SPACE-EFFICIENT SQUARISH BLOCKS & CIRCULAR ORBS (6 cols, resizable 1×1 or 2×1 in Playground) */
+              /* COMPACT SPACE-EFFICIENT SQUARISH BLOCKS & CIRCULAR ORBS (6 cols, resizable 1Ã—1 or 2Ã—1 in Playground) */
               <div className="flex-1 grid grid-cols-6 gap-2 content-center">
                 {(playgroundMode ? preferences.controlTiles.slice(0, 12) : currentTiles).map((id) => {
                   const meta = ALL_CONTROL_TILES.find((t) => t.id === id) ?? ALL_CONTROL_TILES[0];
@@ -6161,7 +6198,7 @@ export const ControlCenterPanel: React.FC<ControlCenterPanelProps> = ({
                             title={`Remove ${meta.label}`}
                             className="w-4 h-4 rounded-full bg-rose-500 text-white text-[9px] font-bold flex items-center justify-center shadow"
                           >
-                            −
+                            âˆ’
                           </button>
                           <button
                             type="button"
@@ -6170,7 +6207,7 @@ export const ControlCenterPanel: React.FC<ControlCenterPanelProps> = ({
                               e.stopPropagation();
                               toggleTileSpan(id);
                             }}
-                            title="Resize block between 1×1 Square/Circle and 2×1 Pill"
+                            title="Resize block between 1Ã—1 Square/Circle and 2Ã—1 Pill"
                             className="px-1 rounded bg-slate-900/95 border border-white/25 text-[8.5px] font-mono text-amber-300 shadow"
                           >
                             {span}
@@ -6223,7 +6260,7 @@ export const ControlCenterPanel: React.FC<ControlCenterPanelProps> = ({
                           )}
                         </div>
                       ) : (
-                        /* Space-Efficient Squarish Block (or 2×1 Compact Pill when resized) */
+                        /* Space-Efficient Squarish Block (or 2Ã—1 Compact Pill when resized) */
                         <div
                           style={
                             active
@@ -7017,7 +7054,7 @@ export const SystemPowerMonitorPanel: React.FC<SystemPowerMonitorPanelProps> = (
   const downPoly = buildSparklinePoints(systemState.netHistoryDown, 280, 52, maxGraphScale);
   const upPoly = buildSparklinePoints(systemState.netHistoryUp, 280, 52, maxGraphScale);
 
-  const maskedPublicIp = (systemState.publicIp || '127.0.0.1').replace(/\.\d+\.\d+$/, '.•••.••');
+  const maskedPublicIp = (systemState.publicIp || '127.0.0.1').replace(/\.\d+\.\d+$/, '.â€¢â€¢â€¢.â€¢â€¢');
 
   return (
     <div className="flex flex-col justify-between h-full gap-2 select-text">
@@ -7029,7 +7066,7 @@ export const SystemPowerMonitorPanel: React.FC<SystemPowerMonitorPanelProps> = (
             <div>
               <div className="text-[11px] opacity-75 flex items-center gap-1.5">
                 <Activity className="w-3.5 h-3.5" style={{ color: palette.primaryHex }} />
-                <span>Live Internet Speed · {systemState.wifiSsid}</span>
+                <span>Live Internet Speed Â· {systemState.wifiSsid}</span>
               </div>
               <div className="flex items-baseline gap-3 mt-1">
                 <span className="flex items-baseline gap-1">
@@ -7125,7 +7162,7 @@ export const SystemPowerMonitorPanel: React.FC<SystemPowerMonitorPanelProps> = (
             <div>
               <span className="opacity-65 block">Session Data</span>
               <span className="font-semibold">
-                {systemState.sessionDownGb}G ↓ · {systemState.sessionUpGb}G ↑
+                {systemState.sessionDownGb}G â†“ Â· {systemState.sessionUpGb}G â†‘
               </span>
             </div>
           </div>
@@ -7176,9 +7213,9 @@ export const SystemPowerMonitorPanel: React.FC<SystemPowerMonitorPanelProps> = (
                     }`}
                   >
                     {batteryPreviewMode === 'idle_full'
-                      ? 'Idle · Full AC'
+                      ? 'Idle Â· Full AC'
                       : batteryPreviewMode === 'low'
-                        ? 'Low · Saver Ready'
+                        ? 'Low Â· Saver Ready'
                         : batteryPreviewMode === 'discharging'
                           ? 'On Battery Drain'
                           : batteryPreviewMode === 'charging'
@@ -7234,14 +7271,14 @@ export const SystemPowerMonitorPanel: React.FC<SystemPowerMonitorPanelProps> = (
             <div className="flex items-center justify-between text-[10px] font-mono opacity-75 tabular-nums mt-1">
               <span>
                 {batteryPreviewMode === 'idle_full'
-                  ? '0W Trickle · Charged'
+                  ? '0W Trickle Â· Charged'
                   : batteryPreviewMode === 'low'
                     ? '-14W Low Cell'
                     : systemState.isCharging && batteryPreviewMode !== 'discharging'
                       ? `+${systemState.chargingWatts}W SuperFast`
                       : `-${systemState.chargingWatts}W Drain`}
               </span>
-              <span>{systemState.batteryTempC.toFixed(1)}°C</span>
+              <span>{systemState.batteryTempC.toFixed(1)}Â°C</span>
             </div>
           </div>
 
@@ -7347,7 +7384,7 @@ export const SystemPowerMonitorPanel: React.FC<SystemPowerMonitorPanelProps> = (
           <div className="flex items-center justify-between text-[10px] opacity-75">
             <span className="flex items-center gap-1">
               <Globe className="w-3 h-3 text-sky-400" />
-              <span>Public IP · ISP</span>
+              <span>Public IP Â· ISP</span>
             </span>
             <div className="flex items-center gap-1.5 select-none">
               <button
@@ -7376,7 +7413,7 @@ export const SystemPowerMonitorPanel: React.FC<SystemPowerMonitorPanelProps> = (
             {revealPublicIp ? systemState.publicIp : maskedPublicIp}
           </div>
           <div className="text-[10px] opacity-70 truncate">
-            {systemState.ispName} · DNS {systemState.dnsServer.split(' ')[0]}
+            {systemState.ispName} Â· DNS {systemState.dnsServer.split(' ')[0]}
           </div>
         </div>
 
@@ -7397,15 +7434,15 @@ export const SystemPowerMonitorPanel: React.FC<SystemPowerMonitorPanelProps> = (
         {/* CPU / GPU / NativeAOT RAM */}
         <div className={`col-span-3 border rounded-xl px-2.5 py-2 flex flex-col justify-between ${cardSurface}`}>
           <div className="flex items-center justify-between text-[10px] opacity-75">
-            <span>CPU · GPU · RAM</span>
+            <span>CPU Â· GPU Â· RAM</span>
             <Cpu className="w-3 h-3" style={{ color: palette.primaryHex }} />
           </div>
           <div className="text-xs font-mono font-semibold tabular-nums mt-0.5">
-            {systemState.cpuUsagePct.toFixed(0)}% · {systemState.gpuUsagePct}% ·{' '}
-            {preferences.featureFlags.lowRamEcoMode ? '9.8' : systemState.ledgeNativeRamMb}MB
+            {systemState.cpuUsagePct.toFixed(0)}% Â· {systemState.gpuUsagePct}% Â·{' '}
+            {preferences.featureFlags.lowRamEcoMode ? '9.8' : (systemState.pillNativeRamMb ?? systemState.ledgeNativeRamMb ?? 12.4)}MB
           </div>
           <div className="text-[10px] font-mono opacity-70 truncate">
-            NVMe {systemState.nvmeReadMb} MB/s · {systemState.gpuTempC}°C
+            NVMe {systemState.nvmeReadMb} MB/s Â· {systemState.gpuTempC}Â°C
           </div>
         </div>
       </div>
@@ -7454,7 +7491,7 @@ export const AppMenuGridPanel: React.FC<AppMenuGridPanelProps> = ({
     setCalcExpr(input);
     const sanitized = input.replace(/[^0-9+\-*/().\s%]/g, '');
     if (!sanitized.trim()) {
-      setCalcResult('—');
+      setCalcResult('â€”');
       return;
     }
     try {
@@ -7477,7 +7514,7 @@ export const AppMenuGridPanel: React.FC<AppMenuGridPanelProps> = ({
             onClick={() => setSubView('apps')}
             className={`text-xs ${isLight ? 'text-sky-700 hover:text-sky-900' : 'text-sky-400'} hover:underline`}
           >
-            ← Back to All Apps
+            â† Back to All Apps
           </button>
         </div>
         <div className="flex-1 overflow-y-auto pill-scroll space-y-1 pr-1">
@@ -7552,7 +7589,7 @@ export const AppMenuGridPanel: React.FC<AppMenuGridPanelProps> = ({
             onClick={() => setSubView('apps')}
             className={`text-xs ${isLight ? 'text-sky-700 hover:text-sky-900' : 'text-sky-400'} hover:underline`}
           >
-            ← Back to All Apps
+            â† Back to All Apps
           </button>
         </div>
         <div className="text-3xl font-mono font-bold tabular-nums tracking-tight">
@@ -7592,7 +7629,7 @@ export const AppMenuGridPanel: React.FC<AppMenuGridPanelProps> = ({
             onClick={() => setSubView('apps')}
             className={`text-xs ${isLight ? 'text-sky-700 hover:text-sky-900' : 'text-sky-400'} hover:underline`}
           >
-            ← Back to All Apps
+            â† Back to All Apps
           </button>
         </div>
         <input
@@ -7633,7 +7670,7 @@ export const AppMenuGridPanel: React.FC<AppMenuGridPanelProps> = ({
     { id: 'mirror', label: 'Mirror', desc: 'Cam & Rim', Icon: Camera, color: 'text-rose-300 bg-rose-500/15', action: () => onOpenTab('mirror') },
     { id: 'reminders', label: 'Reminders', desc: `${reminders.filter((r) => !r.completed).length} due today`, Icon: CheckSquare, color: 'text-purple-300 bg-purple-500/15', action: () => setSubView('reminders') },
     { id: 'stopwatch', label: 'Stopwatch', desc: '100Hz Laps', Icon: Timer, color: 'text-orange-300 bg-orange-500/15', action: () => setSubView('stopwatch') },
-    { id: 'settings', label: 'A–Z Kits', desc: 'Customize All', Icon: Settings, color: 'text-slate-200 bg-white/15', action: onOpenFullSettings },
+    { id: 'settings', label: 'Aâ€“Z Kits', desc: 'Customize All', Icon: Settings, color: 'text-slate-200 bg-white/15', action: onOpenFullSettings },
   ];
 
   return (
@@ -7682,6 +7719,7 @@ export const AppMenuGridPanel: React.FC<AppMenuGridPanelProps> = ({
     </div>
   );
 };
+
 === FILE: src/components/CustomPopdown.tsx ===
 import React, { useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
@@ -7969,6 +8007,7 @@ export function CustomPopdown<T extends string = string>({
     </>
   );
 }
+
 === FILE: src/components/DesktopStudioDock.tsx ===
 import React from 'react';
 import {
@@ -8090,6 +8129,10 @@ export const DesktopStudioDock: React.FC<DesktopStudioDockProps> = ({
               type="button"
               draggable
               onDragStart={(e) => {
+                e.dataTransfer.setData(
+                  'application/x-dynamic-pill-file',
+                  JSON.stringify(file)
+                );
                 e.dataTransfer.setData(
                   'application/x-dynamic-ledge-file',
                   JSON.stringify(file)
@@ -8302,7 +8345,7 @@ export const DesktopStudioDock: React.FC<DesktopStudioDockProps> = ({
               </button>
 
               <span className="hidden xl:inline text-[11px] text-slate-400 font-mono">
-                {palette.name} · {preferences.toggleShortcut} / {preferences.voiceAgentShortcut}
+                {palette.name} Â· {preferences.toggleShortcut} / {preferences.voiceAgentShortcut}
               </span>
             </div>
 
@@ -8340,6 +8383,7 @@ export const DesktopStudioDock: React.FC<DesktopStudioDockProps> = ({
     </>
   );
 };
+
 === FILE: src/components/ErrorBoundary.tsx ===
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 
@@ -8401,6 +8445,7 @@ export class ErrorBoundary extends Component<Props, State> {
     return this.props.children;
   }
 }
+
 === FILE: src/components/FluidEffectSlider.tsx ===
 import React, { useEffect, useRef, useState } from 'react';
 import { ControlSliderOrientation, SliderVisualStyle } from '../utils/themeAndSliders';
@@ -9021,6 +9066,7 @@ export const FluidEffectSlider: React.FC<FluidEffectSliderProps> = ({
     </div>
   );
 };
+
 === FILE: src/components/FluidMusicVisualizer.tsx ===
 import React, { useEffect, useRef } from 'react';
 import { MusicVisualizerStyle } from '../types/pill';
@@ -9321,12 +9367,12 @@ export const FluidMusicVisualizer: React.FC<FluidMusicVisualizerProps> = ({
         type="button"
         onClick={onCycleStyle}
         title="Click to switch fluid music illustrator animation"
-        aria-label={`Music visualizer (${(style || 'bars').replace(/_/g, ' ')}) — click to switch style`}
+        aria-label={`Music visualizer (${(style || 'bars').replace(/_/g, ' ')}) â€” click to switch style`}
         className="w-full my-1.5 px-2 py-1 rounded-xl bg-white/[0.03] hover:bg-white/[0.055] border border-white/[0.05] relative overflow-hidden h-11 flex items-center cursor-pointer transition-colors group focus-visible:outline-2 focus-visible:outline-sky-400"
       >
         <canvas ref={canvasRef} className="w-full h-full block" />
         <span className="absolute right-2 bottom-1 text-[9px] text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none capitalize">
-          {(style || 'bars').replace(/_/g, ' ')} · Next
+          {(style || 'bars').replace(/_/g, ' ')} Â· Next
         </span>
       </button>
     );
@@ -9338,6 +9384,7 @@ export const FluidMusicVisualizer: React.FC<FluidMusicVisualizerProps> = ({
     </div>
   );
 };
+
 === FILE: src/components/FullSettingsView.tsx ===
 import React, { useRef, useState } from 'react';
 import {
@@ -9434,7 +9481,7 @@ const SETTINGS_CLIP_SORT_OPTIONS: PopdownOption<ClipboardSortBy>[] = [
   { value: 'newest', label: 'Newest First', sublabel: 'Most recently copied items first' },
   { value: 'oldest', label: 'Oldest First', sublabel: 'Chronological capture order' },
   { value: 'pinned', label: 'Pinned First', sublabel: 'Keep pinned snippets anchored on top' },
-  { value: 'type', label: 'Format Type (A–Z)', sublabel: 'Sort alphabetically by extension/type' },
+  { value: 'type', label: 'Format Type (Aâ€“Z)', sublabel: 'Sort alphabetically by extension/type' },
   { value: 'size', label: 'Payload Size', sublabel: 'Largest files and images first' },
 ];
 
@@ -9902,7 +9949,7 @@ export const ALL_ASTRA_ORB_DEFINITIONS: AstraOrbDefinition[] = [
     id: 'cupertino_silk',
     name: 'Cupertino Liquid Silk',
     category: 'style_kits',
-    desc: 'Pearlescent Möbius ribbon knot with fluid caustic light reflections',
+    desc: 'Pearlescent MÃ¶bius ribbon knot with fluid caustic light reflections',
     hex: '#818cf8',
     tag: 'Liquid Glass',
   },
@@ -10172,6 +10219,11 @@ export const FullSettingsView: React.FC<FullSettingsViewProps> = ({
 
   return (
     <div
+      onMouseLeave={() => {
+        if (preferences.closeSettingsOnMouseLeave ?? true) {
+          handleClose();
+        }
+      }}
       className="w-full h-screen flex flex-col bg-[#090b10] text-slate-100 overflow-hidden select-none"
     >
       {/* 1. Custom Titlebar Header with Window Drag Region and Windows 11 Controls */}
@@ -10331,10 +10383,10 @@ export const FullSettingsView: React.FC<FullSettingsViewProps> = ({
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-white/10">
               <div>
                 <h1 className="text-xl font-bold text-white tracking-tight">
-                  Pill for Windows — Deep Customization &amp; Studio Settings
+                  Pill for Windows â€” Deep Customization &amp; Studio Settings
                 </h1>
                 <p className="text-xs text-slate-400 mt-0.5">
-                  Every color theme, A–Z style kit, icon pack, slider style, &gt; Control Center layout, and Home module updates live with interactive previews below.
+                  Every color theme, Aâ€“Z style kit, icon pack, slider style, &gt; Control Center layout, and Home module updates live with interactive previews below.
                 </p>
               </div>
 
@@ -10408,10 +10460,10 @@ export const FullSettingsView: React.FC<FullSettingsViewProps> = ({
                       >
                         <span>
                           {preferences.shapeStyle === PillShapeStyle.MinimalistBar
-                            ? '⚡ Test Razor Slice Gesture'
+                            ? 'âš¡ Test Razor Slice Gesture'
                             : preferences.shapeStyle === PillShapeStyle.SplitDualCapsule
-                            ? '⚡ Test Dual Droplet Detach'
-                            : '⚡ Test Spring Wobble'}
+                            ? 'âš¡ Test Dual Droplet Detach'
+                            : 'âš¡ Test Spring Wobble'}
                         </span>
                       </button>
                     )}
@@ -10421,7 +10473,7 @@ export const FullSettingsView: React.FC<FullSettingsViewProps> = ({
                         onClick={() => playTactilePop('notification')}
                         className="px-2.5 py-1 text-[11px] font-medium bg-white/10 hover:bg-white/20 text-emerald-300 rounded-lg transition-colors"
                       >
-                        🔊 Test Sound Effect
+                        ðŸ”Š Test Sound Effect
                       </button>
                     )}
                     <span className="text-[11px] font-mono text-slate-400 bg-white/5 px-2 py-0.5 rounded-md border border-white/10">
@@ -10463,7 +10515,7 @@ export const FullSettingsView: React.FC<FullSettingsViewProps> = ({
                             </span>
                           </div>
                           <div className="text-[10px] text-slate-400 capitalize truncate">
-                            {preferences.material} · {preferences.innerPillScale} scale
+                            {preferences.material} Â· {preferences.innerPillScale} scale
                           </div>
                         </div>
                       </div>
@@ -10625,7 +10677,7 @@ export const FullSettingsView: React.FC<FullSettingsViewProps> = ({
                                     />
                                     <span className="font-semibold truncate">Dynamic Island</span>
                                   </div>
-                                  <span className="text-emerald-400 font-mono text-[9px]">● Live</span>
+                                  <span className="text-emerald-400 font-mono text-[9px]">â— Live</span>
                                 </div>
 
                                 {/* Completely Detached Companion Satellite Droplet */}
@@ -10692,7 +10744,7 @@ export const FullSettingsView: React.FC<FullSettingsViewProps> = ({
                                 </div>
 
                                 <div className="flex items-center gap-1 shrink-0 font-mono text-[9px] text-slate-400">
-                                  <span className="text-emerald-400">● Live</span>
+                                  <span className="text-emerald-400">â— Live</span>
                                 </div>
                               </div>
                             )}
@@ -10712,7 +10764,7 @@ export const FullSettingsView: React.FC<FullSettingsViewProps> = ({
                       <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-white/10 text-xs">
                         <div className="flex items-center gap-3">
                           <span className="font-mono text-sky-300 bg-sky-950/60 border border-sky-400/20 px-2 py-0.5 rounded text-[11px]">
-                            {preferences.sizeScale === PillSizeScale.Small ? '193 × 33 px (Compact)' : preferences.sizeScale === PillSizeScale.Large ? '229 × 39 px (Roomy)' : '210 × 36 px (Normal)'}
+                            {preferences.sizeScale === PillSizeScale.Small ? '193 Ã— 33 px (Compact)' : preferences.sizeScale === PillSizeScale.Large ? '229 Ã— 39 px (Roomy)' : '210 Ã— 36 px (Normal)'}
                           </span>
                           <span className="text-slate-300">
                             Anchor: <strong className="text-white capitalize">{String(preferences.anchorPosition || 'top_center').replace(/_/g, ' ')}</strong>
@@ -10725,7 +10777,7 @@ export const FullSettingsView: React.FC<FullSettingsViewProps> = ({
                               ? 'bg-amber-500/10 text-amber-300 border border-amber-500/20'
                               : 'bg-white/5 text-slate-300 border border-white/10'
                           }`}>
-                            {preferences.stealthAutoHide ? '🛡️ Stealth Auto-Hide Enabled' : 'Always Floating'}
+                            {preferences.stealthAutoHide ? 'ðŸ›¡ï¸ Stealth Auto-Hide Enabled' : 'Always Floating'}
                           </span>
                           <span className="text-[11px] font-mono text-slate-400 bg-white/5 px-2 py-0.5 rounded border border-white/10">
                             Physics: {preferences.springPreset}
@@ -10831,7 +10883,7 @@ export const FullSettingsView: React.FC<FullSettingsViewProps> = ({
                         </div>
 
                         <div className="w-full flex items-center justify-between text-[9px] font-mono text-slate-500 border-t border-white/5 pt-1">
-                          <span>Tap: Speak · Long Press: Chat</span>
+                          <span>Tap: Speak Â· Long Press: Chat</span>
                           <span className="text-cyan-400 capitalize">{String(preferences.astraOrbStyle || 'siri_rainbow').replace(/_/g, ' ')}</span>
                         </div>
                       </div>
@@ -10877,14 +10929,14 @@ export const FullSettingsView: React.FC<FullSettingsViewProps> = ({
            * ============================================================== */}
           {section === 'themes_icons' && (
             <div className="space-y-6">
-              {/* Complete A–Z Coordinated Style Kits (Cyberpunk, Retro, Paper, Animals, Flowers, Cars, etc.) */}
+              {/* Complete Aâ€“Z Coordinated Style Kits (Cyberpunk, Retro, Paper, Animals, Flowers, Cars, etc.) */}
               <section className="bg-white/[0.03] border border-white/10 rounded-2xl p-5 space-y-4">
                 <div>
                   <h2 className="text-sm font-semibold text-white">
-                    A–Z Complete Style Kits (One-Click Full Overhaul)
+                    Aâ€“Z Complete Style Kits (One-Click Full Overhaul)
                   </h2>
                   <p className="text-xs text-slate-400 mt-0.5">
-                    Applies a coordinated theme palette, custom slider track, tile surface finish, icon pack, capsule geometry, edge lighting, and acoustic soundscape — while keeping every control customizable below.
+                    Applies a coordinated theme palette, custom slider track, tile surface finish, icon pack, capsule geometry, edge lighting, and acoustic soundscape â€” while keeping every control customizable below.
                   </p>
                 </div>
 
@@ -11255,7 +11307,7 @@ export const FullSettingsView: React.FC<FullSettingsViewProps> = ({
                     {(
                       [
                         { id: 'fluent_glass', label: 'Fluent Glass', sub: 'Crisp Windows 11 Mica' },
-                        { id: 'chamfer_cyber', label: 'Chamfer Cyber', sub: '45° cut sci-fi corners' },
+                        { id: 'chamfer_cyber', label: 'Chamfer Cyber', sub: '45Â° cut sci-fi corners' },
                         { id: 'retro_bevel', label: 'Retro Bevel Key', sub: 'Tactile 80s deck keycap' },
                         { id: 'paper_sketch', label: 'Paper & Ink', sub: 'Editorial ink shadow' },
                         { id: 'carbon_gt', label: 'Carbon Weave GT', sub: 'Motorsport cockpit mesh' },
@@ -11372,7 +11424,7 @@ export const FullSettingsView: React.FC<FullSettingsViewProps> = ({
                                 : 'bg-white/8 hover:bg-white/15 text-slate-300'
                             }`}
                           >
-                            {isMusic ? '✓ Music Slider' : 'Use for Music'}
+                            {isMusic ? 'âœ“ Music Slider' : 'Use for Music'}
                           </button>
                           <button
                             type="button"
@@ -11387,7 +11439,7 @@ export const FullSettingsView: React.FC<FullSettingsViewProps> = ({
                                 : 'bg-white/8 hover:bg-white/15 text-slate-300'
                             }`}
                           >
-                            {isControl ? '✓ Control Slider' : 'Use for Controls'}
+                            {isControl ? 'âœ“ Control Slider' : 'Use for Controls'}
                           </button>
                         </div>
                       </div>
@@ -11663,7 +11715,7 @@ export const FullSettingsView: React.FC<FullSettingsViewProps> = ({
                     Choose &amp; Reorder Control Center Quick Actions (16 Available)
                   </h2>
                   <p className="text-xs text-slate-400 mt-0.5">
-                    Tiles automatically paginate across Page 1 and Page 2 (● · ▼) in the order you set.
+                    Tiles automatically paginate across Page 1 and Page 2 (â— Â· â–¼) in the order you set.
                   </p>
                 </div>
 
@@ -11835,7 +11887,7 @@ export const FullSettingsView: React.FC<FullSettingsViewProps> = ({
                       {
                         id: PillShapeStyle.DynamicPill,
                         name: 'Dynamic Island Pill',
-                        desc: 'Floating 360° rounded Apple capsule (Recommended)',
+                        desc: 'Floating 360Â° rounded Apple capsule (Recommended)',
                       },
                       {
                         id: PillShapeStyle.TopBezelPill,
@@ -12215,7 +12267,7 @@ export const FullSettingsView: React.FC<FullSettingsViewProps> = ({
                         }`}
                       >
                         {preferences.revealOnEdgeTouch
-                          ? `${preferences.revealAreaWidth ?? 140}px × ${preferences.revealAreaHeight ?? 4}px`
+                          ? `${preferences.revealAreaWidth ?? 140}px Ã— ${preferences.revealAreaHeight ?? 4}px`
                           : 'Disabled'}
                       </span>
                       <button
@@ -12240,7 +12292,7 @@ export const FullSettingsView: React.FC<FullSettingsViewProps> = ({
                     <div className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/25 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                       <div className="space-y-0.5">
                         <div className="text-xs font-semibold text-rose-200 flex items-center gap-1.5">
-                          <span>🛡️ Cursor Edge Auto-Reveal is Completely Disabled</span>
+                          <span>ðŸ›¡ï¸ Cursor Edge Auto-Reveal is Completely Disabled</span>
                         </div>
                         <p className="text-[11px] text-slate-300 leading-relaxed">
                           Moving your cursor to the top screen edge will <strong>never</strong> trigger or drop down the Pill. Use <strong>Alt+K</strong> to drop the compact pill from top, or <strong>Alt+L</strong> to expand full studio.
@@ -12531,7 +12583,7 @@ export const FullSettingsView: React.FC<FullSettingsViewProps> = ({
                       onClick={() => playTactilePop(cue.k, preferences.soundProfile)}
                       className="px-2.5 py-1 text-xs bg-white/8 hover:bg-white/15 text-slate-200 rounded-lg"
                     >
-                      ▶ {cue.label}
+                      â–¶ {cue.label}
                     </button>
                   ))}
                 </div>
@@ -12540,11 +12592,11 @@ export const FullSettingsView: React.FC<FullSettingsViewProps> = ({
           )}
 
           {/* ================================================================
-           * SECTION 6: ASTRA (అస్త్రం) ORB, VOICE MODES & AI REASONING
+           * SECTION 6: ASTRA (à°…à°¸à±à°¤à±à°°à°‚) ORB, VOICE MODES & AI REASONING
            * ============================================================== */}
           {section === 'ai_astra' && (
             <div className="space-y-6">
-              {/* Astra (అస్త్రం / Astram) In-Pill Morphing 3D Siri Orb & Master AI Control */}
+              {/* Astra (à°…à°¸à±à°¤à±à°°à°‚ / Astram) In-Pill Morphing 3D Siri Orb & Master AI Control */}
               <section className="bg-white/[0.03] border border-white/10 rounded-2xl p-5 space-y-4">
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex items-center gap-3.5 min-w-0">
@@ -12552,7 +12604,7 @@ export const FullSettingsView: React.FC<FullSettingsViewProps> = ({
                     <div>
                       <h2 className="text-sm font-semibold text-white flex items-center gap-2">
                         <Sparkles className="w-4 h-4" style={{ color: palette.primaryHex }} />
-                        <span>Astra (అస్త్రం / Astram) — In-Pill Siri Sphere &amp; Master AI Switch</span>
+                        <span>Astra (à°…à°¸à±à°¤à±à°°à°‚ / Astram) â€” In-Pill Siri Sphere &amp; Master AI Switch</span>
                       </h2>
                       <p className="text-xs text-slate-400 mt-0.5">
                         Morphs the existing Pill directly into Astra (never spawns a duplicate window), with 60fps 3D silk-ribbon sphere, &ldquo;Astra&rdquo; wake word, Assist, and Notedown.
@@ -12624,7 +12676,7 @@ export const FullSettingsView: React.FC<FullSettingsViewProps> = ({
                   <label className="flex items-center justify-between p-3 rounded-xl bg-white/[0.03] border border-white/10 cursor-pointer">
                     <div>
                       <div className="text-xs font-semibold text-white">
-                        Wake Word: &ldquo;Astra&rdquo; / &ldquo;Astram&rdquo; (అస్త్రం)
+                        Wake Word: &ldquo;Astra&rdquo; / &ldquo;Astram&rdquo; (à°…à°¸à±à°¤à±à°°à°‚)
                       </div>
                       <div className="text-[11px] text-slate-400">
                         Say &ldquo;Astra&rdquo; or &ldquo;Hey Astram&rdquo; aloud to morph the Pill hands-free
@@ -12675,12 +12727,12 @@ export const FullSettingsView: React.FC<FullSettingsViewProps> = ({
                   <div className="flex flex-wrap items-center gap-1.5 pt-1">
                     {(
                       [
-                        { id: 'all', label: 'All Avatars (30)', icon: '✨' },
-                        { id: 'naruto', label: 'Naruto Shinobi (6)', icon: '🍥' },
-                        { id: 'motorsport', label: 'F1 & Motorsport (7)', icon: '🏎️' },
-                        { id: 'cosmos', label: 'Cosmos & Planets (5)', icon: '🪐' },
-                        { id: 'style_kits', label: 'Theme Kits (7)', icon: '🎨' },
-                        { id: 'siri_orbs', label: 'Siri Spheres (5)', icon: '🔮' },
+                        { id: 'all', label: 'All Avatars (30)', icon: 'âœ¨' },
+                        { id: 'naruto', label: 'Naruto Shinobi (6)', icon: 'ðŸ¥' },
+                        { id: 'motorsport', label: 'F1 & Motorsport (7)', icon: 'ðŸŽï¸' },
+                        { id: 'cosmos', label: 'Cosmos & Planets (5)', icon: 'ðŸª' },
+                        { id: 'style_kits', label: 'Theme Kits (7)', icon: 'ðŸŽ¨' },
+                        { id: 'siri_orbs', label: 'Siri Spheres (5)', icon: 'ðŸ”®' },
                       ] as const
                     ).map((cat) => {
                       const active = astraCategoryFilter === cat.id;
@@ -12712,35 +12764,35 @@ export const FullSettingsView: React.FC<FullSettingsViewProps> = ({
                         {
                           id: 'naruto' as AstraCategory,
                           label: 'Shinobi Jutsu & Dojutsu',
-                          icon: '🍥',
+                          icon: 'ðŸ¥',
                           desc: 'Swirling high-velocity chakra spirals, iconic Dojutsu oculary seals, ethereal Susanoo armor, and Akatsuki crimson clouds.',
                           accent: '#ef4444',
                         },
                         {
                           id: 'motorsport' as AstraCategory,
                           label: 'Formula 1 & Motorsport GT',
-                          icon: '🏎️',
+                          icon: 'ðŸŽï¸',
                           desc: 'High-rev telemetry rev-match tachometer and authentic official Pirelli compound tyre specifications (Soft, Medium, Hard, Inter, Wet).',
                           accent: '#f59e0b',
                         },
                         {
                           id: 'cosmos' as AstraCategory,
                           label: 'Celestial Planetary Cosmos',
-                          icon: '🪐',
+                          icon: 'ðŸª',
                           desc: 'Thermonuclear solar prominence plasma loops, 3D rotating lunar basalt maria with craters, blue marble Earth, Mars, and galactic arms.',
                           accent: '#38bdf8',
                         },
                         {
                           id: 'style_kits' as AstraCategory,
                           label: 'Designer Theme Kits',
-                          icon: '🎨',
+                          icon: 'ðŸŽ¨',
                           desc: 'Cyberpunk HUDs, 80s CRT retro amber phosphor synths, Japanese sumi-e calligraphy, botanical sakura, and liquid silk.',
                           accent: '#ec4899',
                         },
                         {
                           id: 'siri_orbs' as AstraCategory,
                           label: 'Studio Siri Spheres & Shaders',
-                          icon: '🔮',
+                          icon: 'ðŸ”®',
                           desc: 'Apple Siri rainbow waves, fluid volumetric shaders, plasma arcing, and luminous electric neon aura.',
                           accent: '#a855f7',
                         },
@@ -12934,7 +12986,7 @@ export const FullSettingsView: React.FC<FullSettingsViewProps> = ({
                           size="sm"
                         />
                       </div>
-                      <span className="text-[10px] font-mono text-slate-400">Chg · Drn · Idle · Low</span>
+                      <span className="text-[10px] font-mono text-slate-400">Chg Â· Drn Â· Idle Â· Low</span>
                     </div>
                   </div>
                 </div>
@@ -13008,7 +13060,7 @@ export const FullSettingsView: React.FC<FullSettingsViewProps> = ({
                       Home Playground Widgets &amp; Dynamic Sizes (S / M / L / V)
                     </h2>
                     <p className="text-xs text-slate-400 mt-0.5">
-                      Set Small (1×1), Medium (2×1), Large (2×2), or Vertical (1×2) for any widget — or drag and resize live via &ldquo;Edit Home&rdquo;.
+                      Set Small (1Ã—1), Medium (2Ã—1), Large (2Ã—2), or Vertical (1Ã—2) for any widget â€” or drag and resize live via &ldquo;Edit Home&rdquo;.
                     </p>
                   </div>
 
@@ -13104,10 +13156,10 @@ export const FullSettingsView: React.FC<FullSettingsViewProps> = ({
                             <div className="flex items-center gap-1">
                               {(
                                 [
-                                  { id: 'small', label: 'Small 1×1' },
-                                  { id: 'medium', label: 'Medium 2×1' },
-                                  { id: 'large', label: 'Large 2×2' },
-                                  { id: 'vertical', label: 'Vert 1×2' },
+                                  { id: 'small', label: 'Small 1Ã—1' },
+                                  { id: 'medium', label: 'Medium 2Ã—1' },
+                                  { id: 'large', label: 'Large 2Ã—2' },
+                                  { id: 'vertical', label: 'Vert 1Ã—2' },
                                 ] as { id: WidgetSizeVariant; label: string }[]
                               ).map((sz) => {
                                 const selected = activeSize === sz.id;
@@ -13366,7 +13418,7 @@ export const FullSettingsView: React.FC<FullSettingsViewProps> = ({
                                     : 'bg-white/[0.03] border-white/10 text-slate-400 hover:text-white'
                                 }`}
                               >
-                                {hasW ? '✓ ' : '+ '}
+                                {hasW ? 'âœ“ ' : '+ '}
                                 {w.label}
                               </button>
                             );
@@ -13414,7 +13466,7 @@ export const FullSettingsView: React.FC<FullSettingsViewProps> = ({
                     <Cpu className="w-3.5 h-3.5 text-emerald-300" />
                   </div>
                   <div className="text-base font-mono font-bold text-emerald-300 tabular-nums mt-1">
-                    {preferences.featureFlags.lowRamEcoMode ? '9.8 MB' : '12.4 MB'} · 0.0% CPU
+                    {preferences.featureFlags.lowRamEcoMode ? '9.8 MB' : '12.4 MB'} Â· 0.0% CPU
                   </div>
                 </div>
               </section>
@@ -13460,6 +13512,7 @@ export const FullSettingsView: React.FC<FullSettingsViewProps> = ({
     </div>
   );
 };
+
 === FILE: src/components/IslandAiAssistantPanel.tsx ===
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
@@ -13552,10 +13605,10 @@ interface BrowserSpeechRecognition {
 }
 
 const MODEL_OPTIONS: PopdownOption<AiAssistantModelId>[] = [
-  { value: 'gemini-3.1-flash-lite', label: 'Fast · Lite', sublabel: 'Lowest latency' },
+  { value: 'gemini-3.1-flash-lite', label: 'Fast Â· Lite', sublabel: 'Lowest latency' },
   { value: 'gemini-3.8-flash', label: '3.8 Flash', sublabel: 'Balanced speed & depth' },
-  { value: 'gemini-4-argon', label: 'Pro · Argon', sublabel: 'Coding & STEM reasoning' },
-  { value: 'gemini-4-carbon', label: 'Deep · Carbon', sublabel: 'Deepest architecture reasoning' },
+  { value: 'gemini-4-argon', label: 'Pro Â· Argon', sublabel: 'Coding & STEM reasoning' },
+  { value: 'gemini-4-carbon', label: 'Deep Â· Carbon', sublabel: 'Deepest architecture reasoning' },
 ];
 
 const PERSONA_OPTIONS: PopdownOption<
@@ -13681,7 +13734,7 @@ export const IslandAiAssistantPanel: React.FC<IslandAiAssistantPanelProps> = ({
   ]);
   const threadEndRef = useRef<HTMLDivElement | null>(null);
 
-  // 2. ASSIST — Active Question Listener & Formatted Code Co-Pilot (OS-Masked)
+  // 2. ASSIST â€” Active Question Listener & Formatted Code Co-Pilot (OS-Masked)
   const [assistMicListening, setAssistMicListening] = useState(false);
   const [assistSystemListening, setAssistSystemListening] = useState(false);
   const [assistTranscriptWindow, setAssistTranscriptWindow] = useState('');
@@ -14011,7 +14064,7 @@ export const IslandAiAssistantPanel: React.FC<IslandAiAssistantPanelProps> = ({
       });
 
       const audioTracks = displayStream.getAudioTracks();
-      // Stop video track immediately — Assist only needs system/call audio (WASAPI Loopback equivalent)
+      // Stop video track immediately â€” Assist only needs system/call audio (WASAPI Loopback equivalent)
       displayStream.getVideoTracks().forEach((vt) => vt.stop());
 
       if (audioTracks.length === 0) {
@@ -14144,7 +14197,7 @@ export const IslandAiAssistantPanel: React.FC<IslandAiAssistantPanelProps> = ({
           role: 'model',
           text: data.text || 'No response returned.',
           queryForGoogle: useSearch ? trimmed : undefined,
-          modelBadge: useSearch ? `${data.modelUsed} · Google Grounded` : data.modelUsed,
+          modelBadge: useSearch ? `${data.modelUsed} Â· Google Grounded` : data.modelUsed,
           sources: data.sources,
         },
       ]);
@@ -14601,7 +14654,7 @@ export const IslandAiAssistantPanel: React.FC<IslandAiAssistantPanelProps> = ({
               onClick={() =>
                 onUpdatePreferences({ privacyMaskEnabled: !preferences.privacyMaskEnabled })
               }
-              title="OS-level screen-capture privacy mask (WDA_EXCLUDEFROMCAPTURE) — hides Assist from Zoom/Teams/Meet screen shares"
+              title="OS-level screen-capture privacy mask (WDA_EXCLUDEFROMCAPTURE) â€” hides Assist from Zoom/Teams/Meet screen shares"
               className={`flex items-center gap-1 px-2 py-1 rounded-lg text-[10.5px] font-semibold border whitespace-nowrap shrink-0 transition-colors ${
                 preferences.privacyMaskEnabled
                   ? 'bg-emerald-500/20 border-emerald-400/40 text-emerald-200'
@@ -14699,7 +14752,7 @@ export const IslandAiAssistantPanel: React.FC<IslandAiAssistantPanelProps> = ({
                           className="inline-flex items-center gap-1 text-[10px] text-emerald-300 hover:underline ml-auto"
                         >
                           <Search className="w-2.5 h-2.5" />
-                          <span>Open on Google ↗</span>
+                          <span>Open on Google â†—</span>
                         </a>
                       )}
                     </div>
@@ -14801,7 +14854,7 @@ export const IslandAiAssistantPanel: React.FC<IslandAiAssistantPanelProps> = ({
         </>
       )}
 
-      {/* Sub-Mode 2: ASSIST — Active Spoken Question Listener & Code/Formatted Answer Engine */}
+      {/* Sub-Mode 2: ASSIST â€” Active Spoken Question Listener & Code/Formatted Answer Engine */}
       {mode === 'assist' && (
         <div
           className={`flex-1 flex flex-col justify-between border rounded-2xl p-2.5 gap-2 min-h-0 ${panelCardCls}`}
@@ -14990,7 +15043,7 @@ export const IslandAiAssistantPanel: React.FC<IslandAiAssistantPanelProps> = ({
               </div>
             ) : (
               <div className="h-full flex items-center justify-center text-xs text-slate-400 text-center px-4">
-                Assist listens to spoken technical or meeting questions and formats structured answers with copyable code — cloaked from screen sharing when OS Masked is enabled.
+                Assist listens to spoken technical or meeting questions and formats structured answers with copyable code â€” cloaked from screen sharing when OS Masked is enabled.
               </div>
             )}
           </div>
@@ -15043,7 +15096,7 @@ export const IslandAiAssistantPanel: React.FC<IslandAiAssistantPanelProps> = ({
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Instant Google Search — news, specs, prices, docs, people..."
+                placeholder="Instant Google Search â€” news, specs, prices, docs, people..."
                 aria-label="Fast Google Search query"
                 className="w-full bg-slate-950/80 border border-white/15 rounded-xl pl-8 pr-3 py-1.5 text-xs text-white placeholder:text-slate-400 focus:outline-none focus:border-sky-400"
               />
@@ -15065,7 +15118,7 @@ export const IslandAiAssistantPanel: React.FC<IslandAiAssistantPanelProps> = ({
                 className="px-2.5 py-1.5 rounded-xl text-xs font-medium bg-white/10 hover:bg-white/18 text-slate-100 inline-flex items-center gap-1 whitespace-nowrap shrink-0"
               >
                 <ExternalLink className="w-3 h-3" />
-                <span>Web ↗</span>
+                <span>Web â†—</span>
               </a>
             )}
           </form>
@@ -15143,7 +15196,7 @@ export const IslandAiAssistantPanel: React.FC<IslandAiAssistantPanelProps> = ({
                         rel="noreferrer"
                         className="inline-flex items-center gap-1 text-[10px] text-emerald-300 hover:underline"
                       >
-                        <span>Full Google Results ↗</span>
+                        <span>Full Google Results â†—</span>
                       </a>
                     )}
                   </div>
@@ -15283,7 +15336,7 @@ export const IslandAiAssistantPanel: React.FC<IslandAiAssistantPanelProps> = ({
                 <span className="truncate">Real-Time Live Voice + Windows Voice Control</span>
               </div>
               <div className="text-[11px] text-slate-400 truncate">
-                Bidirectional 24kHz audio — speak naturally or ask to toggle Wi-Fi, Privacy Mask, or Volume
+                Bidirectional 24kHz audio â€” speak naturally or ask to toggle Wi-Fi, Privacy Mask, or Volume
               </div>
             </div>
 
@@ -15404,6 +15457,7 @@ export const IslandAiAssistantPanel: React.FC<IslandAiAssistantPanelProps> = ({
     </div>
   );
 };
+
 === FILE: src/components/LivingProgressBar.tsx ===
 import React, { useEffect, useRef, useState } from 'react';
 import { formatDurationClock } from '../utils/audioSynth';
@@ -15490,6 +15544,7 @@ export const LivingProgressBar: React.FC<LivingProgressBarProps> = ({
     </div>
   );
 };
+
 === FILE: src/components/PillAppLogo.tsx ===
 import React from 'react';
 
@@ -15616,6 +15671,7 @@ export const PillAppLogo: React.FC<PillAppLogoProps> = ({
     </svg>
   );
 };
+
 === FILE: src/components/PillCapsule.tsx ===
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
@@ -15660,7 +15716,7 @@ import {
   isSpringAtRest,
   PillAnchorPosition,
   PillShapeStyle,
-  resolveLedgeGeometry,
+  resolvePillGeometry,
   SpringState1D,
   stepSpring1D,
 } from '../utils/springPhysics';
@@ -15866,7 +15922,7 @@ export const PillCapsule: React.FC<PillCapsuleProps> = ({
 
   const targetGeometry = useMemo(
     () =>
-      resolveLedgeGeometry({
+      resolvePillGeometry({
         isExpanded,
         isLauncherOpen,
         activeTab,
@@ -16115,13 +16171,37 @@ export const PillCapsule: React.FC<PillCapsuleProps> = ({
       }
     };
     const onWindowClick = () => setContextMenuPos(null);
+    const onWindowBlur = () => setContextMenuPos(null);
     window.addEventListener('keydown', onKeyDown);
     window.addEventListener('click', onWindowClick);
+    window.addEventListener('blur', onWindowBlur);
     return () => {
       window.removeEventListener('keydown', onKeyDown);
       window.removeEventListener('click', onWindowClick);
+      window.removeEventListener('blur', onWindowBlur);
     };
   }, [isExpanded, effectiveAstraActive, onCollapse, onCloseVoiceAgent]);
+
+  // Synchronize Tauri OS window pass-through hit testing when context menu opens/closes
+  useEffect(() => {
+    if (typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window) {
+      import('@tauri-apps/api/core')
+        .then(({ invoke }) => {
+          invoke('set_pill_force_interactive', { force: Boolean(contextMenuPos) }).catch(() => {});
+        })
+        .catch(() => {});
+    }
+    kickLoopRef.current?.();
+    return () => {
+      if (typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window) {
+        import('@tauri-apps/api/core')
+          .then(({ invoke }) => {
+            invoke('set_pill_force_interactive', { force: false }).catch(() => {});
+          })
+          .catch(() => {});
+      }
+    };
+  }, [contextMenuPos]);
 
   // Listen to native OS cursor boundary events (120Hz precision from window_manager.rs)
   useEffect(() => {
@@ -16160,6 +16240,7 @@ export const PillCapsule: React.FC<PillCapsuleProps> = ({
         }
         setIsHovered(false);
         setEdgeTouched(false);
+        setContextMenuPos(null);
       }).then((u) => {
         unlistenOutside = u;
       });
@@ -16188,7 +16269,9 @@ export const PillCapsule: React.FC<PillCapsuleProps> = ({
     e.preventDefault();
     setIsDragOver(false);
 
-    const customDesktopPayload = e.dataTransfer.getData('application/x-dynamic-ledge-file');
+    const customDesktopPayload =
+      e.dataTransfer.getData('application/x-dynamic-pill-file') ||
+      e.dataTransfer.getData('application/x-dynamic-ledge-file');
     if (customDesktopPayload) {
       try {
         const parsed = JSON.parse(customDesktopPayload) as TrayFileItem;
@@ -16214,7 +16297,7 @@ export const PillCapsule: React.FC<PillCapsuleProps> = ({
           sizeLabel: kb >= 1024 ? `${(kb / 1024).toFixed(1)} MB` : `${kb.toFixed(1)} KB`,
           addedAt: 'Just now',
           pinned: false,
-          contentPreview: `Dropped onto Dynamic Ledge: ${f.name}`,
+          contentPreview: `Dropped onto Dynamic Pill: ${f.name}`,
         };
       });
       onAddTrayFiles(dropped);
@@ -16292,10 +16375,10 @@ export const PillCapsule: React.FC<PillCapsuleProps> = ({
             </div>
             <div className="text-[10.5px] text-emerald-200/85">
               {isCloakedFromScreenCapture
-                ? 'Zoom/Teams/Meet viewers only see your desktop — Pill is excluded from capture'
+                ? 'Zoom/Teams/Meet viewers only see your desktop â€” Pill is excluded from capture'
                 : preferences.privacyMaskEnabled
-                  ? 'Public Now Playing HUD visible to callers · Assist/Notes/Clipboard remain hidden'
-                  : 'Privacy Mask is Off — callers can see Pill'}
+                  ? 'Public Now Playing HUD visible to callers Â· Assist/Notes/Clipboard remain hidden'
+                  : 'Privacy Mask is Off â€” callers can see Pill'}
             </div>
           </div>
           <button
@@ -16311,6 +16394,31 @@ export const PillCapsule: React.FC<PillCapsuleProps> = ({
       {/* Hidden Zero-Cost SVG Metaball Filter for Liquid Meniscus Coalescence */}
       <svg className="sr-only" aria-hidden="true">
         <defs>
+          <filter
+            id="pill-liquid-goo"
+            x="-35%"
+            y="-35%"
+            width="190%"
+            height="190%"
+            colorInterpolationFilters="sRGB"
+          >
+            <feGaussianBlur in="SourceGraphic" stdDeviation="7.2" result="blur" />
+            <feColorMatrix
+              in="blur"
+              mode="matrix"
+              values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 26 -11"
+              result="goo"
+            />
+            <feDropShadow
+              in="goo"
+              dx="0"
+              dy="1"
+              stdDeviation="0.6"
+              floodColor="#94a3b8"
+              floodOpacity="0.22"
+              result="rimmed"
+            />
+          </filter>
           <filter
             id="ledge-liquid-goo"
             x="-35%"
@@ -16421,9 +16529,9 @@ export const PillCapsule: React.FC<PillCapsuleProps> = ({
             transformOrigin: isBottomAnchor ? '50% 100%' : '50% 0%',
           }}
           className="relative flex items-center pointer-events-auto will-change-transform max-w-[calc(100vw-16px)] before:absolute before:-top-1 before:left-0 before:right-0 before:h-2 before:content-['']"
-          data-testid="dynamic-ledge-root"
+          data-testid="dynamic-pill-root"
         >
-          {/* Concave Top-Bezel Meniscus Fillets (only when shape is TopBezelLedge) */}
+          {/* Concave Top-Bezel Meniscus Fillets (only when shape is TopBezelPill) */}
           {isDockedBezel && !isCloakedFromScreenCapture && !isPureOrbOnly && (
             <>
               <svg
@@ -16469,7 +16577,7 @@ export const PillCapsule: React.FC<PillCapsuleProps> = ({
             style={{
               filter:
                 !isGlass && !isExpanded && !isCloakedFromScreenCapture && !isPureOrbOnly
-                  ? 'url(#ledge-liquid-goo)'
+                  ? 'url(#pill-liquid-goo)'
                   : undefined,
             }}
             className={`absolute inset-0 pointer-events-none flex items-center transition-opacity duration-200 ${
@@ -16559,7 +16667,7 @@ export const PillCapsule: React.FC<PillCapsuleProps> = ({
               >
                 <EyeOff className="w-3.5 h-3.5 text-emerald-300 shrink-0" />
                 <span className="text-[11px] font-mono truncate">
-                  WDA_EXCLUDEFROMCAPTURE · Invisible on Zoom / Teams / Meet
+                  WDA_EXCLUDEFROMCAPTURE Â· Invisible on Zoom / Teams / Meet
                 </span>
               </div>
             ) : isDragOver && !isExpanded ? (
@@ -16574,7 +16682,7 @@ export const PillCapsule: React.FC<PillCapsuleProps> = ({
                 </div>
               </div>
             ) : effectiveAstraActive ? (
-              /* 1.5 In-Pill Astra (`అస్త్రం`) Morph — Uses the existing Pill directly! */
+              /* 1.5 In-Pill Astra (`à°…à°¸à±à°¤à±à°°à°‚`) Morph â€” Uses the existing Pill directly! */
               <InPillAstraPanel
                 onClose={onCloseVoiceAgent}
                 preferences={preferences}
@@ -16667,7 +16775,7 @@ export const PillCapsule: React.FC<PillCapsuleProps> = ({
                       {callSession.callerName}
                     </div>
                     <div className="text-[11px] text-slate-400 truncate tabular-nums">
-                      {callSession.appSource} ·{' '}
+                      {callSession.appSource} Â·{' '}
                       {callSession.isAccepted
                         ? formatDurationClock(callSession.elapsedSec)
                         : 'Incoming Audio'}
@@ -16722,7 +16830,7 @@ export const PillCapsule: React.FC<PillCapsuleProps> = ({
                   </div>
                   <div className="min-w-0">
                     <div className="text-xs font-semibold text-white truncate">
-                      {agentRequest.agentName} · Permission Request
+                      {agentRequest.agentName} Â· Permission Request
                     </div>
                     <div className="text-[11px] font-mono text-slate-300 truncate">
                       {agentRequest.commandSummary}
@@ -16809,7 +16917,7 @@ export const PillCapsule: React.FC<PillCapsuleProps> = ({
                       : 'Battery Power'}
                   </span>
                   <span className="text-[11px] text-slate-400 truncate">
-                    · {batteryEta.formattedEta}
+                    Â· {batteryEta.formattedEta}
                   </span>
                 </div>
                 <span className="flex items-center gap-1.5 text-xs font-mono font-semibold text-emerald-300 tabular-nums shrink-0">
@@ -16841,14 +16949,14 @@ export const PillCapsule: React.FC<PillCapsuleProps> = ({
                 <span className="text-[11px] text-emerald-300 font-medium shrink-0">Complete</span>
               </button>
             ) : (
-              /* 4. Collapsed Dynamic Island Pill / Ledge */
+              /* 4. Collapsed Dynamic Island Pill */
               <button
                 type="button"
                 onClick={() => {
                   playTactilePop('expand');
                   onExpand();
                 }}
-                aria-label="Expand Dynamic Ledge"
+                aria-label="Expand Dynamic Pill"
                 className="w-full h-full flex items-center justify-between px-3 text-left focus-visible:outline-2 focus-visible:outline-sky-400"
               >
                 {musicVisible ? (
@@ -16967,8 +17075,8 @@ export const PillCapsule: React.FC<PillCapsuleProps> = ({
             }}
             aria-label={
               timerRemainingSec !== null
-                ? `Active timer ${formatDurationClock(timerRemainingSec)} — click to open`
-                : 'Secondary island status — click to open'
+                ? `Active timer ${formatDurationClock(timerRemainingSec)} â€” click to open`
+                : 'Secondary island status â€” click to open'
             }
             style={{
               right: 0,
@@ -17003,147 +17111,173 @@ export const PillCapsule: React.FC<PillCapsuleProps> = ({
 
       {/* Right-Click Quick Context Menu */}
       {contextMenuPos && (
-        <div
-          role="menu"
-          aria-label="Dynamic Island quick controls"
-          style={{
-            left: `${Math.min(contextMenuPos.x, window.innerWidth - 236)}px`,
-            top: `${Math.min(contextMenuPos.y, window.innerHeight - 290)}px`,
-          }}
-          onClick={(e) => e.stopPropagation()}
-          className="fixed z-50 w-60 bg-slate-950/95 backdrop-blur-xl border border-white/15 rounded-xl p-1.5 shadow-2xl text-xs text-slate-200 space-y-0.5"
-        >
-          <button
-            type="button"
-            role="menuitem"
-            onClick={() => {
+        <>
+          <div
+            className="fixed inset-0 z-40 bg-transparent pointer-events-auto cursor-default"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
               setContextMenuPos(null);
-              if (isExpanded) onCollapse();
-              else onExpand('home');
+              playTactilePop('collapse');
             }}
-            className="w-full text-left px-2.5 py-1.5 rounded-lg hover:bg-white/10 transition-colors"
-          >
-            {isExpanded ? 'Collapse Island' : 'Expand Home Hub'}
-          </button>
-          <button
-            type="button"
-            role="menuitem"
-            onClick={() => {
+            onContextMenu={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
               setContextMenuPos(null);
-              onExpand('control');
             }}
-            className="w-full text-left px-2.5 py-1.5 rounded-lg hover:bg-white/10 transition-colors"
+          />
+          <div
+            role="menu"
+            aria-label="Dynamic Island quick controls"
+            style={{
+              left: `${Math.min(Math.max(10, contextMenuPos.x), (typeof window !== 'undefined' ? window.innerWidth : 960) - 250)}px`,
+              top: `${Math.min(Math.max(10, contextMenuPos.y), (typeof window !== 'undefined' ? window.innerHeight : 600) - 310)}px`,
+            }}
+            onClick={(e) => e.stopPropagation()}
+            onContextMenu={(e) => e.stopPropagation()}
+            className="fixed z-50 w-60 bg-slate-950/95 backdrop-blur-xl border border-white/15 rounded-xl p-1.5 shadow-2xl text-xs text-slate-200 space-y-0.5 pointer-events-auto select-none"
           >
-            Open Windows Control Center
-          </button>
-          {preferences.aiEnabled && (
             <button
               type="button"
               role="menuitem"
               onClick={() => {
                 setContextMenuPos(null);
-                if (effectiveAstraActive) onCloseVoiceAgent();
-                else onOpenVoiceAgent();
+                playTactilePop('confirm');
+                if (isExpanded) onCollapse();
+                else onExpand('home');
               }}
-              className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg hover:bg-white/10 transition-colors"
+              className="w-full text-left px-2.5 py-1.5 rounded-lg hover:bg-white/10 active:bg-white/15 transition-colors cursor-pointer"
+            >
+              {isExpanded ? 'Collapse Island' : 'Expand Home Hub'}
+            </button>
+            <button
+              type="button"
+              role="menuitem"
+              onClick={() => {
+                setContextMenuPos(null);
+                playTactilePop('confirm');
+                onExpand('control');
+              }}
+              className="w-full text-left px-2.5 py-1.5 rounded-lg hover:bg-white/10 active:bg-white/15 transition-colors cursor-pointer"
+            >
+              Open Windows Control Center
+            </button>
+            {preferences.aiEnabled && (
+              <button
+                type="button"
+                role="menuitem"
+                onClick={() => {
+                  setContextMenuPos(null);
+                  playTactilePop('confirm');
+                  if (effectiveAstraActive) onCloseVoiceAgent();
+                  else onOpenVoiceAgent();
+                }}
+                className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg hover:bg-white/10 active:bg-white/15 transition-colors cursor-pointer"
+              >
+                <span className="flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5" style={{ color: palette.primaryHex }} />
+                  <span>{effectiveAstraActive ? 'Exit Astra Pill Mode' : 'Morph Pill into Astra'}</span>
+                </span>
+                <span className="text-[10px] font-mono text-slate-400">
+                  {preferences.voiceAgentShortcut}
+                </span>
+              </button>
+            )}
+            <button
+              type="button"
+              role="menuitem"
+              onClick={() => {
+                setContextMenuPos(null);
+                playTactilePop('confirm');
+                onUpdatePreferences({ privacyMaskEnabled: !preferences.privacyMaskEnabled });
+              }}
+              className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg hover:bg-white/10 active:bg-white/15 transition-colors cursor-pointer"
             >
               <span className="flex items-center gap-1.5">
-                <Sparkles className="w-3.5 h-3.5" style={{ color: palette.primaryHex }} />
-                <span>{effectiveAstraActive ? 'Exit Astra Pill Mode' : 'Morph Pill into Astra'}</span>
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                <span>OS Privacy Mask</span>
               </span>
-              <span className="text-[10px] font-mono text-slate-400">
-                {preferences.voiceAgentShortcut}
+              <span className="text-emerald-300 font-mono text-[11px]">
+                {preferences.privacyMaskEnabled ? 'On' : 'Off'}
               </span>
             </button>
-          )}
-          <button
-            type="button"
-            role="menuitem"
-            onClick={() => {
-              setContextMenuPos(null);
-              onUpdatePreferences({ privacyMaskEnabled: !preferences.privacyMaskEnabled });
-            }}
-            className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg hover:bg-white/10 transition-colors"
-          >
-            <span className="flex items-center gap-1.5">
-              <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-              <span>OS Privacy Mask</span>
-            </span>
-            <span className="text-emerald-300 font-mono text-[11px]">
-              {preferences.privacyMaskEnabled ? 'On' : 'Off'}
-            </span>
-          </button>
-          <button
-            type="button"
-            role="menuitem"
-            onClick={() => {
-              setContextMenuPos(null);
-              onUpdatePreferences({
-                privacySimulateCaptureView: !preferences.privacySimulateCaptureView,
-              });
-            }}
-            className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg hover:bg-white/10 transition-colors"
-          >
-            <span className="flex items-center gap-1.5">
-              {preferences.privacySimulateCaptureView ? (
-                <Eye className="w-3.5 h-3.5 text-sky-300" />
-              ) : (
-                <EyeOff className="w-3.5 h-3.5 text-slate-400" />
-              )}
-              <span>Preview Caller View</span>
-            </span>
-            <span className="text-slate-400 text-[11px]">
-              {preferences.privacySimulateCaptureView ? 'Active' : 'Test'}
-            </span>
-          </button>
-          <button
-            type="button"
-            role="menuitem"
-            onClick={() => {
-              setContextMenuPos(null);
-              onUpdatePreferences({
-                shapeStyle:
-                  preferences.shapeStyle === PillShapeStyle.DynamicPill
-                    ? PillShapeStyle.TopBezelPill
-                    : PillShapeStyle.DynamicPill,
-              });
-            }}
-            className="w-full text-left px-2.5 py-1.5 rounded-lg hover:bg-white/10 transition-colors"
-          >
-            Switch to{' '}
-            {preferences.shapeStyle === PillShapeStyle.DynamicPill
-              ? 'Top-Bezel Pill Dock'
-              : 'Dynamic Island Pill'}
-          </button>
-          <button
-            type="button"
-            role="menuitem"
-            onClick={() => {
-              setContextMenuPos(null);
-              onUpdatePreferences({ stealthAutoHide: !preferences.stealthAutoHide });
-            }}
-            className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg hover:bg-white/10 transition-colors"
-          >
-            <span>Stealth Edge-Hide</span>
-            <span className="text-slate-400">{preferences.stealthAutoHide ? 'On' : 'Off'}</span>
-          </button>
-          <div className="border-t border-white/10 my-1" />
-          <button
-            type="button"
-            role="menuitem"
-            onClick={() => {
-              setContextMenuPos(null);
-              onOpenFullSettings();
-            }}
-            className="w-full text-left px-2.5 py-1.5 rounded-lg hover:bg-white/10 text-sky-300 transition-colors"
-          >
-            Full Studio Settings…
-          </button>
-        </div>
+            <button
+              type="button"
+              role="menuitem"
+              onClick={() => {
+                setContextMenuPos(null);
+                playTactilePop('confirm');
+                onUpdatePreferences({
+                  privacySimulateCaptureView: !preferences.privacySimulateCaptureView,
+                });
+              }}
+              className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg hover:bg-white/10 active:bg-white/15 transition-colors cursor-pointer"
+            >
+              <span className="flex items-center gap-1.5">
+                {preferences.privacySimulateCaptureView ? (
+                  <Eye className="w-3.5 h-3.5 text-sky-300" />
+                ) : (
+                  <EyeOff className="w-3.5 h-3.5 text-slate-400" />
+                )}
+                <span>Preview Caller View</span>
+              </span>
+              <span className="text-slate-400 text-[11px]">
+                {preferences.privacySimulateCaptureView ? 'Active' : 'Test'}
+              </span>
+            </button>
+            <button
+              type="button"
+              role="menuitem"
+              onClick={() => {
+                setContextMenuPos(null);
+                playTactilePop('confirm');
+                onUpdatePreferences({
+                  shapeStyle:
+                    preferences.shapeStyle === PillShapeStyle.DynamicPill
+                      ? PillShapeStyle.TopBezelPill
+                      : PillShapeStyle.DynamicPill,
+                });
+              }}
+              className="w-full text-left px-2.5 py-1.5 rounded-lg hover:bg-white/10 active:bg-white/15 transition-colors cursor-pointer"
+            >
+              Switch to{' '}
+              {preferences.shapeStyle === PillShapeStyle.DynamicPill
+                ? 'Top-Bezel Pill Dock'
+                : 'Dynamic Island Pill'}
+            </button>
+            <button
+              type="button"
+              role="menuitem"
+              onClick={() => {
+                setContextMenuPos(null);
+                playTactilePop('confirm');
+                onUpdatePreferences({ stealthAutoHide: !preferences.stealthAutoHide });
+              }}
+              className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg hover:bg-white/10 active:bg-white/15 transition-colors cursor-pointer"
+            >
+              <span>Stealth Edge-Hide</span>
+              <span className="text-slate-400">{preferences.stealthAutoHide ? 'On' : 'Off'}</span>
+            </button>
+            <div className="border-t border-white/10 my-1" />
+            <button
+              type="button"
+              role="menuitem"
+              onClick={() => {
+                setContextMenuPos(null);
+                playTactilePop('confirm');
+                onOpenFullSettings();
+              }}
+              className="w-full text-left px-2.5 py-1.5 rounded-lg hover:bg-white/10 active:bg-white/15 text-sky-300 transition-colors cursor-pointer"
+            >
+              Full Studio Settingsâ€¦
+            </button>
+          </div>
+        </>
       )}
     </>
   );
 };
+
 === FILE: src/components/PillExpandedContent.tsx ===
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
@@ -17243,7 +17377,7 @@ const CLIPBOARD_SORT_OPTIONS: PopdownOption<ClipboardSortBy>[] = [
   { value: 'newest', label: 'Sort: Newest', sublabel: 'Most recent clips first' },
   { value: 'oldest', label: 'Sort: Oldest', sublabel: 'Chronological order' },
   { value: 'pinned', label: 'Sort: Pinned', sublabel: 'Pinned items at top' },
-  { value: 'type', label: 'Sort: Format', sublabel: 'Group A–Z by format' },
+  { value: 'type', label: 'Sort: Format', sublabel: 'Group Aâ€“Z by format' },
   { value: 'size', label: 'Sort: Size', sublabel: 'Largest payload first' },
 ];
 
@@ -17357,7 +17491,7 @@ export const HOME_WIDGET_CATALOG: {
   {
     id: 'voice_search',
     label: 'Search & Astra Orb',
-    desc: 'Fast Google web search + Astra (అస్త్రం) voice orb trigger',
+    desc: 'Fast Google web search + Astra (à°…à°¸à±à°¤à±à°°à°‚) voice orb trigger',
     defaultSize: 'medium',
   },
   {
@@ -17399,10 +17533,10 @@ export const HOME_WIDGET_CATALOG: {
 ];
 
 const WIDGET_SIZE_OPTIONS: { id: WidgetSizeVariant; short: string; title: string }[] = [
-  { id: 'small', short: 'S', title: 'Small Square (1×1)' },
-  { id: 'medium', short: 'M', title: 'Medium Wide (2×1)' },
-  { id: 'large', short: 'L', title: 'Large Studio (2×2)' },
-  { id: 'vertical', short: 'V', title: 'Vertical Pillar (1×2)' },
+  { id: 'small', short: 'S', title: 'Small Square (1Ã—1)' },
+  { id: 'medium', short: 'M', title: 'Medium Wide (2Ã—1)' },
+  { id: 'large', short: 'L', title: 'Large Studio (2Ã—2)' },
+  { id: 'vertical', short: 'V', title: 'Vertical Pillar (1Ã—2)' },
 ];
 
 type ClipFilterGroup = 'all' | 'text_code' | 'media' | 'files' | 'colors_links';
@@ -17942,7 +18076,7 @@ export const PillExpandedContent: React.FC<PillExpandedContentProps> = ({
         source: 'Universal File Copy',
         category: meta.category,
         badgeCode: meta.badgeCode,
-        fileSizeLabel: `${sizeStr} · ${file.type || 'Binary File'}`,
+        fileSizeLabel: `${sizeStr} Â· ${file.type || 'Binary File'}`,
         previewImageUrl: previewUrl,
       });
     });
@@ -18185,7 +18319,7 @@ export const PillExpandedContent: React.FC<PillExpandedContentProps> = ({
   const renderMusicWidgetBody = (size: WidgetSizeVariant) => {
     const lyricsOn = preferences.musicLyricsVisible !== false;
 
-    // 1. SMALL (1×1 Compact Square) — Zero wasted space!
+    // 1. SMALL (1Ã—1 Compact Square) â€” Zero wasted space!
     if (size === 'small') {
       return (
         <div className="flex flex-col justify-between h-full gap-1.5">
@@ -18249,7 +18383,7 @@ export const PillExpandedContent: React.FC<PillExpandedContentProps> = ({
       );
     }
 
-    // 2. VERTICAL (1×2 Tall Pillar) — Apple Control Center Vertical Music Column
+    // 2. VERTICAL (1Ã—2 Tall Pillar) â€” Apple Control Center Vertical Music Column
     if (size === 'vertical') {
       return (
         <div className="flex flex-col justify-between h-full gap-2">
@@ -18371,7 +18505,7 @@ export const PillExpandedContent: React.FC<PillExpandedContentProps> = ({
       );
     }
 
-    // 3. MEDIUM (2×1 Space-Efficient Wide Block — Default!)
+    // 3. MEDIUM (2Ã—1 Space-Efficient Wide Block â€” Default!)
     if (size === 'medium') {
       return (
         <div className="flex flex-col justify-between h-full gap-1.5">
@@ -18539,7 +18673,7 @@ export const PillExpandedContent: React.FC<PillExpandedContentProps> = ({
       );
     }
 
-    // 4. LARGE (2×2 Full Studio Player — Zero Wasted Space, Full Synchronized Lyrics or Visualizer + Fused Scrubber)
+    // 4. LARGE (2Ã—2 Full Studio Player â€” Zero Wasted Space, Full Synchronized Lyrics or Visualizer + Fused Scrubber)
     return (
       <div className="flex flex-col justify-between h-full gap-2">
         <div className="flex items-center justify-between gap-2">
@@ -18552,7 +18686,7 @@ export const PillExpandedContent: React.FC<PillExpandedContentProps> = ({
             <div className="min-w-0">
               <div className="text-sm font-semibold truncate">{currentTrack.title}</div>
               <div className="text-xs opacity-70 truncate">
-                {currentTrack.artist} · {currentTrack.album}
+                {currentTrack.artist} Â· {currentTrack.album}
               </div>
             </div>
           </div>
@@ -18784,7 +18918,7 @@ export const PillExpandedContent: React.FC<PillExpandedContentProps> = ({
             <span className="font-semibold flex items-center gap-1 truncate">
               <Search className="w-3 h-3 shrink-0" style={{ color: palette.primaryHex }} />
               <span className="truncate">
-                {size === 'small' ? 'Search & Astra' : 'Fast Search & Astra (అస్త్రం)'}
+                {size === 'small' ? 'Search & Astra' : 'Fast Search & Astra (à°…à°¸à±à°¤à±à°°à°‚)'}
               </span>
             </span>
             {size !== 'small' && (
@@ -18797,7 +18931,7 @@ export const PillExpandedContent: React.FC<PillExpandedContentProps> = ({
           {size === 'large' && (
             <p className="text-[11px] opacity-75 leading-snug">
               Launch grounded Google Search inside the Pill or summon the floating{' '}
-              <strong>Astra (అస్త్రం)</strong> voice orb to control Windows hands-free.
+              <strong>Astra (à°…à°¸à±à°¤à±à°°à°‚)</strong> voice orb to control Windows hands-free.
             </p>
           )}
 
@@ -18937,12 +19071,12 @@ export const PillExpandedContent: React.FC<PillExpandedContentProps> = ({
 
           <div className="mt-auto">
             <div className="text-xs font-mono font-bold tabular-nums">
-              ↓ {systemState.netDownMbps.toFixed(1)}{' '}
+              â†“ {systemState.netDownMbps.toFixed(1)}{' '}
               <span className="opacity-65 font-normal">Mbps</span>
             </div>
             <div className="text-[10px] font-mono opacity-75 tabular-nums">
-              ↑ {systemState.netUpMbps.toFixed(1)} Mbps
-              {size !== 'small' ? ` · ${systemState.sessionDownGb.toFixed(2)} GB` : ''}
+              â†‘ {systemState.netUpMbps.toFixed(1)} Mbps
+              {size !== 'small' ? ` Â· ${systemState.sessionDownGb.toFixed(2)} GB` : ''}
             </div>
           </div>
         </button>
@@ -18968,10 +19102,10 @@ export const PillExpandedContent: React.FC<PillExpandedContentProps> = ({
           </div>
           <div className="mt-auto">
             <div className="text-xs font-mono font-bold tabular-nums">
-              {systemState.chargingWatts}W PD · {systemState.batteryPct}%
+              {systemState.chargingWatts}W PD Â· {systemState.batteryPct}%
             </div>
             <div className="text-[10px] font-mono text-emerald-400 tabular-nums">
-              CPU {systemState.cpuUsagePct.toFixed(0)}% · GPU {systemState.gpuTempC}°C
+              CPU {systemState.cpuUsagePct.toFixed(0)}% Â· GPU {systemState.gpuTempC}Â°C
             </div>
           </div>
         </button>
@@ -18988,16 +19122,16 @@ export const PillExpandedContent: React.FC<PillExpandedContentProps> = ({
           <div className="flex items-center justify-between w-full text-[10px] opacity-85">
             <span className="flex items-center gap-1 font-semibold truncate">
               <ThemedIcon name="sun" packStyle={preferences.iconPack} size={13} color="#fbbf24" className="shrink-0" />
-              <span>Bengaluru · Sunny</span>
+              <span>Bengaluru Â· Sunny</span>
             </span>
-            <span className="font-mono text-emerald-400 font-semibold">24°C</span>
+            <span className="font-mono text-emerald-400 font-semibold">24Â°C</span>
           </div>
           <div className="mt-auto">
             <div className="text-xs font-mono font-bold tabular-nums">
-              H: 28° · L: 19°
+              H: 28Â° Â· L: 19Â°
             </div>
             <div className="text-[10px] opacity-75">
-              AQI 42 · Humidity 58%
+              AQI 42 Â· Humidity 58%
             </div>
           </div>
         </button>
@@ -19037,7 +19171,7 @@ export const PillExpandedContent: React.FC<PillExpandedContentProps> = ({
                 style={{ color: palette.primaryHex }}
                 className="text-[10px] font-semibold mt-0.5"
               >
-                {copiedId === topClip.id ? '✓ Copied' : 'Click to copy'}
+                {copiedId === topClip.id ? 'âœ“ Copied' : 'Click to copy'}
               </div>
             </button>
           ) : (
@@ -19219,7 +19353,7 @@ export const PillExpandedContent: React.FC<PillExpandedContentProps> = ({
                 onClick={() => handleCopyText(clip.id, clip.text)}
                 className="px-1.5 py-0.5 text-[10px] font-semibold bg-white/15 hover:bg-white/25 rounded"
               >
-                {copiedId === clip.id ? '✓' : 'Copy'}
+                {copiedId === clip.id ? 'âœ“' : 'Copy'}
               </button>
               <button
                 type="button"
@@ -19253,7 +19387,7 @@ export const PillExpandedContent: React.FC<PillExpandedContentProps> = ({
               {clip.badgeCode}
             </span>
             <span className="text-[10.5px] opacity-70 truncate">
-              {isDynamic ? clip.copiedAt : `${clip.source} · ${clip.copiedAt}`}
+              {isDynamic ? clip.copiedAt : `${clip.source} Â· ${clip.copiedAt}`}
             </span>
           </div>
 
@@ -19449,16 +19583,16 @@ export const PillExpandedContent: React.FC<PillExpandedContentProps> = ({
               onUpdatePreferences({ privacyMaskEnabled: nextMask });
               onTriggerQuickActionToast(
                 nextMask
-                  ? 'OS Privacy Mask ON — Pill cloaked from Zoom/Teams/Meet screen shares'
-                  : 'OS Privacy Mask OFF — Pill visible to screen sharing'
+                  ? 'OS Privacy Mask ON â€” Pill cloaked from Zoom/Teams/Meet screen shares'
+                  : 'OS Privacy Mask OFF â€” Pill visible to screen sharing'
               );
             }}
             aria-label="Toggle OS-level screen-share privacy mask"
             aria-pressed={preferences.privacyMaskEnabled}
             title={
               preferences.privacyMaskEnabled
-                ? 'OS Privacy Mask Active (WDA_EXCLUDEFROMCAPTURE) — Hidden from video call screen shares'
-                : 'OS Privacy Mask Disabled — Click to cloak Pill from screen capture'
+                ? 'OS Privacy Mask Active (WDA_EXCLUDEFROMCAPTURE) â€” Hidden from video call screen shares'
+                : 'OS Privacy Mask Disabled â€” Click to cloak Pill from screen capture'
             }
             className={`p-1.5 rounded-lg transition-colors focus-visible:outline-2 focus-visible:outline-sky-400 ${
               preferences.privacyMaskEnabled
@@ -19481,7 +19615,7 @@ export const PillExpandedContent: React.FC<PillExpandedContentProps> = ({
                 onOpenVoiceAgent();
               }}
               aria-label={`Morph Pill into Astra (${preferences.voiceAgentShortcut})`}
-              title={`Morph Pill into Astra (అస్త్రం) (${preferences.voiceAgentShortcut})`}
+              title={`Morph Pill into Astra (à°…à°¸à±à°¤à±à°°à°‚) (${preferences.voiceAgentShortcut})`}
               style={{
                 backgroundColor: `${palette.primaryHex}24`,
                 color: isLight ? '#78350f' : palette.primaryHex,
@@ -19609,7 +19743,7 @@ export const PillExpandedContent: React.FC<PillExpandedContentProps> = ({
               <Sparkles className="w-6 h-6 opacity-50" />
               <div className="text-xs font-semibold">Search &amp; AI Disabled</div>
               <p className="text-[11px] opacity-70 max-w-xs">
-                Re-enable AI &amp; Astra (అస్త్రం) features anytime inside Pill Settings.
+                Re-enable AI &amp; Astra (à°…à°¸à±à°¤à±à°°à°‚) features anytime inside Pill Settings.
               </p>
               <button
                 type="button"
@@ -19645,7 +19779,7 @@ export const PillExpandedContent: React.FC<PillExpandedContentProps> = ({
                 </span>
                 {playgroundMode && (
                   <span className="text-[10px] opacity-65 hidden sm:inline">
-                    Drag blocks to reorder · Tap S / M / L / V to resize
+                    Drag blocks to reorder Â· Tap S / M / L / V to resize
                   </span>
                 )}
               </div>
@@ -19913,7 +20047,7 @@ export const PillExpandedContent: React.FC<PillExpandedContentProps> = ({
                           {file.name}
                         </div>
                         <div className="text-[11px] opacity-65 tabular-nums">
-                          {file.sizeLabel} · {file.addedAt}
+                          {file.sizeLabel} Â· {file.addedAt}
                         </div>
                       </div>
                     </div>
@@ -20066,7 +20200,7 @@ export const PillExpandedContent: React.FC<PillExpandedContentProps> = ({
                   <button
                     type="button"
                     onClick={() => clipFilePickerRef.current?.click()}
-                    title="Copy any file format (A–Z) into Smart Clipboard"
+                    title="Copy any file format (Aâ€“Z) into Smart Clipboard"
                     style={{
                       backgroundColor: `${palette.primaryHex}24`,
                       color: isLight ? '#9a3412' : palette.primaryHex,
@@ -20312,7 +20446,7 @@ export const PillExpandedContent: React.FC<PillExpandedContentProps> = ({
                   />
                 ) : (
                   <div className="h-full flex items-center justify-center text-xs opacity-60 text-center px-4">
-                    No Markdown notes yet — dictate by voice, capture System Audio, or click &ldquo;Sample Call&rdquo; below to test Notedown.
+                    No Markdown notes yet â€” dictate by voice, capture System Audio, or click &ldquo;Sample Call&rdquo; below to test Notedown.
                   </div>
                 )}
               </div>
@@ -20321,7 +20455,7 @@ export const PillExpandedContent: React.FC<PillExpandedContentProps> = ({
                 value={noteContent}
                 onChange={(e) => onChangeNoteContent(e.target.value)}
                 aria-label="Notedown Markdown scratchpad"
-                placeholder="Type notes, dictate with Mic, or capture System Audio — then click 'Notedown MD' to structure into clean Markdown..."
+                placeholder="Type notes, dictate with Mic, or capture System Audio â€” then click 'Notedown MD' to structure into clean Markdown..."
                 className={`flex-1 w-full resize-none border rounded-xl p-2.5 text-xs font-mono leading-relaxed focus:outline-none focus:border-sky-400 pill-scroll select-text ${cardSurfaceCls}`}
               />
             )}
@@ -20330,7 +20464,7 @@ export const PillExpandedContent: React.FC<PillExpandedContentProps> = ({
             <div className="flex items-center justify-between text-[11px] opacity-85 gap-2">
               <div className="flex items-center gap-2 min-w-0">
                 <span className="tabular-nums font-mono truncate">
-                  {noteContent.trim() ? noteContent.trim().split(/\s+/).length : 0}w ·{' '}
+                  {noteContent.trim() ? noteContent.trim().split(/\s+/).length : 0}w Â·{' '}
                   {noteContent.length}c
                 </span>
                 {preferences.aiEnabled && (
@@ -20453,7 +20587,7 @@ export const PillExpandedContent: React.FC<PillExpandedContentProps> = ({
                       : 'Check framing & lighting before joining a call'}
                   </div>
                   <div className="text-[11px] text-slate-500 mt-0.5">
-                    Zero recording · Processed strictly in local GPU framebuffers
+                    Zero recording Â· Processed strictly in local GPU framebuffers
                   </div>
                 </div>
               )}
@@ -20514,6 +20648,7 @@ export const PillExpandedContent: React.FC<PillExpandedContentProps> = ({
     </div>
   );
 };
+
 === FILE: src/components/ResilientThumb.tsx ===
 import React, { useState } from 'react';
 import { Disc3 } from 'lucide-react';
@@ -20559,6 +20694,7 @@ export const ResilientThumb: React.FC<ResilientThumbProps> = ({
     />
   );
 };
+
 === FILE: src/components/RichMarkdown.tsx ===
 import React, { useState } from 'react';
 import { Check, Copy, ExternalLink } from 'lucide-react';
@@ -20818,10 +20954,10 @@ export const RichMarkdown: React.FC<RichMarkdownProps> = ({
       }
 
       // Unordered List
-      if (/^[-*•]\s+/.test(trimmed)) {
+      if (/^[-*â€¢]\s+/.test(trimmed)) {
         const items: string[] = [];
-        while (i < lines.length && /^[-*•]\s+/.test(lines[i].trim())) {
-          items.push(lines[i].trim().replace(/^[-*•]\s+/, ''));
+        while (i < lines.length && /^[-*â€¢]\s+/.test(lines[i].trim())) {
+          items.push(lines[i].trim().replace(/^[-*â€¢]\s+/, ''));
           i++;
         }
         blocks.push(
@@ -20890,6 +21026,7 @@ export const RichMarkdown: React.FC<RichMarkdownProps> = ({
     </div>
   );
 };
+
 === FILE: src/components/ThemedIcon.tsx ===
 import React from 'react';
 import { IconPackStyle } from '../utils/themeAndSliders';
@@ -21371,7 +21508,7 @@ function RetroCrtPixelGlyph({ name, size = 16, color = 'currentColor' }: { name:
 }
 
 // ---------------------------------------------------------------------------
-// 3. MOTORSPORT GT GLYPHS (15° Forward Slanted Aerodynamic Winglets & Slashes)
+// 3. MOTORSPORT GT GLYPHS (15Â° Forward Slanted Aerodynamic Winglets & Slashes)
 // ---------------------------------------------------------------------------
 function MotorsportGtGlyph({ name, size = 16, color = 'currentColor' }: { name: ThemedIconName; size?: number; color?: string }) {
   const tiltStyle = { transform: 'skewX(-14deg)' };
@@ -21855,7 +21992,7 @@ export const ThemedIcon: React.FC<ThemedIconProps> = ({
     );
   }
 
-  // 3. Motorsport GT Automotive Winglets (15° forward tilt)
+  // 3. Motorsport GT Automotive Winglets (15Â° forward tilt)
   if (packStyle === 'motorsport_gt') {
     return (
       <span className={`inline-flex items-center justify-center shrink-0 ${className}`}>
@@ -22024,6 +22161,7 @@ export const ThemedIcon: React.FC<ThemedIconProps> = ({
     </span>
   );
 };
+
 === FILE: src/components/VoiceAgentOverlay.tsx ===
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
@@ -22158,7 +22296,7 @@ export const AstraLiquidOrbVisual: React.FC<{
 };
 
 /**
- * Headless zero-UI Wake-Word Daemon listening for "Astra" / "Astram" / "అస్త్రం"
+ * Headless zero-UI Wake-Word Daemon listening for "Astra" / "Astram" / "à°…à°¸à±à°¤à±à°°à°‚"
  * when Astra is not currently morphed open in the Pill.
  */
 export const AstraWakeWordDaemon: React.FC<{
@@ -22195,7 +22333,7 @@ export const AstraWakeWordDaemon: React.FC<{
             latest += ev.results[i][0].transcript + ' ';
           }
           const lower = latest.toLowerCase().trim();
-          const wakeMatch = lower.match(/\b(?:hey\s+)?(?:astra|astram|అస్త్రం)\b(.*)$/i);
+          const wakeMatch = lower.match(/\b(?:hey\s+)?(?:astra|astram|à°…à°¸à±à°¤à±à°°à°‚)\b(.*)$/i);
           if (wakeMatch) {
             const trailingCmd = (wakeMatch[1] || '').trim();
             if (trailingCmd.length > 3) {
@@ -22263,8 +22401,8 @@ export interface InPillAstraPanelProps {
 }
 
 /**
- * In-Pill Astra (`అస్త్రం` / `Astram`) Morph Surface.
- * Renders directly inside the existing Pill — never spawning a second separate window!
+ * In-Pill Astra (`à°…à°¸à±à°¤à±à°°à°‚` / `Astram`) Morph Surface.
+ * Renders directly inside the existing Pill â€” never spawning a second separate window!
  */
 export const InPillAstraPanel: React.FC<InPillAstraPanelProps> = ({
   onClose,
@@ -22724,8 +22862,8 @@ export const InPillAstraPanel: React.FC<InPillAstraPanelProps> = ({
   const activeTranscriptBubble = liveInterimText || lastPrompt;
 
   /* ==========================================================================
-   * IN-PILL MODE 1: `orb_only` — Sleek, Clean Big Astra Orb (Only Orb, Zero Overhead)
-   * Single tap: Speak / Listen · Long press (>450ms): Open Chat Studio
+   * IN-PILL MODE 1: `orb_only` â€” Sleek, Clean Big Astra Orb (Only Orb, Zero Overhead)
+   * Single tap: Speak / Listen Â· Long press (>450ms): Open Chat Studio
    * ======================================================================== */
   if (preferences.astraMode === 'orb_only') {
     return (
@@ -22744,8 +22882,8 @@ export const InPillAstraPanel: React.FC<InPillAstraPanelProps> = ({
           }}
           title={
             isListeningLive
-              ? 'Astra listening (Tap to stop · Long press for Chat)'
-              : 'Tap to speak to Astra · Long press for Chat'
+              ? 'Astra listening (Tap to stop Â· Long press for Chat)'
+              : 'Tap to speak to Astra Â· Long press for Chat'
           }
           aria-label="Astra Voice Orb (Tap to speak, Long press for Chat)"
           className="rounded-full transition-transform active:scale-95 hover:scale-105 focus-visible:outline-2 focus-visible:outline-sky-400 flex items-center justify-center cursor-pointer bg-transparent border-0 ring-0 shadow-none p-0 m-0"
@@ -22772,7 +22910,7 @@ export const InPillAstraPanel: React.FC<InPillAstraPanelProps> = ({
   }
 
   /* ==========================================================================
-   * IN-PILL MODE 2: `orb_with_captions` — Compact Orb + Live Streaming Subtitles
+   * IN-PILL MODE 2: `orb_with_captions` â€” Compact Orb + Live Streaming Subtitles
    * Frosted acrylic background matching the exact design language of the Pill
    * ======================================================================== */
   if (preferences.astraMode === 'orb_with_captions') {
@@ -22789,8 +22927,8 @@ export const InPillAstraPanel: React.FC<InPillAstraPanelProps> = ({
           onPointerCancel={handleOrbPointerCancel}
           title={
             isListeningLive
-              ? 'Astra listening (Tap to stop · Long press for Chat)'
-              : 'Tap to speak · Long press for Chat'
+              ? 'Astra listening (Tap to stop Â· Long press for Chat)'
+              : 'Tap to speak Â· Long press for Chat'
           }
           aria-label="Astra Voice Orb (Tap to speak, Long press for Chat)"
           className="shrink-0 rounded-full transition-transform active:scale-95 hover:scale-105 focus-visible:outline-2 focus-visible:outline-sky-400 cursor-pointer"
@@ -22810,7 +22948,7 @@ export const InPillAstraPanel: React.FC<InPillAstraPanelProps> = ({
             {isProcessing ? (
               <div className="flex items-center gap-2 text-xs font-medium text-sky-200 truncate">
                 <Loader2 className="w-3.5 h-3.5 animate-spin text-sky-400 shrink-0" />
-                <span className="truncate">Thinking…</span>
+                <span className="truncate">Thinkingâ€¦</span>
               </div>
             ) : liveInterimText ? (
               <div className="text-xs font-medium text-white truncate flex items-center gap-1.5">
@@ -22830,7 +22968,7 @@ export const InPillAstraPanel: React.FC<InPillAstraPanelProps> = ({
             ) : (
               <div className="text-xs text-slate-400 truncate flex items-center gap-1.5">
                 <span style={{ color: palette.primaryHex }} className="font-semibold text-[11px]">Astra</span>
-                <span className="text-[10px] text-slate-400">· Speak or tap orb…</span>
+                <span className="text-[10px] text-slate-400">Â· Speak or tap orbâ€¦</span>
               </div>
             )}
           </div>
@@ -22862,7 +23000,7 @@ export const InPillAstraPanel: React.FC<InPillAstraPanelProps> = ({
   }
 
   /* ==========================================================================
-   * IN-PILL MODE 2: `orb_with_chat` — Morphs the existing Pill into Siri Orb + Chat Studio
+   * IN-PILL MODE 2: `orb_with_chat` â€” Morphs the existing Pill into Siri Orb + Chat Studio
    * ======================================================================== */
   return (
     <div
@@ -22885,13 +23023,14 @@ export const InPillAstraPanel: React.FC<InPillAstraPanelProps> = ({
               state={orbVisualState}
               audioLevel={micAudioLevel}
               size={38}
+              style={preferences.astraOrbStyle}
               lowPowerEco={preferences.featureFlags.lowRamEcoMode}
             />
           </button>
           <div className="min-w-0">
             <div className="flex items-center gap-1.5">
               <span className="text-xs font-semibold text-white">Astra</span>
-              <span className="text-[10.5px] text-cyan-300 font-medium">అస్త్రం</span>
+              <span className="text-[10.5px] text-cyan-300 font-medium">à°…à°¸à±à°¤à±à°°à°‚</span>
               {preferences.privacyMaskEnabled && (
                 <span className="inline-flex items-center gap-1 text-[10px] text-emerald-300/90 ml-1">
                   <ShieldCheck className="w-3 h-3" />
@@ -22901,8 +23040,8 @@ export const InPillAstraPanel: React.FC<InPillAstraPanelProps> = ({
             </div>
             <div className="text-[10.5px] text-slate-400 truncate">
               {isListeningLive
-                ? 'Listening live inside Pill — pause speaking to execute'
-                : 'In-Pill Siri Agent · Windows Controls & Grounded Web'}
+                ? 'Listening live inside Pill â€” pause speaking to execute'
+                : 'In-Pill Siri Agent Â· Windows Controls & Grounded Web'}
             </div>
           </div>
         </div>
@@ -22957,7 +23096,7 @@ export const InPillAstraPanel: React.FC<InPillAstraPanelProps> = ({
         ) : (
           <div className="py-2 text-center">
             <div className="text-xs font-medium text-slate-200">
-              Speak naturally or type below — the Pill itself is now Astra
+              Speak naturally or type below â€” the Pill itself is now Astra
             </div>
             <div className="text-[11px] text-slate-400 mt-0.5">
               Controls Wi-Fi, Bluetooth, Privacy Mask, Volume, Brightness, Timers &amp; Live Web Search
@@ -22968,7 +23107,7 @@ export const InPillAstraPanel: React.FC<InPillAstraPanelProps> = ({
         {isProcessing && (
           <div className="flex items-center gap-2 text-xs text-sky-200 py-1">
             <Loader2 className="w-3.5 h-3.5 animate-spin text-sky-300" />
-            <span>Running command…</span>
+            <span>Running commandâ€¦</span>
           </div>
         )}
 
@@ -23102,7 +23241,7 @@ export const InPillAstraPanel: React.FC<InPillAstraPanelProps> = ({
                 stopActiveListening();
               }
             }}
-            placeholder="Ask Astra (అస్త్రం)..."
+            placeholder="Ask Astra (à°…à°¸à±à°¤à±à°°à°‚)..."
             aria-label="Ask Astra input"
             className="flex-1 bg-transparent text-xs text-white placeholder:text-slate-400 focus:outline-none px-1"
           />
@@ -23132,6 +23271,7 @@ export const InPillAstraPanel: React.FC<InPillAstraPanelProps> = ({
     </div>
   );
 };
+
 === FILE: src/components/shaders/AstraSiriSphereCanvas.tsx ===
 import React, { useEffect, useRef } from 'react';
 
@@ -23437,6 +23577,7 @@ export const AstraSiriSphereCanvas: React.FC<AstraSiriSphereCanvasProps> = ({
     />
   );
 };
+
 === FILE: src/components/shaders/LiquidMetaballCanvas.tsx ===
 import React, { useEffect, useRef } from 'react';
 
@@ -23588,6 +23729,7 @@ export const LiquidMetaballCanvas: React.FC<LiquidMetaballCanvasProps> = ({
     />
   );
 };
+
 === FILE: src/constants/motionSprings.ts ===
 export const PILL_LIQUID_SPRING = {
   type: 'spring' as const,
@@ -23616,6 +23758,7 @@ export const SPRING_SMOOTH = {
   damping: 30,
   mass: 0.9,
 };
+
 === FILE: src/data/demoData.ts ===
 import {
   AgentApprovalRequest,
@@ -23695,7 +23838,7 @@ export const INITIAL_BLUETOOTH_DEVICES: BluetoothDeviceEntry[] = [
 ];
 
 export const AVAILABLE_CAST_DISPLAYS = [
-  { id: 'cast-1', name: 'Studio OLED 65" (4K HDR)', protocol: 'Miracast · 60Hz' },
+  { id: 'cast-1', name: 'Studio OLED 65" (4K HDR)', protocol: 'Miracast Â· 60Hz' },
   { id: 'cast-2', name: 'Conference Surface Hub 2S', protocol: 'Wireless Display' },
   { id: 'cast-3', name: 'Living Room Bravia XR', protocol: 'Miracast Audio+Video' },
 ];
@@ -23739,7 +23882,7 @@ export const INITIAL_CLIPBOARD_ITEMS: ClipboardItem[] = [
     pinned: true,
     category: 'image',
     badgeCode: 'PNG',
-    fileSizeLabel: '2.4 MB · 2048 × 2048 px · RGBA 16-bit',
+    fileSizeLabel: '2.4 MB Â· 2048 Ã— 2048 px Â· RGBA 16-bit',
     previewImageUrl: '/assets/images/album_cover_midnight_1794384707111.jpg',
   },
   {
@@ -23759,7 +23902,7 @@ export const INITIAL_CLIPBOARD_ITEMS: ClipboardItem[] = [
     pinned: false,
     category: 'image',
     badgeCode: 'JPG',
-    fileSizeLabel: '1.8 MB · 3840 × 2160 px · Display P3',
+    fileSizeLabel: '1.8 MB Â· 3840 Ã— 2160 px Â· Display P3',
     previewImageUrl: '/assets/images/album_cover_solstice_1794384708539.jpg',
   },
   {
@@ -23780,7 +23923,7 @@ export const INITIAL_CLIPBOARD_ITEMS: ClipboardItem[] = [
     pinned: false,
     category: 'archive',
     badgeCode: 'MSIX',
-    fileSizeLabel: '4.6 MB · SHA256 Signed NativeAOT Package',
+    fileSizeLabel: '4.6 MB Â· SHA256 Signed NativeAOT Package',
   },
   {
     id: 'clip-5',
@@ -23793,7 +23936,7 @@ export const INITIAL_CLIPBOARD_ITEMS: ClipboardItem[] = [
   },
   {
     id: 'clip-6',
-    text: 'Meeting Room 4B · Passcode 884-219 · DirectComposition 120Hz Spring Review at 10:30 AM IST',
+    text: 'Meeting Room 4B Â· Passcode 884-219 Â· DirectComposition 120Hz Spring Review at 10:30 AM IST',
     source: 'Screenshot OCR',
     copiedAt: '19m ago',
     pinned: false,
@@ -23882,8 +24025,8 @@ export const INITIAL_SYSTEM_STATE: WindowsSystemState = {
   publicIp: '14.139.56.112',
   ispName: 'NKN Gigabit Fiber',
   gatewayIp: '192.168.1.1',
-  dnsServer: '1.1.1.1 · Cloudflare',
-  wifiChannel: 'Wi-Fi 6E · Ch 37 (6 GHz)',
+  dnsServer: '1.1.1.1 Â· Cloudflare',
+  wifiChannel: 'Wi-Fi 6E Â· Ch 37 (6 GHz)',
   wifiRssiDbm: -46,
   wifiLinkMbps: 2402,
   netHistoryDown: [240, 265, 290, 310, 298, 336, 355, 328, 362, 349, 378, 342.8],
@@ -24035,6 +24178,7 @@ export const DEFAULT_PREFERENCES: PillPreferences = {
   },
   showCompactStats: false,
 };
+
 === FILE: src/data/winuiProjectFiles.ts ===
 export interface WinUIProjectFile {
   path: string;
@@ -24048,22 +24192,22 @@ export const WINUI_NATIVE_FILES: WinUIProjectFile[] = [
   {
     path: 'Pill.WinUI/AGENT_DELTA_DIFF.md',
     language: 'markdown',
-    summary: 'INCREMENTAL v2 DELTA DIFF SPEC — Apply Only New Features Over Existing v1 Codebase',
+    summary: 'INCREMENTAL v2 DELTA DIFF SPEC â€” Apply Only New Features Over Existing v1 Codebase',
     ramNote: 'Surgical patch guide for coding agents: preserves v1 WinRT drivers while adding Playground, Multi-Size Widgets, Bento Clipboard & Astra Orb.',
-    content: `# PILL FOR WINDOWS — INCREMENTAL v2 DELTA DIFF SPECIFICATION
+    content: `# PILL FOR WINDOWS â€” INCREMENTAL v2 DELTA DIFF SPECIFICATION
 **Scope:** Incremental Patch Over Existing v1 Build (DO NOT rewrite existing working Bluetooth, Wi-Fi, CoreAudio, DDC/CI, or NativeAOT plumbing).
 
 ---
 
 ## SUMMARY OF DELTA CHANGES TO APPLY
 
-### DIFF 1 — Multi-Size Dynamic Widgets (\`Small 1×1\`, \`Medium 2×1\`, \`Large 2×2\`, \`Vertical 1×2\`) & Space-Efficient Music Card
+### DIFF 1 â€” Multi-Size Dynamic Widgets (\`Small 1Ã—1\`, \`Medium 2Ã—1\`, \`Large 2Ã—2\`, \`Vertical 1Ã—2\`) & Space-Efficient Music Card
 - **Target Files:** \`Models/PillPreferences.cs\`, \`Views/HomePlaygroundPage.xaml(.cs)\`, \`Controls/MusicStudioWidget.xaml(.cs)\`
 - **Changes:**
   1. Add \`public enum WidgetSizeVariant { Small, Medium, Large, Vertical }\` and \`Dictionary<string, WidgetSizeVariant> WidgetSizes\` to \`PillPreferences\`.
   2. Replace the fixed 2-column split on Home with a 4-column dense \`VariableSizedWrapGrid\` / CSS-equivalent \`Grid\` (\`ColumnDefinitions="*,*,*,*"\`, \`RowHeight="108"\`):
      - \`Small\`: \`ColumnSpan=1, RowSpan=1\`
-     - \`Medium\`: \`ColumnSpan=2, RowSpan=1\` (Default for Music — eliminates empty dark space!)
+     - \`Medium\`: \`ColumnSpan=2, RowSpan=1\` (Default for Music â€” eliminates empty dark space!)
      - \`Large\`: \`ColumnSpan=2, RowSpan=2\`
      - \`Vertical\`: \`ColumnSpan=1, RowSpan=2\`
   3. **Remove \`"Fluent Mica"\` / \`"24-bit WASAPI"\` label** from \`MusicStudioWidget\`.
@@ -24072,49 +24216,49 @@ export const WINUI_NATIVE_FILES: WinUIProjectFile[] = [
      - Add \`bool MusicLyricsVisible { get; set; } = true;\` to \`PillPreferences\`.
      - Render fused inline lyric bar above \`LivingProgressBar\` by default; wire \`Lyrics On/Off\` toggle button and \`Expand\` (\`Maximize\`) button that swaps in a scrollable \`ListView\` of synchronized LRC/GSMTC lines.
 
-### DIFF 2 — Apple-Style Interactive "Playground" Building-Block Editor (Home + Control Center)
+### DIFF 2 â€” Apple-Style Interactive "Playground" Building-Block Editor (Home + Control Center)
 - **Target Files:** \`Views/HomePlaygroundPage.xaml.cs\`, \`Views/ControlCenterView.xaml(.cs)\`
 - **Changes:**
   1. When \`IsPlaygroundEditing == true\` on Home or any Custom Widget Tab:
      - Enable drag-and-drop reorder (\`CanDragItems="True"\`, \`CanReorderItems="True"\`, \`AllowDrop="True"\`).
-     - Render corner size pills (\`S\`, \`M\`, \`L\`, \`V\`) + remove (\`×\`) on each widget block and a \`+ Add Block\` strip for unadded widgets.
+     - Render corner size pills (\`S\`, \`M\`, \`L\`, \`V\`) + remove (\`Ã—\`) on each widget block and a \`+ Add Block\` strip for unadded widgets.
   2. In \`ControlCenterView\`:
-     - Add \`SquarishBlocks\` (6-column compact rounded squares — new default!) and \`CircularOrbs\` (6-column Apple Control Center circular toggles with corner \`>\` submenu badges) alongside existing layouts, eliminating wide wasted horizontal space.
-     - Add \`Edit Blocks\` Playground toggle allowing drag-and-drop tile reorder and \`1×1\` vs \`2×1\` span toggle (\`ControlTileSizes\`).
+     - Add \`SquarishBlocks\` (6-column compact rounded squares â€” new default!) and \`CircularOrbs\` (6-column Apple Control Center circular toggles with corner \`>\` submenu badges) alongside existing layouts, eliminating wide wasted horizontal space.
+     - Add \`Edit Blocks\` Playground toggle allowing drag-and-drop tile reorder and \`1Ã—1\` vs \`2Ã—1\` span toggle (\`ControlTileSizes\`).
 
-### DIFF 3 — Tab Renaming (\`"Voice AI"\` → \`"Search & AI"\`) & Extra Custom Widget Pages
+### DIFF 3 â€” Tab Renaming (\`"Voice AI"\` â†’ \`"Search & AI"\`) & Extra Custom Widget Pages
 - **Target Files:** \`Models/PillPreferences.cs\`, \`Views/ExpandedIslandShell.xaml.cs\`, \`Views/FullSettingsWindow.xaml(.cs)\`
 - **Changes:**
   1. Change default label of \`ai\` tab from \`"Voice AI"\` to \`"Search & AI"\`.
   2. Add \`Dictionary<string, string> CustomTabNames\` so users can rename any built-in tab in Settings.
   3. Add \`List<CustomWidgetTab> CustomWidgetTabs\` (\`Id\`, \`Name\`, \`Enabled\`, \`Widgets\`, \`WidgetSizes\`) so users can create extra custom tabs in Settings (like extra Apple Control Center pages) that render the same multi-size \`HomePlaygroundPage\` canvas.
 
-### DIFF 4 — Dynamic Bento Clipboard + Sort & Group + Layout Switcher
+### DIFF 4 â€” Dynamic Bento Clipboard + Sort & Group + Layout Switcher
 - **Target Files:** \`Views/SmartClipboardView.xaml(.cs)\`
 - **Changes:**
   1. Add \`ClipboardLayoutMode { DynamicBento, ClassicList }\` (default \`DynamicBento\`), \`ClipboardSortBy { Newest, Oldest, Pinned, Type, Size }\`, and \`ClipboardGroupBy { None, Category }\`.
   2. In \`DynamicBento\` mode, use a 3-column dense layout where copied images use natural aspect-fitted \`ColumnSpan=2\` frames (\`Stretch="UniformToFill"\`, zero empty black sidebars) while colors, links, short text, and file chips pack into \`ColumnSpan=1\` square cards right beside them. Preserve \`ClassicList\` as a 1-click toggle.
 
-### DIFF 5 — Astra (\`అస్త్రం\` / \`Astram\`) Floating Orb Agent + Real-Time Streaming + DPAPI API Key Vault
+### DIFF 5 â€” Astra (\`à°…à°¸à±à°¤à±à°°à°‚\` / \`Astram\`) Floating Orb Agent + Real-Time Streaming + DPAPI API Key Vault
 - **Target Files:** \`Services/AstraOrbAndVaultService.cs\` (NEW), \`Views/AstraFloatingOrbWindow.xaml(.cs)\` (REPLACES modal VoiceAgent overlay), \`Views/FullSettingsWindow.xaml\`
 - **Changes:**
-  1. Rename voice agent to **Astra** (\`అస్త్రం\` / \`Astram\` in Telugu).
+  1. Rename voice agent to **Astra** (\`à°…à°¸à±à°¤à±à°°à°‚\` / \`Astram\` in Telugu).
   2. **Zero Full-Screen Backdrop:** Host Astra in a compact click-through top-right/Pill-anchored layered \`AppWindow\` (\`WS_EX_LAYERED | WS_EX_TOPMOST | WS_EX_NOACTIVATE\`) with a Win2D/HLSL 3D iridescent Siri-style liquid sphere.
   3. **Two Display Modes (\`AstraMode\`):**
      - \`OrbOnly\` (**Without Chat**): Pure floating 3D liquid orb + live streaming words pill + compact ephemeral result card (no text box).
-     - \`OrbWithChat\` (**With Chat**): Frosted dark-glass card with right-aligned live user speech bubble, bottom rainbow Siri/Astra aurora glow, grounded markdown reply, and bottom \`"Ask Astra (అస్త్రం)..."\` \`TextBox\`.
+     - \`OrbWithChat\` (**With Chat**): Frosted dark-glass card with right-aligned live user speech bubble, bottom rainbow Siri/Astra aurora glow, grounded markdown reply, and bottom \`"Ask Astra (à°…à°¸à±à°¤à±à°°à°‚)..."\` \`TextBox\`.
   4. **On-The-Go Voice Streaming & Wake Word:**
      - Continuous \`SpeechContinuousRecognitionSession\` listens for \`"Astra"\` / \`"Astram"\` (\`AstraWakeWordEnabled\`, toggleable in Settings).
-     - Once awake, streams \`HypothesisGenerated\` words live into the UI and auto-dispatches after 1.1s of silence — no manual Record → Stop → Send!
+     - Once awake, streams \`HypothesisGenerated\` words live into the UI and auto-dispatches after 1.1s of silence â€” no manual Record â†’ Stop â†’ Send!
   5. **Settings API Key Input & Master AI Disable Switch (Windows Native):**
      - Add \`bool AiEnabled { get; set; } = true;\` master switch in Settings (disables \`Search & AI\` tab, wake word, hotkey, and dictation when \`false\`).
      - Add a WinUI \`PasswordBox\` + \`Save Key\` / \`Clear Key\` buttons wired to \`AstraOrbAndVaultService.SaveApiKey(string)\` using \`ProtectedData.Protect(..., DataProtectionScope.CurrentUser)\` (Windows DPAPI) so users can supply, rotate, or remove their own Gemini API key at any time.
 
-### DIFF 6 — v3 Upgrade: OS-Level Screen-Capture Privacy Masking (\`WDA_EXCLUDEFROMCAPTURE\`), In-Pill Astra Morphing + 3D Siri Silk Sphere, \`Notedown\`, \`Assist\`, Animated Battery & Custom Popdowns
+### DIFF 6 â€” v3 Upgrade: OS-Level Screen-Capture Privacy Masking (\`WDA_EXCLUDEFROMCAPTURE\`), In-Pill Astra Morphing + 3D Siri Silk Sphere, \`Notedown\`, \`Assist\`, Animated Battery & Custom Popdowns
 - **Target Files:** \`Services/PrivacyMaskAndCaptureService.cs\` (NEW), \`Views/MainIslandWindow.xaml.cs\`, \`Controls/AstraSiriSphereControl.cs\`, \`Controls/AnimatedBatterySymbol.xaml\`, \`Views/NotesNotedownView.xaml\`, \`Views/AssistCopilotView.xaml\`
 - **Changes:**
   1. **Unified In-Pill Astra Morphing (NO Separate Second Window):**
-     - Remove \`AstraFloatingOrbWindow\`. When \`IsAstraOpen == true\` (triggered via \`Alt+V\`, \`"Astra"\`/\`"Astram"\` wake word, or Pill button), morph \`MainIslandWindow\`'s own spring geometry directly to \`410×64\` (\`OrbOnly\`) or \`488×152\` (\`OrbWithChat\`, expanding smoothly to \`246px\` height when Markdown answers arrive).
+     - Remove \`AstraFloatingOrbWindow\`. When \`IsAstraOpen == true\` (triggered via \`Alt+V\`, \`"Astra"\`/\`"Astram"\` wake word, or Pill button), morph \`MainIslandWindow\`'s own spring geometry directly to \`410Ã—64\` (\`OrbOnly\`) or \`488Ã—152\` (\`OrbWithChat\`, expanding smoothly to \`246px\` height when Markdown answers arrive).
   2. **Realistic 3D Apple Siri Refractive Silk-Ribbon Sphere (\`AstraSiriSphereControl\`):**
      - Render a 60fps Win2D / HLSL additive-blended (\`CanvasBlend.Add\`) 3D sphere containing 5 rotating parametric silk ribbons (cyan, magenta, royal indigo,violet, coral-gold) inside a spherical clipping mask so overlapping ribbons bloom into a burning-white core, topped with Fresnel specular glass arcs.
   3. **OS-Level Screen-Capture Privacy Masking (\`SetWindowDisplayAffinity\`):**
@@ -24187,7 +24331,7 @@ public static partial class PrivacyMaskAndCaptureService
   {
     path: 'Pill.WinUI/Services/AstraOrbAndVaultService.cs',
     language: 'csharp',
-    summary: 'Astra (అస్త్రం) Continuous Wake-Word, On-The-Go Speech Streaming & Windows DPAPI API Key Vault',
+    summary: 'Astra (à°…à°¸à±à°¤à±à°°à°‚) Continuous Wake-Word, On-The-Go Speech Streaming & Windows DPAPI API Key Vault',
     ramNote: 'Zero-allocation SpeechContinuousRecognitionSession + ProtectedData DPAPI local encryption (~0.4 MB overhead).',
     content: `using System;
 using System.IO;
@@ -24209,7 +24353,7 @@ public enum AstraDisplayMode
 /// <summary>
 /// Manages:
 /// 1. Windows DPAPI-encrypted custom Gemini API Key storage + Master AI Enable/Disable switch.
-/// 2. Continuous low-power wake-word detection for "Astra" / "Astram" (అస్త్రం).
+/// 2. Continuous low-power wake-word detection for "Astra" / "Astram" (à°…à°¸à±à°¤à±à°°à°‚).
 /// 3. Real-time on-the-go streaming speech capture with automatic silence-pause dispatch.
 /// </summary>
 public sealed class AstraOrbAndVaultService : IDisposable
@@ -24299,7 +24443,7 @@ public sealed class AstraOrbAndVaultService : IDisposable
     }
 
     // =========================================================================
-    // 2. ASTRA ("అస్త్రం" / "ASTRAM") WAKE WORD & ON-THE-GO STREAMING ENGINE
+    // 2. ASTRA ("à°…à°¸à±à°¤à±à°°à°‚" / "ASTRAM") WAKE WORD & ON-THE-GO STREAMING ENGINE
     // =========================================================================
     public async Task SummonOrbAsync()
     {
@@ -24409,7 +24553,7 @@ public sealed class AstraOrbAndVaultService : IDisposable
     {
         commandRemainder = string.Empty;
         string lower = transcript.ToLowerInvariant();
-        string[] triggers = { "hey astram", "hey astra", "astram", "astra", "అస్త్రం" };
+        string[] triggers = { "hey astram", "hey astra", "astram", "astra", "à°…à°¸à±à°¤à±à°°à°‚" };
 
         foreach (string trig in triggers)
         {
@@ -24448,7 +24592,7 @@ public sealed class AstraOrbAndVaultService : IDisposable
     language: 'markdown',
     summary: 'Turnkey Implementation & Windows Integration Manual for AI Agents and Developers',
     ramNote: 'Zero-ambiguity API signatures, WinRT namespaces, and NativeAOT compilation guide.',
-    content: `# PILL FOR WINDOWS — NATIVE AGENT IMPLEMENTATION MANUAL
+    content: `# PILL FOR WINDOWS â€” NATIVE AGENT IMPLEMENTATION MANUAL
 **Target Platform:** Windows 11 (Build 22621+ / Version 22H2 or newer)
 **Framework:** C# / .NET 8.0, Windows App SDK 1.6, WinUI 3, Win2D, DirectComposition
 **Binary Target:** NativeAOT Single-File x64 / ARM64 executable (~4.6 MB, ~12.4 MB working set)
@@ -25354,12 +25498,13 @@ For turnkey AI Agent instructions and API specs, see \`AGENT_INSTRUCTIONS.md\`.
 `,
   },
 ];
+
 === FILE: src/hooks/useAstraSpeechStream.ts ===
 import { useEffect, useRef } from 'react';
 import { usePillStore } from '../store/usePillStore';
 
 const SILENCE_COMMIT_MS = 1100;
-const WAKE_WORDS = ['astra', 'astram', 'hey astra', 'hi astra', 'ok astra', 'అస్త్రం', 'అస్త్ర'];
+const WAKE_WORDS = ['astra', 'astram', 'hey astra', 'hi astra', 'ok astra', 'à°…à°¸à±à°¤à±à°°à°‚', 'à°…à°¸à±à°¤à±à°°'];
 
 export function useAstraSpeechStream() {
   const astraVisible = usePillStore((s) => s.astraVisible);
@@ -25445,7 +25590,7 @@ export function useAstraSpeechStream() {
       if (!apiKey) {
         setAstraState('speaking');
         setAstraAnswerMarkdown(
-          `**Astra Voice Assistant (అస్త్రం)**\n\nNo Gemini API Key found in your DPAPI Vault.\n\nOpen **Settings** (⚙️) to save your Gemini API key securely.`
+          `**Astra Voice Assistant (à°…à°¸à±à°¤à±à°°à°‚)**\n\nNo Gemini API Key found in your DPAPI Vault.\n\nOpen **Settings** (âš™ï¸) to save your Gemini API key securely.`
         );
         return;
       }
@@ -25458,7 +25603,7 @@ export function useAstraSpeechStream() {
             role: 'user',
             parts: [
               {
-                text: `You are Astra (అస్త్రం), an intelligent native Windows 11 AI companion. Answer concisely in clean markdown with technical accuracy:\n\n${trimmed}`,
+                text: `You are Astra (à°…à°¸à±à°¤à±à°°à°‚), an intelligent native Windows 11 AI companion. Answer concisely in clean markdown with technical accuracy:\n\n${trimmed}`,
               },
             ],
           },
@@ -25573,6 +25718,7 @@ export function useAstraSpeechStream() {
 
   return { submitManualQuery };
 }
+
 === FILE: src/hooks/useHitTestPassthrough.ts ===
 import { useEffect, useRef } from 'react';
 import { invoke } from '@tauri-apps/api/core';
@@ -25619,6 +25765,7 @@ export function useHitTestPassthrough<T extends HTMLElement>(isExpandedOrMenuOpe
 
   return ref;
 }
+
 === FILE: src/hooks/useTauriHardwareBridge.ts ===
 import { useEffect } from 'react';
 import { usePillStore } from '../store/usePillStore';
@@ -25827,6 +25974,7 @@ export function useTauriHardwareBridge() {
     openSettings,
   };
 }
+
 === FILE: src/index.css ===
 @import "tailwindcss";
 @custom-variant dark (&:where(.dark, .dark *));
@@ -25910,12 +26058,14 @@ export function useTauriHardwareBridge() {
     transition-duration: 0.01ms !important;
   }
 }
+
 === FILE: src/main.tsx ===
 import {createRoot} from 'react-dom/client';
 import App from './App';
 import './index.css';
 
 createRoot(document.getElementById('root')!).render(<App />);
+
 === FILE: src/store/usePillStore.ts ===
 import { create } from 'zustand';
 import {
@@ -26179,6 +26329,7 @@ export const usePillStore = create<PillState>((set, get) => ({
   },
   setActivePopdownId: (id) => set({ activePopdownId: id }),
 }));
+
 === FILE: src/types/pill.ts ===
 import {
   PillAnchorPosition,
@@ -26574,7 +26725,7 @@ export interface PillPreferences {
   isElongated: boolean;
   isFloatingPill: boolean;
 
-  // Stealth Hide, Reveal & Astra (అస్త్రం / Astram) In-Pill Agent
+  // Stealth Hide, Reveal & Astra (à°…à°¸à±à°¤à±à°°à°‚ / Astram) In-Pill Agent
   stealthAutoHide: boolean;
   revealOnEdgeTouch: boolean;
   revealAreaWidth?: number;
@@ -26645,6 +26796,7 @@ export {
   PillShapeStyle as LedgeShapeStyle,
   PillSizeScale as LedgeSizeScale,
 };
+
 === FILE: src/types/preferences.ts ===
 export type WidgetSizeVariant = 'Small' | 'Medium' | 'Large' | 'Vertical';
 // Small = 1x1, Medium = 2x1 (Default for Music!), Large = 2x2, Vertical = 1x2
@@ -26667,7 +26819,7 @@ export interface CustomWidgetTab {
 export interface PillPreferences {
   // Master AI & Astra (Diff 5 & 6)
   aiEnabled: boolean;                    // Default: true (Master kill-switch)
-  astraWakeWordEnabled: boolean;         // Default: true ("Astra" / "Astram" / "అస్త్రం")
+  astraWakeWordEnabled: boolean;         // Default: true ("Astra" / "Astram" / "à°…à°¸à±à°¤à±à°°à°‚")
   astraMode: AstraDisplayMode;           // Default: 'OrbWithChat'
 
   // OS Screen-Capture Privacy Cloaking (Diff 6)
@@ -26792,6 +26944,7 @@ export const DEFAULT_PREFERENCES: PillPreferences = {
 };
 
 export type LedgePreferences = PillPreferences;
+
 === FILE: src/utils/audioSynth.ts ===
 import { SoundActionKind, SoundProfileId } from '../types/pill';
 
@@ -26880,7 +27033,7 @@ export function playTactilePop(
     }
 
     const t0 = ctx.currentTime + 0.0005;
-    console.log(`[AudioEngine] 🔊 ${kind} | profile: ${profile} | perf: ${nowPerf.toFixed(2)}ms | audioTime: ${t0.toFixed(4)}s`);
+    console.log(`[AudioEngine] ðŸ”Š ${kind} | profile: ${profile} | perf: ${nowPerf.toFixed(2)}ms | audioTime: ${t0.toFixed(4)}s`);
     const masterGain = ctx.createGain();
     const filter = ctx.createBiquadFilter();
     filter.type = 'lowpass';
@@ -27149,6 +27302,7 @@ export function formatStopwatchClock(elapsedMs: number): string {
     .toString()
     .padStart(2, '0')}`;
 }
+
 === FILE: src/utils/customizationLogic.test.ts ===
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -27212,6 +27366,7 @@ test('matchesShortcutCombo matches Alt+L and Alt+Space accurately', () => {
     false
   );
 });
+
 === FILE: src/utils/customizationLogic.ts ===
 import type { BuiltinPillTab, PillPreferences, PillTab } from '../types/pill';
 
@@ -27419,6 +27574,7 @@ export function isTabEnabledInPrefs(tab: PillTab, prefs: PillPreferences): boole
   return Boolean(prefs.enabledTabs?.[builtin]);
 }
 
+
 === FILE: src/utils/springPhysics.test.ts ===
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -27466,7 +27622,7 @@ test('Fluid spring produces organic overshoot while Calm spring stays critically
   assert.ok(maxCalm <= 101.0);
 });
 
-test('computeLiquidDeformation preserves incompressible 2D fluid area (scaleX * scaleY ≈ 1)', () => {
+test('computeLiquidDeformation preserves incompressible 2D fluid area (scaleX * scaleY â‰ˆ 1)', () => {
   const expanding = computeLiquidDeformation(1400, 120);
   assert.ok(expanding.scaleX > 1.01);
   assert.ok(expanding.scaleY < 0.99);
@@ -27598,6 +27754,7 @@ test('resolvePillGeometry morphs the existing Pill directly into Astra (orb_only
   assert.equal(orbWithChat.height, 308);
 });
 
+
 === FILE: src/utils/springPhysics.ts ===
 export interface SpringConfig {
   stiffness: number;
@@ -27715,7 +27872,7 @@ export interface LiquidDeformation {
 }
 
 /**
- * Computes incompressible fluid squash-and-stretch deformation (scaleX * scaleY ≈ 1)
+ * Computes incompressible fluid squash-and-stretch deformation (scaleX * scaleY â‰ˆ 1)
  * driven by instantaneous horizontal and vertical expansion velocities.
  */
 export function computeLiquidDeformation(
@@ -27873,7 +28030,7 @@ export function resolvePillGeometry(input: PillGeometryInput): PillGeometryOutpu
     return expanded ? 34 : Math.round(h / 2);
   };
 
-  // 0.5 In-Pill Astra (అస్త్రం) Morph — Uses the existing Pill directly instead of a separate box!
+  // 0.5 In-Pill Astra (à°…à°¸à±à°¤à±à°°à°‚) Morph â€” Uses the existing Pill directly instead of a separate box!
   if (input.isAstraActive && !input.isExpanded) {
     if (input.astraMode === 'orb_only') {
       const baseW = input.astraExpandedResult ? 420 : 70;
@@ -28073,6 +28230,7 @@ export type LedgeAnchorPosition = PillAnchorPosition;
 export const LedgeAnchorPosition = PillAnchorPosition;
 export type LedgeGeometryInput = PillGeometryInput;
 export type LedgeGeometryOutput = PillGeometryOutput;
+
 === FILE: src/utils/themeAndSliders.test.ts ===
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -28139,6 +28297,7 @@ test('paginateControlTiles splits tiles into Windows 11 3x2 pages accurately', (
   assert.deepEqual(pages[0], ['wifi', 'bt', 'airplane', 'acc', 'saver', 'captions']);
   assert.deepEqual(pages[1], ['nightlight', 'cast', 'project']);
 });
+
 === FILE: src/utils/themeAndSliders.ts ===
 import type { EdgeLightProfile, AstraOrbStyle } from '../types/pill';
 
@@ -28861,6 +29020,7 @@ export function resolveEdgeGlowCss(
   }
 }
 
+
 === FILE: src/utils/zipBuilder.test.ts ===
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -28888,6 +29048,7 @@ test('createZipArchive writes valid PKZIP local headers, central directory, and 
   // Total entry count in EOCD must be 2
   assert.equal(view.getUint16(eocdOffset + 10, true), 2);
 });
+
 === FILE: src/utils/zipBuilder.ts ===
 export interface ZipFileEntry {
   path: string;
@@ -29016,3 +29177,4 @@ export function createZipArchive(entries: ZipFileEntry[]): Uint8Array<ArrayBuffe
 
   return output;
 }
+

@@ -119,6 +119,10 @@ export const DesktopStudioDock: React.FC<DesktopStudioDockProps> = ({
               draggable
               onDragStart={(e) => {
                 e.dataTransfer.setData(
+                  'application/x-dynamic-pill-file',
+                  JSON.stringify(file)
+                );
+                e.dataTransfer.setData(
                   'application/x-dynamic-ledge-file',
                   JSON.stringify(file)
                 );

@@ -41,7 +41,7 @@ import {
   isSpringAtRest,
   PillAnchorPosition,
   PillShapeStyle,
-  resolveLedgeGeometry,
+  resolvePillGeometry,
   SpringState1D,
   stepSpring1D,
 } from '../utils/springPhysics';
@@ -247,7 +247,7 @@ export const PillCapsule: React.FC<PillCapsuleProps> = ({
 
   const targetGeometry = useMemo(
     () =>
-      resolveLedgeGeometry({
+      resolvePillGeometry({
         isExpanded,
         isLauncherOpen,
         activeTab,
@@ -496,13 +496,37 @@ export const PillCapsule: React.FC<PillCapsuleProps> = ({
       }
     };
     const onWindowClick = () => setContextMenuPos(null);
+    const onWindowBlur = () => setContextMenuPos(null);
     window.addEventListener('keydown', onKeyDown);
     window.addEventListener('click', onWindowClick);
+    window.addEventListener('blur', onWindowBlur);
     return () => {
       window.removeEventListener('keydown', onKeyDown);
       window.removeEventListener('click', onWindowClick);
+      window.removeEventListener('blur', onWindowBlur);
     };
   }, [isExpanded, effectiveAstraActive, onCollapse, onCloseVoiceAgent]);
+
+  // Synchronize Tauri OS window pass-through hit testing when context menu opens/closes
+  useEffect(() => {
+    if (typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window) {
+      import('@tauri-apps/api/core')
+        .then(({ invoke }) => {
+          invoke('set_pill_force_interactive', { force: Boolean(contextMenuPos) }).catch(() => {});
+        })
+        .catch(() => {});
+    }
+    kickLoopRef.current?.();
+    return () => {
+      if (typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window) {
+        import('@tauri-apps/api/core')
+          .then(({ invoke }) => {
+            invoke('set_pill_force_interactive', { force: false }).catch(() => {});
+          })
+          .catch(() => {});
+      }
+    };
+  }, [contextMenuPos]);
 
   // Listen to native OS cursor boundary events (120Hz precision from window_manager.rs)
   useEffect(() => {
@@ -541,6 +565,7 @@ export const PillCapsule: React.FC<PillCapsuleProps> = ({
         }
         setIsHovered(false);
         setEdgeTouched(false);
+        setContextMenuPos(null);
       }).then((u) => {
         unlistenOutside = u;
       });
@@ -569,7 +594,9 @@ export const PillCapsule: React.FC<PillCapsuleProps> = ({
     e.preventDefault();
     setIsDragOver(false);
 
-    const customDesktopPayload = e.dataTransfer.getData('application/x-dynamic-ledge-file');
+    const customDesktopPayload =
+      e.dataTransfer.getData('application/x-dynamic-pill-file') ||
+      e.dataTransfer.getData('application/x-dynamic-ledge-file');
     if (customDesktopPayload) {
       try {
         const parsed = JSON.parse(customDesktopPayload) as TrayFileItem;
@@ -595,7 +622,7 @@ export const PillCapsule: React.FC<PillCapsuleProps> = ({
           sizeLabel: kb >= 1024 ? `${(kb / 1024).toFixed(1)} MB` : `${kb.toFixed(1)} KB`,
           addedAt: 'Just now',
           pinned: false,
-          contentPreview: `Dropped onto Dynamic Ledge: ${f.name}`,
+          contentPreview: `Dropped onto Dynamic Pill: ${f.name}`,
         };
       });
       onAddTrayFiles(dropped);
@@ -692,6 +719,31 @@ export const PillCapsule: React.FC<PillCapsuleProps> = ({
       {/* Hidden Zero-Cost SVG Metaball Filter for Liquid Meniscus Coalescence */}
       <svg className="sr-only" aria-hidden="true">
         <defs>
+          <filter
+            id="pill-liquid-goo"
+            x="-35%"
+            y="-35%"
+            width="190%"
+            height="190%"
+            colorInterpolationFilters="sRGB"
+          >
+            <feGaussianBlur in="SourceGraphic" stdDeviation="7.2" result="blur" />
+            <feColorMatrix
+              in="blur"
+              mode="matrix"
+              values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 26 -11"
+              result="goo"
+            />
+            <feDropShadow
+              in="goo"
+              dx="0"
+              dy="1"
+              stdDeviation="0.6"
+              floodColor="#94a3b8"
+              floodOpacity="0.22"
+              result="rimmed"
+            />
+          </filter>
           <filter
             id="ledge-liquid-goo"
             x="-35%"
@@ -802,9 +854,9 @@ export const PillCapsule: React.FC<PillCapsuleProps> = ({
             transformOrigin: isBottomAnchor ? '50% 100%' : '50% 0%',
           }}
           className="relative flex items-center pointer-events-auto will-change-transform max-w-[calc(100vw-16px)] before:absolute before:-top-1 before:left-0 before:right-0 before:h-2 before:content-['']"
-          data-testid="dynamic-ledge-root"
+          data-testid="dynamic-pill-root"
         >
-          {/* Concave Top-Bezel Meniscus Fillets (only when shape is TopBezelLedge) */}
+          {/* Concave Top-Bezel Meniscus Fillets (only when shape is TopBezelPill) */}
           {isDockedBezel && !isCloakedFromScreenCapture && !isPureOrbOnly && (
             <>
               <svg
@@ -850,7 +902,7 @@ export const PillCapsule: React.FC<PillCapsuleProps> = ({
             style={{
               filter:
                 !isGlass && !isExpanded && !isCloakedFromScreenCapture && !isPureOrbOnly
-                  ? 'url(#ledge-liquid-goo)'
+                  ? 'url(#pill-liquid-goo)'
                   : undefined,
             }}
             className={`absolute inset-0 pointer-events-none flex items-center transition-opacity duration-200 ${
@@ -1222,14 +1274,14 @@ export const PillCapsule: React.FC<PillCapsuleProps> = ({
                 <span className="text-[11px] text-emerald-300 font-medium shrink-0">Complete</span>
               </button>
             ) : (
-              /* 4. Collapsed Dynamic Island Pill / Ledge */
+              /* 4. Collapsed Dynamic Island Pill */
               <button
                 type="button"
                 onClick={() => {
                   playTactilePop('expand');
                   onExpand();
                 }}
-                aria-label="Expand Dynamic Ledge"
+                aria-label="Expand Dynamic Pill"
                 className="w-full h-full flex items-center justify-between px-3 text-left focus-visible:outline-2 focus-visible:outline-sky-400"
               >
                 {musicVisible ? (
@@ -1384,143 +1436,168 @@ export const PillCapsule: React.FC<PillCapsuleProps> = ({
 
       {/* Right-Click Quick Context Menu */}
       {contextMenuPos && (
-        <div
-          role="menu"
-          aria-label="Dynamic Island quick controls"
-          style={{
-            left: `${Math.min(contextMenuPos.x, window.innerWidth - 236)}px`,
-            top: `${Math.min(contextMenuPos.y, window.innerHeight - 290)}px`,
-          }}
-          onClick={(e) => e.stopPropagation()}
-          className="fixed z-50 w-60 bg-slate-950/95 backdrop-blur-xl border border-white/15 rounded-xl p-1.5 shadow-2xl text-xs text-slate-200 space-y-0.5"
-        >
-          <button
-            type="button"
-            role="menuitem"
-            onClick={() => {
+        <>
+          <div
+            className="fixed inset-0 z-40 bg-transparent pointer-events-auto cursor-default"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
               setContextMenuPos(null);
-              if (isExpanded) onCollapse();
-              else onExpand('home');
+              playTactilePop('collapse');
             }}
-            className="w-full text-left px-2.5 py-1.5 rounded-lg hover:bg-white/10 transition-colors"
-          >
-            {isExpanded ? 'Collapse Island' : 'Expand Home Hub'}
-          </button>
-          <button
-            type="button"
-            role="menuitem"
-            onClick={() => {
+            onContextMenu={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
               setContextMenuPos(null);
-              onExpand('control');
             }}
-            className="w-full text-left px-2.5 py-1.5 rounded-lg hover:bg-white/10 transition-colors"
+          />
+          <div
+            role="menu"
+            aria-label="Dynamic Island quick controls"
+            style={{
+              left: `${Math.min(Math.max(10, contextMenuPos.x), (typeof window !== 'undefined' ? window.innerWidth : 960) - 250)}px`,
+              top: `${Math.min(Math.max(10, contextMenuPos.y), (typeof window !== 'undefined' ? window.innerHeight : 600) - 310)}px`,
+            }}
+            onClick={(e) => e.stopPropagation()}
+            onContextMenu={(e) => e.stopPropagation()}
+            className="fixed z-50 w-60 bg-slate-950/95 backdrop-blur-xl border border-white/15 rounded-xl p-1.5 shadow-2xl text-xs text-slate-200 space-y-0.5 pointer-events-auto select-none"
           >
-            Open Windows Control Center
-          </button>
-          {preferences.aiEnabled && (
             <button
               type="button"
               role="menuitem"
               onClick={() => {
                 setContextMenuPos(null);
-                if (effectiveAstraActive) onCloseVoiceAgent();
-                else onOpenVoiceAgent();
+                playTactilePop('confirm');
+                if (isExpanded) onCollapse();
+                else onExpand('home');
               }}
-              className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg hover:bg-white/10 transition-colors"
+              className="w-full text-left px-2.5 py-1.5 rounded-lg hover:bg-white/10 active:bg-white/15 transition-colors cursor-pointer"
+            >
+              {isExpanded ? 'Collapse Island' : 'Expand Home Hub'}
+            </button>
+            <button
+              type="button"
+              role="menuitem"
+              onClick={() => {
+                setContextMenuPos(null);
+                playTactilePop('confirm');
+                onExpand('control');
+              }}
+              className="w-full text-left px-2.5 py-1.5 rounded-lg hover:bg-white/10 active:bg-white/15 transition-colors cursor-pointer"
+            >
+              Open Windows Control Center
+            </button>
+            {preferences.aiEnabled && (
+              <button
+                type="button"
+                role="menuitem"
+                onClick={() => {
+                  setContextMenuPos(null);
+                  playTactilePop('confirm');
+                  if (effectiveAstraActive) onCloseVoiceAgent();
+                  else onOpenVoiceAgent();
+                }}
+                className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg hover:bg-white/10 active:bg-white/15 transition-colors cursor-pointer"
+              >
+                <span className="flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5" style={{ color: palette.primaryHex }} />
+                  <span>{effectiveAstraActive ? 'Exit Astra Pill Mode' : 'Morph Pill into Astra'}</span>
+                </span>
+                <span className="text-[10px] font-mono text-slate-400">
+                  {preferences.voiceAgentShortcut}
+                </span>
+              </button>
+            )}
+            <button
+              type="button"
+              role="menuitem"
+              onClick={() => {
+                setContextMenuPos(null);
+                playTactilePop('confirm');
+                onUpdatePreferences({ privacyMaskEnabled: !preferences.privacyMaskEnabled });
+              }}
+              className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg hover:bg-white/10 active:bg-white/15 transition-colors cursor-pointer"
             >
               <span className="flex items-center gap-1.5">
-                <Sparkles className="w-3.5 h-3.5" style={{ color: palette.primaryHex }} />
-                <span>{effectiveAstraActive ? 'Exit Astra Pill Mode' : 'Morph Pill into Astra'}</span>
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                <span>OS Privacy Mask</span>
               </span>
-              <span className="text-[10px] font-mono text-slate-400">
-                {preferences.voiceAgentShortcut}
+              <span className="text-emerald-300 font-mono text-[11px]">
+                {preferences.privacyMaskEnabled ? 'On' : 'Off'}
               </span>
             </button>
-          )}
-          <button
-            type="button"
-            role="menuitem"
-            onClick={() => {
-              setContextMenuPos(null);
-              onUpdatePreferences({ privacyMaskEnabled: !preferences.privacyMaskEnabled });
-            }}
-            className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg hover:bg-white/10 transition-colors"
-          >
-            <span className="flex items-center gap-1.5">
-              <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-              <span>OS Privacy Mask</span>
-            </span>
-            <span className="text-emerald-300 font-mono text-[11px]">
-              {preferences.privacyMaskEnabled ? 'On' : 'Off'}
-            </span>
-          </button>
-          <button
-            type="button"
-            role="menuitem"
-            onClick={() => {
-              setContextMenuPos(null);
-              onUpdatePreferences({
-                privacySimulateCaptureView: !preferences.privacySimulateCaptureView,
-              });
-            }}
-            className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg hover:bg-white/10 transition-colors"
-          >
-            <span className="flex items-center gap-1.5">
-              {preferences.privacySimulateCaptureView ? (
-                <Eye className="w-3.5 h-3.5 text-sky-300" />
-              ) : (
-                <EyeOff className="w-3.5 h-3.5 text-slate-400" />
-              )}
-              <span>Preview Caller View</span>
-            </span>
-            <span className="text-slate-400 text-[11px]">
-              {preferences.privacySimulateCaptureView ? 'Active' : 'Test'}
-            </span>
-          </button>
-          <button
-            type="button"
-            role="menuitem"
-            onClick={() => {
-              setContextMenuPos(null);
-              onUpdatePreferences({
-                shapeStyle:
-                  preferences.shapeStyle === PillShapeStyle.DynamicPill
-                    ? PillShapeStyle.TopBezelPill
-                    : PillShapeStyle.DynamicPill,
-              });
-            }}
-            className="w-full text-left px-2.5 py-1.5 rounded-lg hover:bg-white/10 transition-colors"
-          >
-            Switch to{' '}
-            {preferences.shapeStyle === PillShapeStyle.DynamicPill
-              ? 'Top-Bezel Pill Dock'
-              : 'Dynamic Island Pill'}
-          </button>
-          <button
-            type="button"
-            role="menuitem"
-            onClick={() => {
-              setContextMenuPos(null);
-              onUpdatePreferences({ stealthAutoHide: !preferences.stealthAutoHide });
-            }}
-            className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg hover:bg-white/10 transition-colors"
-          >
-            <span>Stealth Edge-Hide</span>
-            <span className="text-slate-400">{preferences.stealthAutoHide ? 'On' : 'Off'}</span>
-          </button>
-          <div className="border-t border-white/10 my-1" />
-          <button
-            type="button"
-            role="menuitem"
-            onClick={() => {
-              setContextMenuPos(null);
-              onOpenFullSettings();
-            }}
-            className="w-full text-left px-2.5 py-1.5 rounded-lg hover:bg-white/10 text-sky-300 transition-colors"
-          >
-            Full Studio Settings…
-          </button>
-        </div>
+            <button
+              type="button"
+              role="menuitem"
+              onClick={() => {
+                setContextMenuPos(null);
+                playTactilePop('confirm');
+                onUpdatePreferences({
+                  privacySimulateCaptureView: !preferences.privacySimulateCaptureView,
+                });
+              }}
+              className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg hover:bg-white/10 active:bg-white/15 transition-colors cursor-pointer"
+            >
+              <span className="flex items-center gap-1.5">
+                {preferences.privacySimulateCaptureView ? (
+                  <Eye className="w-3.5 h-3.5 text-sky-300" />
+                ) : (
+                  <EyeOff className="w-3.5 h-3.5 text-slate-400" />
+                )}
+                <span>Preview Caller View</span>
+              </span>
+              <span className="text-slate-400 text-[11px]">
+                {preferences.privacySimulateCaptureView ? 'Active' : 'Test'}
+              </span>
+            </button>
+            <button
+              type="button"
+              role="menuitem"
+              onClick={() => {
+                setContextMenuPos(null);
+                playTactilePop('confirm');
+                onUpdatePreferences({
+                  shapeStyle:
+                    preferences.shapeStyle === PillShapeStyle.DynamicPill
+                      ? PillShapeStyle.TopBezelPill
+                      : PillShapeStyle.DynamicPill,
+                });
+              }}
+              className="w-full text-left px-2.5 py-1.5 rounded-lg hover:bg-white/10 active:bg-white/15 transition-colors cursor-pointer"
+            >
+              Switch to{' '}
+              {preferences.shapeStyle === PillShapeStyle.DynamicPill
+                ? 'Top-Bezel Pill Dock'
+                : 'Dynamic Island Pill'}
+            </button>
+            <button
+              type="button"
+              role="menuitem"
+              onClick={() => {
+                setContextMenuPos(null);
+                playTactilePop('confirm');
+                onUpdatePreferences({ stealthAutoHide: !preferences.stealthAutoHide });
+              }}
+              className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg hover:bg-white/10 active:bg-white/15 transition-colors cursor-pointer"
+            >
+              <span>Stealth Edge-Hide</span>
+              <span className="text-slate-400">{preferences.stealthAutoHide ? 'On' : 'Off'}</span>
+            </button>
+            <div className="border-t border-white/10 my-1" />
+            <button
+              type="button"
+              role="menuitem"
+              onClick={() => {
+                setContextMenuPos(null);
+                playTactilePop('confirm');
+                onOpenFullSettings();
+              }}
+              className="w-full text-left px-2.5 py-1.5 rounded-lg hover:bg-white/10 active:bg-white/15 text-sky-300 transition-colors cursor-pointer"
+            >
+              Full Studio Settings…
+            </button>
+          </div>
+        </>
       )}
     </>
   );

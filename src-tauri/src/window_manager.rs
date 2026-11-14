@@ -7,7 +7,7 @@ use windows::Win32::Graphics::Dwm::{
     DwmSetWindowAttribute, DWMWA_BORDER_COLOR, DWMWA_WINDOW_CORNER_PREFERENCE,
     DWMWCP_DONOTROUND,
 };
-use windows::Win32::UI::Input::KeyboardAndMouse::{GetAsyncKeyState, VK_LBUTTON};
+use windows::Win32::UI::Input::KeyboardAndMouse::{GetAsyncKeyState, VK_LBUTTON, VK_RBUTTON};
 use windows::Win32::UI::WindowsAndMessaging::{
     GetCursorPos, GetSystemMetrics, GetWindowLongPtrW, SetForegroundWindow, SetWindowLongPtrW,
     SetWindowPos, GWL_EXSTYLE, GWL_STYLE, HWND_TOPMOST, SM_CXSCREEN, SM_CYSCREEN,
@@ -222,10 +222,20 @@ pub fn configure_pill_overlay_window(window: &WebviewWindow) -> Arc<Mutex<PillHi
 
                     // Detect global outside click when cursor is outside the pill
                     let lbutton_down = unsafe { GetAsyncKeyState(VK_LBUTTON.0 as i32) < 0 };
-                    if !inside && lbutton_down && !was_lbutton_down {
+                    let rbutton_down = unsafe { GetAsyncKeyState(VK_RBUTTON.0 as i32) < 0 };
+                    let is_mouse_down = lbutton_down || rbutton_down;
+
+                    let outside_stage = pt.x < st.window_x
+                        || pt.x > st.window_x + (960.0 * s) as i32
+                        || pt.y < st.window_y
+                        || pt.y > st.window_y + (600.0 * s) as i32;
+
+                    if ((!inside && lbutton_down) || (st.force_interactive && outside_stage && is_mouse_down))
+                        && !was_lbutton_down
+                    {
                         let _ = win_clone.emit("pill://outside-click", ());
                     }
-                    was_lbutton_down = lbutton_down;
+                    was_lbutton_down = is_mouse_down;
 
                     let should_ignore = !inside;
                     if should_ignore != last_ignore {
@@ -247,6 +257,17 @@ pub fn update_pill_hit_rect(
 ) -> Result<(), String> {
     if let Ok(mut st) = state.lock() {
         st.rect = rect;
+    }
+    Ok(())
+}
+
+#[tauri::command]
+pub fn set_pill_force_interactive(
+    state: tauri::State<'_, Arc<Mutex<PillHitState>>>,
+    force: bool,
+) -> Result<(), String> {
+    if let Ok(mut st) = state.lock() {
+        st.force_interactive = force;
     }
     Ok(())
 }

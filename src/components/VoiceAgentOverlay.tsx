@@ -858,6 +858,7 @@ export const InPillAstraPanel: React.FC<InPillAstraPanelProps> = ({
               state={orbVisualState}
               audioLevel={micAudioLevel}
               size={38}
+              style={preferences.astraOrbStyle}
               lowPowerEco={preferences.featureFlags.lowRamEcoMode}
             />
           </button>

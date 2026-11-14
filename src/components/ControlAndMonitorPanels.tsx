@@ -2294,7 +2294,7 @@ export const SystemPowerMonitorPanel: React.FC<SystemPowerMonitorPanelProps> = (
           </div>
           <div className="text-xs font-mono font-semibold tabular-nums mt-0.5">
             {systemState.cpuUsagePct.toFixed(0)}% · {systemState.gpuUsagePct}% ·{' '}
-            {preferences.featureFlags.lowRamEcoMode ? '9.8' : systemState.ledgeNativeRamMb}MB
+            {preferences.featureFlags.lowRamEcoMode ? '9.8' : (systemState.pillNativeRamMb ?? systemState.ledgeNativeRamMb ?? 12.4)}MB
           </div>
           <div className="text-[10px] font-mono opacity-70 truncate">
             NVMe {systemState.nvmeReadMb} MB/s · {systemState.gpuTempC}°C

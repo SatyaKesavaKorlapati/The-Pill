@@ -831,6 +831,11 @@ export const FullSettingsView: React.FC<FullSettingsViewProps> = ({
 
   return (
     <div
+      onMouseLeave={() => {
+        if (preferences.closeSettingsOnMouseLeave ?? true) {
+          handleClose();
+        }
+      }}
       className="w-full h-screen flex flex-col bg-[#090b10] text-slate-100 overflow-hidden select-none"
     >
       {/* 1. Custom Titlebar Header with Window Drag Region and Windows 11 Controls */}
