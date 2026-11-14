@@ -2252,10 +2252,10 @@ export const PillExpandedContent: React.FC<PillExpandedContentProps> = ({
           aria-label="Dynamic Island sections"
         >
           <img
-            src={getThemeIconUrl(preferences.themeId)}
-            alt="The Pill"
+            src={getThemeMotifUrl(preferences.themeId)}
+            alt="The Pill Motif"
             title="The Pill"
-            className="w-5 h-4.5 rounded-md object-contain shrink-0 ring-1 ring-white/20 mr-1 shadow-sm select-none"
+            className="h-5 w-auto max-w-[56px] object-contain shrink-0 mr-2 drop-shadow select-none hover:scale-105 transition-transform"
           />
           {visibleTabs.map((tabId) => {
             const isSelected = !isLauncherOpen && activeTab === tabId;

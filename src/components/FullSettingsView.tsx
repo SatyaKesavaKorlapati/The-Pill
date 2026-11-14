@@ -843,7 +843,7 @@ export const FullSettingsView: React.FC<FullSettingsViewProps> = ({
           <img
             src={getThemeIconUrl(preferences.themeId)}
             alt="The Pill"
-            className="w-5 h-5 rounded-md object-contain shrink-0 ring-1 ring-white/20 shadow-md"
+            className="w-5 h-5 object-contain shrink-0 drop-shadow select-none"
           />
           <span className="text-xs font-semibold text-white tracking-tight flex items-center gap-1.5">
             <span>The Pill Settings</span>
@@ -1107,12 +1107,12 @@ export const FullSettingsView: React.FC<FullSettingsViewProps> = ({
                         <img
                           src={getThemeIconUrl(preferences.themeId)}
                           alt={`${palette.name} Icon`}
-                          className="w-12 h-11 rounded-xl object-contain ring-1 ring-white/20 shadow-lg shrink-0"
+                          className="w-11 h-11 object-contain drop-shadow-md shrink-0 select-none"
                         />
                         <img
                           src={getThemeMotifUrl(preferences.themeId)}
                           alt={`${palette.name} Motif`}
-                          className="h-11 w-32 rounded-full object-cover ring-1 ring-white/20 shadow-lg shrink-0"
+                          className="h-10 w-auto max-w-[130px] object-contain drop-shadow-md shrink-0 select-none"
                         />
                         <div className="min-w-0">
                           <div className="text-xs font-semibold text-white flex items-center gap-1.5">
@@ -1590,7 +1590,7 @@ export const FullSettingsView: React.FC<FullSettingsViewProps> = ({
                         <img
                           src={getThemeIconUrl(kit.themeId)}
                           alt={kit.title}
-                          className="w-14 h-12 rounded-xl object-contain shrink-0 ring-1 ring-white/20 shadow-lg"
+                          className="h-12 w-12 object-contain shrink-0 drop-shadow-md select-none"
                         />
 
                         {/* Title, Badge, Summary, Dots */}
@@ -1620,7 +1620,7 @@ export const FullSettingsView: React.FC<FullSettingsViewProps> = ({
                         <img
                           src={getThemeMotifUrl(kit.themeId)}
                           alt={`${kit.title} motif`}
-                          className="h-10 w-24 rounded-full object-cover shrink-0 ring-1 ring-white/20 shadow-md hidden sm:block"
+                          className="h-10 w-auto max-w-[110px] object-contain shrink-0 drop-shadow-md hidden sm:block select-none"
                         />
                       </button>
                     );
@@ -1662,7 +1662,7 @@ export const FullSettingsView: React.FC<FullSettingsViewProps> = ({
                             <img
                               src={getThemeIconUrl(id)}
                               alt={th.name}
-                              className="w-9 h-8 rounded-lg object-contain shrink-0 ring-1 ring-white/20 shadow-md"
+                              className="w-9 h-9 object-contain shrink-0 drop-shadow select-none"
                             />
                             <div className="min-w-0">
                               <div className="text-xs font-semibold truncate">{th.name}</div>

@@ -1067,7 +1067,12 @@ export const ControlCenterPanel: React.FC<ControlCenterPanelProps> = ({
                               active ? `border-transparent ${palette.onPrimaryTextClass}` : ''
                             }`}
                           >
-                            <Icon className="w-4 h-4" strokeWidth={iconMetrics.strokeWidth} />
+                            <ThemedIcon
+                              name={id as ThemedIconName}
+                              packStyle={preferences.iconPack}
+                              size={16}
+                              strokeWidth={iconMetrics.strokeWidth}
+                            />
                           </button>
                           {showChevron && !playgroundMode && (
                             <button
@@ -1110,7 +1115,13 @@ export const ControlCenterPanel: React.FC<ControlCenterPanelProps> = ({
                                 : 'flex-col items-center justify-center gap-0.5 px-1'
                             } min-w-0 hover:brightness-95 active:scale-[0.97] transition-transform`}
                           >
-                            <Icon className="w-4 h-4 shrink-0" strokeWidth={iconMetrics.strokeWidth} />
+                            <ThemedIcon
+                              name={id as ThemedIconName}
+                              packStyle={preferences.iconPack}
+                              size={16}
+                              className="shrink-0"
+                              strokeWidth={iconMetrics.strokeWidth}
+                            />
                             {isWide ? (
                               <div className="min-w-0">
                                 <div className="text-[10.5px] font-semibold leading-tight truncate">
@@ -1188,7 +1199,12 @@ export const ControlCenterPanel: React.FC<ControlCenterPanelProps> = ({
                             onClick={() => handleTileToggle(id)}
                             className="w-8 h-8 rounded-xl bg-black/15 flex items-center justify-center"
                           >
-                            <Icon className="w-4 h-4" strokeWidth={iconMetrics.strokeWidth} />
+                            <ThemedIcon
+                              name={id as ThemedIconName}
+                              packStyle={preferences.iconPack}
+                              size={16}
+                              strokeWidth={iconMetrics.strokeWidth}
+                            />
                           </button>
                           {showChevron && (
                             <button
@@ -1227,7 +1243,13 @@ export const ControlCenterPanel: React.FC<ControlCenterPanelProps> = ({
                         onClick={() => handleTileToggle(id)}
                         className="flex items-center gap-1.5 min-w-0 flex-1 text-left"
                       >
-                        <Icon className="w-3.5 h-3.5 shrink-0" strokeWidth={iconMetrics.strokeWidth} />
+                        <ThemedIcon
+                          name={id as ThemedIconName}
+                          packStyle={preferences.iconPack}
+                          size={14}
+                          className="shrink-0"
+                          strokeWidth={iconMetrics.strokeWidth}
+                        />
                         <div className="min-w-0">
                           <div className="text-[10.5px] font-semibold leading-tight truncate">{meta.label}</div>
                           <div className="text-[9.5px] opacity-75 leading-tight truncate">{caption}</div>
@@ -1292,7 +1314,12 @@ export const ControlCenterPanel: React.FC<ControlCenterPanelProps> = ({
                         onClick={() => handleTileToggle(id)}
                         className="my-1 p-2 rounded-xl bg-black/15"
                       >
-                        <Icon className="w-4 h-4" strokeWidth={iconMetrics.strokeWidth} />
+                        <ThemedIcon
+                          name={id as ThemedIconName}
+                          packStyle={preferences.iconPack}
+                          size={16}
+                          strokeWidth={iconMetrics.strokeWidth}
+                        />
                       </button>
                       <div className="w-full min-w-0">
                         <div className="text-[10.5px] font-semibold truncate">{meta.label}</div>
@@ -1331,7 +1358,13 @@ export const ControlCenterPanel: React.FC<ControlCenterPanelProps> = ({
                         onClick={() => handleTileToggle(id)}
                         className="flex items-center gap-2.5 min-w-0 flex-1 text-left"
                       >
-                        <Icon className="w-4 h-4 shrink-0" strokeWidth={iconMetrics.strokeWidth} />
+                        <ThemedIcon
+                          name={id as ThemedIconName}
+                          packStyle={preferences.iconPack}
+                          size={16}
+                          className="shrink-0"
+                          strokeWidth={iconMetrics.strokeWidth}
+                        />
                         <span className="text-xs font-semibold truncate">{meta.label}</span>
                         <span className="text-[10px] opacity-75 truncate ml-auto">{caption}</span>
                       </button>
@@ -1619,7 +1652,13 @@ export const ControlCenterPanel: React.FC<ControlCenterPanelProps> = ({
                       orientation="vertical"
                       isLightSurface={isLight}
                     />
-                    <Sun className="w-3.5 h-3.5 opacity-80" />
+                    <ThemedIcon
+                      name="sun"
+                      packStyle={preferences.iconPack}
+                      size={14}
+                      className="opacity-80"
+                      strokeWidth={iconMetrics.strokeWidth}
+                    />
                   </div>
                 )}
                 {preferences.showControlVolumeSlider && (
@@ -1647,7 +1686,12 @@ export const ControlCenterPanel: React.FC<ControlCenterPanelProps> = ({
                       }}
                       className="p-1 rounded-lg bg-white/10 hover:bg-white/20"
                     >
-                      <Volume2 className="w-3.5 h-3.5" />
+                      <ThemedIcon
+                        name="volume"
+                        packStyle={preferences.iconPack}
+                        size={14}
+                        strokeWidth={iconMetrics.strokeWidth}
+                      />
                     </button>
                   </div>
                 )}
@@ -1660,8 +1704,11 @@ export const ControlCenterPanel: React.FC<ControlCenterPanelProps> = ({
               >
                 {preferences.showControlBrightnessSlider && (
                   <div className="flex items-center gap-3 px-1">
-                    <Sun
-                      className="w-4 h-4 shrink-0"
+                    <ThemedIcon
+                      name="sun"
+                      packStyle={preferences.iconPack}
+                      size={16}
+                      className="shrink-0"
                       strokeWidth={iconMetrics.strokeWidth}
                     />
                     <FluidEffectSlider
@@ -1686,8 +1733,11 @@ export const ControlCenterPanel: React.FC<ControlCenterPanelProps> = ({
 
                 {preferences.showControlVolumeSlider && (
                   <div className="flex items-center gap-3 px-1">
-                    <Volume2
-                      className="w-4 h-4 shrink-0"
+                    <ThemedIcon
+                      name="volume"
+                      packStyle={preferences.iconPack}
+                      size={16}
+                      className="shrink-0"
                       strokeWidth={iconMetrics.strokeWidth}
                     />
                     <FluidEffectSlider
