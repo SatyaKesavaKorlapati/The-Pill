@@ -483,6 +483,56 @@ export const PillCapsule: React.FC<PillCapsuleProps> = ({
     };
   }, [isExpanded, effectiveAstraActive, onCollapse, onCloseVoiceAgent]);
 
+  // Listen to native OS cursor boundary events (120Hz precision from window_manager.rs)
+  useEffect(() => {
+    if (typeof window === 'undefined' || !('__TAURI_INTERNALS__' in window)) return;
+    let unlistenLeft: (() => void) | null = null;
+    let unlistenEntered: (() => void) | null = null;
+    let unlistenOutside: (() => void) | null = null;
+    let leaveToleranceTimer: number | null = null;
+
+    import('@tauri-apps/api/event').then(({ listen }) => {
+      listen('pill://cursor-left-pill', () => {
+        if (leaveToleranceTimer !== null) window.clearTimeout(leaveToleranceTimer);
+        leaveToleranceTimer = window.setTimeout(() => {
+          leaveToleranceTimer = null;
+          setIsHovered(false);
+          setEdgeTouched(false);
+        }, 450);
+      }).then((u) => {
+        unlistenLeft = u;
+      });
+
+      listen('pill://cursor-entered-pill', () => {
+        if (leaveToleranceTimer !== null) {
+          window.clearTimeout(leaveToleranceTimer);
+          leaveToleranceTimer = null;
+        }
+        setIsHovered(true);
+      }).then((u) => {
+        unlistenEntered = u;
+      });
+
+      listen('pill://outside-click', () => {
+        if (leaveToleranceTimer !== null) {
+          window.clearTimeout(leaveToleranceTimer);
+          leaveToleranceTimer = null;
+        }
+        setIsHovered(false);
+        setEdgeTouched(false);
+      }).then((u) => {
+        unlistenOutside = u;
+      });
+    });
+
+    return () => {
+      if (leaveToleranceTimer !== null) window.clearTimeout(leaveToleranceTimer);
+      unlistenLeft?.();
+      unlistenEntered?.();
+      unlistenOutside?.();
+    };
+  }, []);
+
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
     if (!isDragOver) setIsDragOver(true);
@@ -538,6 +588,7 @@ export const PillCapsule: React.FC<PillCapsuleProps> = ({
   const isGraphite = !isLightPaper && preferences.material === AppearanceMaterial.FrostedGraphite;
   const isDockedBezel = targetGeometry.isDockedFlushTop;
   const isBottomAnchor = preferences.anchorPosition === LedgeAnchorPosition.BottomTaskbar;
+  const isPureOrbOnly = Boolean(effectiveAstraActive && preferences.astraMode === 'orb_only' && !astraHasResult);
 
   // Compute Edge Lighting Aura (or Siri Rainbow Aura when Astra is morphed in-Pill)
   const shouldShowEdgeLight =
@@ -724,7 +775,7 @@ export const PillCapsule: React.FC<PillCapsuleProps> = ({
           data-testid="dynamic-ledge-root"
         >
           {/* Concave Top-Bezel Meniscus Fillets (only when shape is TopBezelLedge) */}
-          {isDockedBezel && !isCloakedFromScreenCapture && (
+          {isDockedBezel && !isCloakedFromScreenCapture && !isPureOrbOnly && (
             <>
               <svg
                 width="12"
@@ -768,7 +819,7 @@ export const PillCapsule: React.FC<PillCapsuleProps> = ({
             aria-hidden="true"
             style={{
               filter:
-                !isGlass && !isExpanded && !isCloakedFromScreenCapture
+                !isGlass && !isExpanded && !isCloakedFromScreenCapture && !isPureOrbOnly
                   ? 'url(#ledge-liquid-goo)'
                   : undefined,
             }}
@@ -783,13 +834,15 @@ export const PillCapsule: React.FC<PillCapsuleProps> = ({
                 height: `${targetGeometry.height}px`,
               }}
               className={
-                isLightPaper
-                  ? 'bg-[#f4efe4]'
-                  : isGlass
-                    ? 'bg-slate-950/72 backdrop-blur-2xl'
-                    : isGraphite
-                      ? 'bg-[#151924]'
-                      : 'bg-[#050609]'
+                isPureOrbOnly
+                  ? 'bg-transparent'
+                  : isLightPaper
+                    ? 'bg-[#f4efe4]'
+                    : isGlass
+                      ? 'bg-slate-950/72 backdrop-blur-2xl'
+                      : isGraphite
+                        ? 'bg-[#151924]'
+                        : 'bg-[#050609]'
               }
             />
             <div
@@ -800,13 +853,15 @@ export const PillCapsule: React.FC<PillCapsuleProps> = ({
                 right: 0,
               }}
               className={`absolute right-0 top-0 rounded-full ${
-                isLightPaper
-                  ? 'bg-[#f4efe4]'
-                  : isGlass
-                    ? 'bg-slate-950/72 backdrop-blur-2xl ring-1 ring-white/20'
-                    : isGraphite
-                      ? 'bg-[#151924]'
-                      : 'bg-[#050609]'
+                isPureOrbOnly
+                  ? 'bg-transparent ring-0'
+                  : isLightPaper
+                    ? 'bg-[#f4efe4]'
+                    : isGlass
+                      ? 'bg-slate-950/72 backdrop-blur-2xl ring-1 ring-white/20'
+                      : isGraphite
+                        ? 'bg-[#151924]'
+                        : 'bg-[#050609]'
               }`}
             />
           </div>
@@ -817,26 +872,29 @@ export const PillCapsule: React.FC<PillCapsuleProps> = ({
             style={{
               width: `${targetGeometry.width}px`,
               height: `${targetGeometry.height}px`,
-              boxShadow: isCloakedFromScreenCapture
-                ? 'none'
-                : edgeShadowCss
-                  ? `${edgeShadowCss}, 0 20px 46px rgba(0,0,0,0.68)`
-                  : undefined,
+              boxShadow:
+                isCloakedFromScreenCapture || isPureOrbOnly
+                  ? 'none'
+                  : edgeShadowCss
+                    ? `${edgeShadowCss}, 0 20px 46px rgba(0,0,0,0.68)`
+                    : undefined,
             }}
             className={`relative overflow-hidden transition-[background-color,border-color,box-shadow] duration-150 ${
-              isCloakedFromScreenCapture
-                ? 'bg-emerald-950/[0.14] border border-dashed border-emerald-400/40 backdrop-blur-[1px]'
-                : isLightPaper
-                  ? 'bg-[#f4efe4] text-stone-900 ring-1 ring-stone-900/20 shadow-[0_20px_48px_rgba(28,25,23,0.42),inset_0_1px_0_rgba(255,255,255,0.8)]'
-                  : isGlass
-                    ? 'backdrop-blur-2xl bg-gradient-to-b from-white/[0.12] to-white/[0.02] ring-1 ring-white/25 shadow-[0_22px_50px_rgba(0,0,0,0.55),inset_0_1px_0_rgba(255,255,255,0.32)]'
-                    : isGraphite
-                      ? 'ring-1 ring-white/18 shadow-[0_18px_44px_rgba(0,0,0,0.68),inset_0_1px_0_rgba(255,255,255,0.14)]'
-                      : 'ring-1 ring-white/[0.15] shadow-[0_18px_44px_rgba(0,0,0,0.72),inset_0_1px_0_rgba(255,255,255,0.11)]'
+              isPureOrbOnly
+                ? 'bg-transparent border-0 ring-0 shadow-none'
+                : isCloakedFromScreenCapture
+                  ? 'bg-emerald-950/[0.14] border border-dashed border-emerald-400/40 backdrop-blur-[1px]'
+                  : isLightPaper
+                    ? 'bg-[#f4efe4] text-stone-900 ring-1 ring-stone-900/20 shadow-[0_20px_48px_rgba(28,25,23,0.42),inset_0_1px_0_rgba(255,255,255,0.8)]'
+                    : isGlass
+                      ? 'backdrop-blur-2xl bg-gradient-to-b from-white/[0.12] to-white/[0.02] ring-1 ring-white/25 shadow-[0_22px_50px_rgba(0,0,0,0.55),inset_0_1px_0_rgba(255,255,255,0.32)]'
+                      : isGraphite
+                        ? 'ring-1 ring-white/18 shadow-[0_18px_44px_rgba(0,0,0,0.68),inset_0_1px_0_rgba(255,255,255,0.14)]'
+                        : 'ring-1 ring-white/[0.15] shadow-[0_18px_44px_rgba(0,0,0,0.72),inset_0_1px_0_rgba(255,255,255,0.11)]'
             }`}
           >
             {/* Minimalist Razor Specular Horizon Highlight */}
-            {preferences.shapeStyle === LedgeShapeStyle.MinimalistBar && (
+            {!isPureOrbOnly && preferences.shapeStyle === LedgeShapeStyle.MinimalistBar && (
               <span className="absolute top-0 left-0 right-0 h-[1.5px] bg-gradient-to-r from-transparent via-cyan-300/80 to-transparent pointer-events-none z-50" />
             )}
 

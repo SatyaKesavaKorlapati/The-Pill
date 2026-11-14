@@ -87,12 +87,12 @@ export default function App() {
 
   // Media Player State
   const [trackIndex, setTrackIndex] = useState(0);
-  const [isPlaying, setIsPlaying] = useState(true);
-  const [trackProgressSec, setTrackProgressSec] = useState(48);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [trackProgressSec, setTrackProgressSec] = useState(0);
   const [audioDevice, setAudioDevice] = useState<AudioOutputDevice>('Surface Studio Speakers');
 
   // Secondary Live Activity: Countdown Timer
-  const [timerRemainingSec, setTimerRemainingSec] = useState<number | null>(285);
+  const [timerRemainingSec, setTimerRemainingSec] = useState<number | null>(null);
   const [timerTotalSec, setTimerTotalSec] = useState<number>(300);
 
   // Windows System & Power Telemetry State
@@ -215,8 +215,11 @@ export default function App() {
     setActivePage(WorkspacePage.Simulator);
     setTransientHud('none');
     setIsExpanded(false);
-    setIsVoiceAgentOpen(true);
-    playTactilePop('expand');
+    setIsVoiceAgentOpen((prev) => {
+      const next = !prev;
+      playTactilePop(next ? 'expand' : 'collapse');
+      return next;
+    });
   }, [preferences.aiEnabled, showTransientToast]);
 
   const executeVoiceAgentActions = useCallback(
@@ -623,19 +626,24 @@ export default function App() {
         });
         unlistenList.push(u3);
 
-        // Global outside click: collapse expanded pill when clicking elsewhere on desktop
+        // Global outside click: collapse expanded pill & dismiss stealth reveal immediately
         const uOutside = await listen('pill://outside-click', () => {
+          if (collapseTimerRef.current !== null) {
+            window.clearTimeout(collapseTimerRef.current);
+            collapseTimerRef.current = null;
+          }
           setIsExpanded((expanded) => {
             if (expanded) {
               playTactilePop('collapse');
-              setStealthRevealedByShortcut(false);
             }
             return false;
           });
+          setIsVoiceAgentOpen(false);
+          setStealthRevealedByShortcut(false);
         });
         unlistenList.push(uOutside);
 
-        // Cursor left expanded pill boundary: collapse after 420ms tolerance buffer
+        // Cursor left pill boundary: collapse & hide after 450ms tolerance buffer
         const uCursorLeft = await listen('pill://cursor-left-pill', () => {
           if (collapseTimerRef.current !== null) window.clearTimeout(collapseTimerRef.current);
           collapseTimerRef.current = window.setTimeout(() => {
@@ -643,15 +651,15 @@ export default function App() {
             setIsExpanded((expanded) => {
               if (expanded) {
                 playTactilePop('collapse');
-                setStealthRevealedByShortcut(false);
               }
               return false;
             });
-          }, 420);
+            setStealthRevealedByShortcut(false);
+          }, 450);
         });
         unlistenList.push(uCursorLeft);
 
-        // Cursor re-entered pill: cancel pending collapse
+        // Cursor re-entered pill: cancel pending collapse & keep revealed
         const uCursorEntered = await listen('pill://cursor-entered-pill', () => {
           if (collapseTimerRef.current !== null) {
             window.clearTimeout(collapseTimerRef.current);

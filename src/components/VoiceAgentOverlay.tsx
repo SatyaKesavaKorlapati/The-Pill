@@ -703,7 +703,7 @@ export const InPillAstraPanel: React.FC<InPillAstraPanelProps> = ({
     return (
       <div
         onClick={(e) => e.stopPropagation()}
-        className="w-full h-full flex flex-col items-center justify-center p-0 text-slate-100 select-none relative"
+        className="w-full h-full flex flex-col items-center justify-center p-0 text-slate-100 select-none relative bg-transparent"
       >
         <button
           type="button"
@@ -720,12 +720,12 @@ export const InPillAstraPanel: React.FC<InPillAstraPanelProps> = ({
               : 'Tap to speak to Astra · Long press for Chat'
           }
           aria-label="Astra Voice Orb (Tap to speak, Long press for Chat)"
-          className="rounded-full transition-transform active:scale-95 hover:scale-105 focus-visible:outline-2 focus-visible:outline-sky-400 flex items-center justify-center cursor-pointer"
+          className="rounded-full transition-transform active:scale-95 hover:scale-105 focus-visible:outline-2 focus-visible:outline-sky-400 flex items-center justify-center cursor-pointer bg-transparent border-0 ring-0 shadow-none p-0 m-0"
         >
           <AstraSiriOrbCanvas
             state={orbVisualState}
             audioLevel={micAudioLevel}
-            size={56}
+            size={70}
             style={preferences.astraOrbStyle}
             lowPowerEco={preferences.featureFlags.lowRamEcoMode}
           />
