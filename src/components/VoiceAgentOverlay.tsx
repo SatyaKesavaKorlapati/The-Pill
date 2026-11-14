@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import {
   AstraDisplayMode,
+  AstraOrbStyle,
   LedgePreferences,
   VoiceAgentAction,
   WindowsSystemState,

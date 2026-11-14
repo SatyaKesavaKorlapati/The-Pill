@@ -359,6 +359,41 @@ pub fn reposition_pill_window(app: AppHandle, anchor: String) -> Result<(), Stri
     Ok(())
 }
 
+const ICON_WIN11: &[u8] = include_bytes!("../../public/assets/themes/icons/win11_cyan.png");
+const ICON_CYBERPUNK: &[u8] = include_bytes!("../../public/assets/themes/icons/cyberpunk_neon.png");
+const ICON_RETRO: &[u8] = include_bytes!("../../public/assets/themes/icons/retro_synth_crt.png");
+const ICON_PAPER: &[u8] = include_bytes!("../../public/assets/themes/icons/paper_editorial.png");
+const ICON_COZY: &[u8] = include_bytes!("../../public/assets/themes/icons/cozy_animals.png");
+const ICON_BOTANICAL: &[u8] = include_bytes!("../../public/assets/themes/icons/botanical_sakura.png");
+const ICON_MOTORSPORT: &[u8] = include_bytes!("../../public/assets/themes/icons/motorsport_gt.png");
+const ICON_APPLE: &[u8] = include_bytes!("../../public/assets/themes/icons/apple_indigo.png");
+
+pub fn get_icon_bytes_for_theme(theme_id: &str) -> &'static [u8] {
+    match theme_id {
+        "cyberpunk_neon" => ICON_CYBERPUNK,
+        "retro_synth_crt" | "sunset_rose" => ICON_RETRO,
+        "paper_editorial" => ICON_PAPER,
+        "cozy_animals" | "emerald_forest" => ICON_COZY,
+        "botanical_sakura" => ICON_BOTANICAL,
+        "motorsport_gt" | "crimson_titanium" => ICON_MOTORSPORT,
+        "apple_indigo" => ICON_APPLE,
+        _ => ICON_WIN11,
+    }
+}
+
+#[tauri::command]
+pub fn update_window_theme_icon(app: AppHandle, theme_id: String) -> Result<(), String> {
+    let bytes = get_icon_bytes_for_theme(&theme_id);
+    let image = tauri::image::Image::from_bytes(bytes).map_err(|e| e.to_string())?;
+
+    for label in &["main-pill", "settings-window"] {
+        if let Some(win) = app.get_webview_window(label) {
+            let _ = win.set_icon(image.clone());
+        }
+    }
+    Ok(())
+}
+
 #[tauri::command]
 pub fn broadcast_preferences_sync(
     app: AppHandle,
@@ -371,7 +406,10 @@ pub fn broadcast_preferences_sync(
     let _ = app.emit("pill://preferences-updated", json_str.clone());
     if let Ok(val) = serde_json::from_str::<serde_json::Value>(&json_str) {
         if let Some(anchor) = val.get("anchorPosition").and_then(|a| a.as_str()) {
-            let _ = reposition_pill_window(app, anchor.to_string());
+            let _ = reposition_pill_window(app.clone(), anchor.to_string());
+        }
+        if let Some(theme) = val.get("themeId").and_then(|t| t.as_str()) {
+            let _ = update_window_theme_icon(app.clone(), theme.to_string());
         }
     }
     Ok(())

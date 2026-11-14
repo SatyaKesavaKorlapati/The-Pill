@@ -85,7 +85,7 @@ export interface ControlTileDefinition {
   hasSubmenu?: boolean;
   Icon: React.ComponentType<{
     className?: string;
-    strokeWidth?: number;
+    strokeWidth?: string | number;
     style?: React.CSSProperties;
   }>;
 }

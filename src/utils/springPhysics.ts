@@ -199,7 +199,7 @@ export interface LedgeGeometryInput {
   floatingOffsetPx?: number;
   isStealthHidden?: boolean;
   isAstraActive?: boolean;
-  astraMode?: 'orb_only' | 'orb_with_chat';
+  astraMode?: 'orb_only' | 'orb_with_captions' | 'orb_with_chat';
   astraExpandedResult?: boolean;
 }
 

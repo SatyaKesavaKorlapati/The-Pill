@@ -1,4 +1,4 @@
-import type { EdgeLightProfile } from '../types/ledge';
+import type { EdgeLightProfile, AstraOrbStyle } from '../types/ledge';
 
 export type LedgeThemeId =
   | 'win11_cyan'
@@ -19,7 +19,14 @@ export type IconPackStyle =
   | 'fluent_outline'
   | 'apple_solid'
   | 'duotone_glass'
-  | 'minimal_mono';
+  | 'minimal_mono'
+  | 'cyberpunk_hud'
+  | 'retro_80s_crt'
+  | 'paper_ink_brush'
+  | 'botanical_sakura'
+  | 'motorsport_gt'
+  | 'cozy_woodland'
+  | 'cupertino_silk';
 
 export type InnerPillScale = 'compact' | 'balanced' | 'plush';
 
@@ -227,6 +234,17 @@ export const LEDGE_THEMES: Record<Exclude<LedgeThemeId, 'custom_hex'>, ThemePale
   },
 };
 
+export const KIT_ASTRA_STYLES: Record<string, AstraOrbStyle> = {
+  win11_cyan: 'fluent_fluid',
+  cyberpunk_neon: 'cyberpunk_hud',
+  retro_synth_crt: 'retro_cassette_vu',
+  paper_editorial: 'paper_ink_enso',
+  cozy_animals: 'cozy_woodland',
+  botanical_sakura: 'botanical_sakura',
+  motorsport_gt: 'motorsport_gt',
+  apple_indigo: 'cupertino_silk',
+};
+
 export const COMPLETE_STYLE_KITS: StyleKitPreset[] = [
   {
     id: 'win11_cyan',
@@ -251,7 +269,7 @@ export const COMPLETE_STYLE_KITS: StyleKitPreset[] = [
     musicSliderStyle: 'cyberpunk_laser',
     controlSliderStyle: 'cyberpunk_laser',
     tileSurfaceStyle: 'chamfer_cyber',
-    iconPack: 'duotone_glass',
+    iconPack: 'cyberpunk_hud',
     innerCapsuleRadius: 'win11_card',
     edgeLightProfile: 'apple_aura',
     soundProfile: 'cyber_synth',
@@ -265,7 +283,7 @@ export const COMPLETE_STYLE_KITS: StyleKitPreset[] = [
     musicSliderStyle: 'retro_vu_cassette',
     controlSliderStyle: 'retro_vu_cassette',
     tileSurfaceStyle: 'retro_bevel',
-    iconPack: 'apple_solid',
+    iconPack: 'retro_80s_crt',
     innerCapsuleRadius: 'win11_card',
     edgeLightProfile: 'solar_amber',
     soundProfile: 'retro_cassette',
@@ -279,7 +297,7 @@ export const COMPLETE_STYLE_KITS: StyleKitPreset[] = [
     musicSliderStyle: 'paper_ink_stroke',
     controlSliderStyle: 'paper_ink_stroke',
     tileSurfaceStyle: 'paper_sketch',
-    iconPack: 'minimal_mono',
+    iconPack: 'paper_ink_brush',
     innerCapsuleRadius: 'win11_card',
     edgeLightProfile: 'off',
     soundProfile: 'zen_garden',
@@ -293,7 +311,7 @@ export const COMPLETE_STYLE_KITS: StyleKitPreset[] = [
     musicSliderStyle: 'fused_liquid_ribbon',
     controlSliderStyle: 'apple_thick_capsule',
     tileSurfaceStyle: 'pebble_organic',
-    iconPack: 'apple_solid',
+    iconPack: 'cozy_woodland',
     innerCapsuleRadius: 'pill_capsule',
     edgeLightProfile: 'solar_amber',
     soundProfile: 'wooden_marimba',
@@ -307,7 +325,7 @@ export const COMPLETE_STYLE_KITS: StyleKitPreset[] = [
     musicSliderStyle: 'botanical_petal_wave',
     controlSliderStyle: 'botanical_petal_wave',
     tileSurfaceStyle: 'pebble_organic',
-    iconPack: 'duotone_glass',
+    iconPack: 'botanical_sakura',
     innerCapsuleRadius: 'squircle_soft',
     edgeLightProfile: 'northern_aurora',
     soundProfile: 'zen_garden',
@@ -321,7 +339,7 @@ export const COMPLETE_STYLE_KITS: StyleKitPreset[] = [
     musicSliderStyle: 'gt_rpm_redline',
     controlSliderStyle: 'gt_rpm_redline',
     tileSurfaceStyle: 'carbon_gt',
-    iconPack: 'apple_solid',
+    iconPack: 'motorsport_gt',
     innerCapsuleRadius: 'win11_card',
     edgeLightProfile: 'crimson_pulse',
     soundProfile: 'mechanical_gt',
@@ -335,7 +353,7 @@ export const COMPLETE_STYLE_KITS: StyleKitPreset[] = [
     musicSliderStyle: 'fused_harmonic_bars',
     controlSliderStyle: 'apple_thick_capsule',
     tileSurfaceStyle: 'fluent_glass',
-    iconPack: 'apple_solid',
+    iconPack: 'cupertino_silk',
     innerCapsuleRadius: 'squircle_soft',
     edgeLightProfile: 'glacial_ice',
     soundProfile: 'taptic_thump',
@@ -471,6 +489,10 @@ export interface IconPackMetrics {
   badgeRadiusClass: string;
   showHalo: boolean;
   solidActiveBadge: boolean;
+  glowEffect?: string;
+  badgeClass?: string;
+  label?: string;
+  subtitle?: string;
 }
 
 export function resolveIconPackMetrics(style: IconPackStyle): IconPackMetrics {
@@ -481,6 +503,8 @@ export function resolveIconPackMetrics(style: IconPackStyle): IconPackMetrics {
         badgeRadiusClass: 'rounded-lg',
         showHalo: false,
         solidActiveBadge: false,
+        label: 'Fluent Outline',
+        subtitle: 'Windows 11 clean geometric wireframe glyphs',
       };
     case 'apple_solid':
       return {
@@ -488,6 +512,8 @@ export function resolveIconPackMetrics(style: IconPackStyle): IconPackMetrics {
         badgeRadiusClass: 'rounded-full',
         showHalo: false,
         solidActiveBadge: true,
+        label: 'Cupertino Solid',
+        subtitle: 'Apple iOS weighted solid action glyphs',
       };
     case 'duotone_glass':
       return {
@@ -495,6 +521,10 @@ export function resolveIconPackMetrics(style: IconPackStyle): IconPackMetrics {
         badgeRadiusClass: 'rounded-xl',
         showHalo: true,
         solidActiveBadge: false,
+        glowEffect: '0 0 10px rgba(56,189,248,0.3)',
+        badgeClass: 'backdrop-blur-md bg-white/[0.08] border border-white/20 text-sky-200',
+        label: 'Duotone Glass',
+        subtitle: 'Translucent frosted glass with soft neon rim',
       };
     case 'minimal_mono':
       return {
@@ -502,6 +532,85 @@ export function resolveIconPackMetrics(style: IconPackStyle): IconPackMetrics {
         badgeRadiusClass: 'rounded-md',
         showHalo: false,
         solidActiveBadge: false,
+        label: 'Minimalist Mono',
+        subtitle: 'Hairline precision 1px monospaced icons',
+      };
+    case 'cyberpunk_hud':
+      return {
+        strokeWidth: 2.1,
+        badgeRadiusClass: 'rounded-sm',
+        showHalo: true,
+        solidActiveBadge: false,
+        glowEffect: '0 0 10px rgba(6,182,212,0.6), 0 0 2px rgba(250,204,21,0.8)',
+        badgeClass: 'border border-cyan-400/50 bg-cyan-950/40 text-cyan-300 shadow-[0_0_12px_rgba(6,182,212,0.3)]',
+        label: 'Cyberpunk HUD',
+        subtitle: 'Sci-fi chamfered brackets, neon cyan glow & laser reticles',
+      };
+    case 'retro_80s_crt':
+      return {
+        strokeWidth: 2.4,
+        badgeRadiusClass: 'rounded-md',
+        showHalo: true,
+        solidActiveBadge: true,
+        glowEffect: '0 0 12px rgba(245,158,11,0.55)',
+        badgeClass: 'border-b-2 border-r-2 border-amber-900/60 bg-amber-950/40 text-amber-300 shadow-[0_0_14px_rgba(245,158,11,0.3)]',
+        label: 'Retro 80s CRT',
+        subtitle: 'Amber phosphor bloom, beveled keycaps & tape cassette vibe',
+      };
+    case 'paper_ink_brush':
+      return {
+        strokeWidth: 1.6,
+        badgeRadiusClass: 'rounded-md',
+        showHalo: false,
+        solidActiveBadge: false,
+        glowEffect: '0 1px 3px rgba(0,0,0,0.12)',
+        badgeClass: 'border border-stone-400/40 bg-stone-200/50 dark:bg-stone-800/50 text-stone-900 dark:text-stone-100',
+        label: 'Paper & Ink Brush',
+        subtitle: 'Sumi-e calligraphy organic strokes & vermilion seal',
+      };
+    case 'botanical_sakura':
+      return {
+        strokeWidth: 1.85,
+        badgeRadiusClass: 'rounded-2xl',
+        showHalo: true,
+        solidActiveBadge: false,
+        glowEffect: '0 0 12px rgba(244,114,182,0.45)',
+        badgeClass: 'border border-pink-400/40 bg-pink-950/30 text-pink-300 shadow-[0_0_14px_rgba(244,114,182,0.35)]',
+        label: 'Botanical Sakura',
+        subtitle: 'Cherry blossom petal contours & soft rosy aura',
+      };
+    case 'motorsport_gt':
+      return {
+        strokeWidth: 2.2,
+        badgeRadiusClass: 'rounded-lg',
+        showHalo: true,
+        solidActiveBadge: true,
+        glowEffect: '0 0 12px rgba(239,68,68,0.5)',
+        badgeClass: 'border border-red-500/40 bg-red-950/40 text-red-400 shadow-[0_0_14px_rgba(239,68,68,0.35)]',
+        label: 'Motorsport Cars GT',
+        subtitle: 'Redline tachometer cuts, carbon weave & high-velocity',
+      };
+    case 'cozy_woodland':
+      return {
+        strokeWidth: 2.0,
+        badgeRadiusClass: 'rounded-full',
+        showHalo: false,
+        solidActiveBadge: true,
+        glowEffect: '0 0 8px rgba(34,197,94,0.3)',
+        badgeClass: 'border border-emerald-500/30 bg-emerald-950/30 text-emerald-300',
+        label: 'Woodland Animals',
+        subtitle: 'Organic pebble contours & warm forest earth accents',
+      };
+    case 'cupertino_silk':
+      return {
+        strokeWidth: 2.1,
+        badgeRadiusClass: 'rounded-2xl',
+        showHalo: true,
+        solidActiveBadge: true,
+        glowEffect: '0 0 10px rgba(129,140,248,0.35)',
+        badgeClass: 'border border-indigo-400/30 bg-indigo-950/30 text-indigo-300 shadow-[0_0_12px_rgba(129,140,248,0.25)]',
+        label: 'Cupertino Liquid Silk',
+        subtitle: 'Sculpted superellipse squircle with pearl frosted sheen',
       };
   }
 }

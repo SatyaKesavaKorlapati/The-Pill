@@ -62,6 +62,7 @@ import {
 } from '../utils/springPhysics';
 import {
   COMPLETE_STYLE_KITS,
+  KIT_ASTRA_STYLES,
   ControlCenterLayoutMode,
   ControlSliderOrientation,
   getThemeIconUrl,
@@ -1025,7 +1026,7 @@ export const FullSettingsView: React.FC<FullSettingsViewProps> = ({
                                 className={`relative flex items-center justify-between px-3 text-slate-100 shadow-lg ${
                                   testBounce ? 'animate-spring-wobble' : ''
                                 } ${
-                                  preferences.shapeStyle === LedgeShapeStyle.TopBezelLedge || preferences.dockFlushBezel
+                                  preferences.shapeStyle === LedgeShapeStyle.TopBezelLedge
                                     ? 'bg-[#050609] border-x border-b border-white/20 rounded-b-2xl pt-1 pb-1.5'
                                     : preferences.shapeStyle === LedgeShapeStyle.SuperellipseSquircle
                                     ? 'bg-[#050609] border border-white/20 rounded-[14px] py-1'
@@ -1051,7 +1052,7 @@ export const FullSettingsView: React.FC<FullSettingsViewProps> = ({
                                 )}
 
                                 {/* Concave Meniscus Fillets for Docked Bezel */}
-                                {(preferences.shapeStyle === LedgeShapeStyle.TopBezelLedge || preferences.dockFlushBezel) && (
+                                {preferences.shapeStyle === LedgeShapeStyle.TopBezelLedge && (
                                   <>
                                     <span className="absolute -left-2 top-0 w-2 h-2 border-r border-t border-white/20 rounded-tr-lg" />
                                     <span className="absolute -right-2 top-0 w-2 h-2 border-l border-t border-white/20 rounded-tl-lg" />
@@ -1065,7 +1066,7 @@ export const FullSettingsView: React.FC<FullSettingsViewProps> = ({
                                     className="w-2.5 h-2.5 rounded-full shrink-0 shadow-sm"
                                   />
                                   <span className="font-semibold truncate">
-                                    {preferences.shapeStyle === LedgeShapeStyle.TopBezelLedge || preferences.dockFlushBezel
+                                    {preferences.shapeStyle === LedgeShapeStyle.TopBezelLedge
                                       ? 'Bezel Ledge'
                                       : preferences.shapeStyle === LedgeShapeStyle.SuperellipseSquircle
                                       ? 'iOS Squircle'
@@ -1227,6 +1228,14 @@ export const FullSettingsView: React.FC<FullSettingsViewProps> = ({
                           {(
                             [
                               { id: 'siri_rainbow', label: 'Siri Rainbow', color: '#38bdf8' },
+                              { id: 'cyberpunk_hud', label: 'Cyberpunk HUD', color: '#22d3ee' },
+                              { id: 'botanical_sakura', label: 'Botanical Sakura', color: '#f472b6' },
+                              { id: 'fluent_fluid', label: 'Fluent Aurora', color: '#38bdf8' },
+                              { id: 'retro_cassette_vu', label: 'Retro Cassette', color: '#f59e0b' },
+                              { id: 'paper_ink_enso', label: 'Paper Ink Enso', color: '#dc2626' },
+                              { id: 'motorsport_gt', label: 'Motorsport GT', color: '#ef4444' },
+                              { id: 'cozy_woodland', label: 'Woodland Leaf', color: '#10b981' },
+                              { id: 'cupertino_silk', label: 'Cupertino Silk', color: '#818cf8' },
                               { id: 'celestial_nebula', label: 'Celestial Nebula', color: '#a855f7' },
                               { id: 'cyber_plasma', label: 'Cyber Plasma', color: '#f43f5e' },
                               { id: 'neon_pulse', label: 'Neon Pulse', color: '#84cc16' },
@@ -1299,6 +1308,7 @@ export const FullSettingsView: React.FC<FullSettingsViewProps> = ({
                             innerCapsuleRadius: kit.innerCapsuleRadius,
                             edgeLightProfile: kit.edgeLightProfile,
                             soundProfile: kit.soundProfile,
+                            astraOrbStyle: KIT_ASTRA_STYLES[kit.id] || 'siri_rainbow',
                             featureFlags: {
                               ...preferences.featureFlags,
                               edgeLighting: kit.edgeLightProfile !== 'off',
@@ -1490,13 +1500,20 @@ export const FullSettingsView: React.FC<FullSettingsViewProps> = ({
 
                 <div>
                   <div className="text-xs font-medium text-slate-300 mb-2">Icon Pack Style</div>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
                     {(
                       [
-                        { id: 'fluent_outline', label: 'Fluent Outline', sub: '1.75px crisp stroke' },
-                        { id: 'apple_solid', label: 'Apple Bold Glyph', sub: '2.35px sculpted weight' },
-                        { id: 'duotone_glass', label: 'Duo-Tone Aura', sub: 'Luminous active halo' },
+                        { id: 'fluent_outline', label: 'Fluent Outline', sub: '1.75px OS native line' },
+                        { id: 'apple_solid', label: 'Cupertino Solid', sub: '2.35px weighted glyphs' },
+                        { id: 'duotone_glass', label: 'Duotone Glass', sub: 'Luminous frosted aura' },
                         { id: 'minimal_mono', label: 'Minimal Hairline', sub: '1.35px technical line' },
+                        { id: 'cyberpunk_hud', label: 'Cyberpunk HUD', sub: 'Sci-Fi neon cyan chamfer' },
+                        { id: 'retro_80s_crt', label: 'Retro 80s CRT', sub: 'Amber phosphor bloom & bevel' },
+                        { id: 'paper_ink_brush', label: 'Paper & Ink Brush', sub: 'Sumi-e calligraphy & seal' },
+                        { id: 'botanical_sakura', label: 'Botanical Sakura', sub: 'Cherry blossom petal contour' },
+                        { id: 'motorsport_gt', label: 'Motorsport Cars GT', sub: 'Redline tachometer cuts' },
+                        { id: 'cozy_woodland', label: 'Woodland Animals', sub: 'Organic pebble & moss earth' },
+                        { id: 'cupertino_silk', label: 'Cupertino Liquid Silk', sub: 'Superellipse pearl sheen' },
                       ] as { id: IconPackStyle; label: string; sub: string }[]
                     ).map((pk) => {
                       const active = preferences.iconPack === pk.id;
@@ -2826,6 +2843,14 @@ export const FullSettingsView: React.FC<FullSettingsViewProps> = ({
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
                     {[
                       { id: 'siri_rainbow', name: 'Siri Rainbow', desc: 'Apple iridescent silk bands with prismatic spectrum aura', hex: '#38bdf8' },
+                      { id: 'cyberpunk_hud', name: 'Cyberpunk HUD', desc: 'Sci-fi holographic HUD construct with targeting reticle, rotating rings & laser core', hex: '#22d3ee' },
+                      { id: 'botanical_sakura', name: 'Botanical Sakura', desc: 'Floating 5-petal cherry blossom flower with stamen filaments & orbiting petals', hex: '#f472b6' },
+                      { id: 'fluent_fluid', name: 'Fluent Aurora', desc: 'Floating pure aurora ribbon wave with borderless transparency', hex: '#38bdf8' },
+                      { id: 'retro_cassette_vu', name: 'Retro Cassette', desc: 'Dual spinning tape spools with acoustic neon VU meter spikes', hex: '#f59e0b' },
+                      { id: 'paper_ink_enso', name: 'Paper Ink Enso', desc: 'Zen calligraphy sumi-e ink enso brush circle & vermilion cinnabar seal', hex: '#dc2626' },
+                      { id: 'motorsport_gt', name: 'Motorsport GT', desc: 'High-RPM tachometer redline arc & spinning turbo turbine hub', hex: '#ef4444' },
+                      { id: 'cozy_woodland', name: 'Woodland Leaf', desc: 'Organic emerald forest leaf with floating firefly wisps', hex: '#10b981' },
+                      { id: 'cupertino_silk', name: 'Cupertino Silk', desc: 'Liquid pearlescent Möbius silk knot with frosted sheen', hex: '#818cf8' },
                       { id: 'celestial_nebula', name: 'Celestial Nebula', desc: 'Deep violet interstellar cosmic dust with spiral plasma', hex: '#a855f7' },
                       { id: 'cyber_plasma', name: 'Cyber Plasma', desc: 'Electric hot magenta with high-frequency neon energy arcs', hex: '#f43f5e' },
                       { id: 'neon_pulse', name: 'Neon Pulse', desc: 'Vibrant lime-cyan laser pulse with acoustic reactivity', hex: '#84cc16' },

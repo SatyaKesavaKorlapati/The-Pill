@@ -36,7 +36,7 @@ import {
 import { configureSoundEngine, playTactilePop } from './utils/audioSynth';
 import { isTabEnabledInPrefs, matchesShortcutCombo } from './utils/customizationLogic';
 import { SPRING_PRESETS } from './utils/springPhysics';
-import { COMPLETE_STYLE_KITS } from './utils/themeAndSliders';
+import { COMPLETE_STYLE_KITS, KIT_ASTRA_STYLES } from './utils/themeAndSliders';
 import { createZipArchive } from './utils/zipBuilder';
 
 const NOTES_STORAGE_KEY = 'dynamic_ledge_win_notes_v1';
@@ -183,6 +183,9 @@ export default function App() {
           if (patch.anchorPosition) {
             invoke('reposition_pill_window', { anchor: patch.anchorPosition }).catch(() => {});
           }
+          if (patch.themeId) {
+            invoke('update_window_theme_icon', { themeId: patch.themeId }).catch(() => {});
+          }
         }).catch(() => {});
       }
       return next;
@@ -202,6 +205,17 @@ export default function App() {
     window.addEventListener('storage', onStorage);
     return () => window.removeEventListener('storage', onStorage);
   }, []);
+
+  // Synchronize OS Taskbar icon with active theme
+  useEffect(() => {
+    if (typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window) {
+      import('@tauri-apps/api/core')
+        .then(({ invoke }) => {
+          invoke('update_window_theme_icon', { themeId: preferences.themeId }).catch(() => {});
+        })
+        .catch(() => {});
+    }
+  }, [preferences.themeId]);
 
   const updateSystemState = useCallback((patch: Partial<WindowsSystemState>) => {
     setSystemState((prev) => ({ ...prev, ...patch }));
@@ -314,6 +328,7 @@ export default function App() {
                 innerCapsuleRadius: kit.innerCapsuleRadius,
                 edgeLightProfile: kit.edgeLightProfile,
                 soundProfile: kit.soundProfile,
+                astraOrbStyle: KIT_ASTRA_STYLES[kit.id] || 'siri_rainbow',
                 featureFlags: {
                   ...prev.featureFlags,
                   edgeLighting: kit.edgeLightProfile !== 'off',
@@ -686,12 +701,13 @@ export default function App() {
             setClipboardItems((prev) => [
               {
                 id: `clip-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
-                title: event.payload.text?.slice(0, 48) || 'Clipboard Item',
-                content: event.payload.text || '',
-                category: event.payload.category || 'text',
+                text: event.payload.text || '',
+                source: event.payload.source || 'Windows Clipboard',
                 copiedAt: 'Just now',
                 pinned: false,
-                byteSize: event.payload.file_size_label || `${event.payload.text?.length || 0} B`,
+                category: event.payload.category || 'text',
+                badgeCode: (event.payload.category || 'text').toUpperCase().slice(0, 3),
+                fileSizeLabel: event.payload.file_size_label || `${event.payload.text?.length || 0} B`,
               },
               ...prev,
             ]);

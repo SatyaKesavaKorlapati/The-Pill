@@ -60,6 +60,14 @@ export type ClipboardGroupBy = 'none' | 'category';
 export type AstraDisplayMode = 'orb_only' | 'orb_with_captions' | 'orb_with_chat';
 export type AstraOrbStyle =
   | 'siri_rainbow'
+  | 'cyberpunk_hud'
+  | 'botanical_sakura'
+  | 'fluent_fluid'
+  | 'retro_cassette_vu'
+  | 'paper_ink_enso'
+  | 'motorsport_gt'
+  | 'cozy_woodland'
+  | 'cupertino_silk'
   | 'celestial_nebula'
   | 'cyber_plasma'
   | 'neon_pulse'
