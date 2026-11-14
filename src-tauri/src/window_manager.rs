@@ -116,6 +116,7 @@ pub fn configure_pill_overlay_window(window: &WebviewWindow) -> Arc<Mutex<PillHi
         let mut last_ignore = true;
         let mut was_at_top_edge = false;
         let mut was_lbutton_down = false;
+        let mut was_inside = false;
         let _ = win_clone.set_ignore_cursor_events(true);
 
         loop {
@@ -151,8 +152,17 @@ pub fn configure_pill_overlay_window(window: &WebviewWindow) -> Arc<Mutex<PillHi
                             && pt.y >= pill_top
                             && pt.y <= pill_bottom);
 
-                    // Detect global outside click when pill is expanded (height > 80.0)
+                    // Detect cursor leaving/entering expanded pill
                     let is_expanded_rect = st.rect.height > 80.0;
+                    if !inside && was_inside && is_expanded_rect {
+                        let _ = win_clone.emit("pill://cursor-left-pill", ());
+                    }
+                    if inside && !was_inside {
+                        let _ = win_clone.emit("pill://cursor-entered-pill", ());
+                    }
+                    was_inside = inside;
+
+                    // Detect global outside click when pill is expanded (height > 80.0)
                     let lbutton_down = unsafe { GetAsyncKeyState(VK_LBUTTON.0 as i32) < 0 };
                     if !inside && is_expanded_rect && lbutton_down && !was_lbutton_down {
                         let _ = win_clone.emit("pill://outside-click", ());

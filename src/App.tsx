@@ -106,6 +106,7 @@ export default function App() {
   const [agentRequest, setAgentRequest] = useState<AgentApprovalRequest | null>(null);
   const agentPromptCursorRef = useRef(0);
   const hudTimeoutRef = useRef<number | null>(null);
+  const collapseTimerRef = useRef<number | null>(null);
 
   // Quick Windows Controls
   const [keepAwake, setKeepAwake] = useState(false);
@@ -625,6 +626,31 @@ export default function App() {
           });
         });
         unlistenList.push(uOutside);
+
+        // Cursor left expanded pill boundary: collapse after 420ms tolerance buffer
+        const uCursorLeft = await listen('pill://cursor-left-pill', () => {
+          if (collapseTimerRef.current !== null) window.clearTimeout(collapseTimerRef.current);
+          collapseTimerRef.current = window.setTimeout(() => {
+            collapseTimerRef.current = null;
+            setIsExpanded((expanded) => {
+              if (expanded) {
+                playTactilePop('collapse');
+                setStealthRevealedByShortcut(false);
+              }
+              return false;
+            });
+          }, 420);
+        });
+        unlistenList.push(uCursorLeft);
+
+        // Cursor re-entered pill: cancel pending collapse
+        const uCursorEntered = await listen('pill://cursor-entered-pill', () => {
+          if (collapseTimerRef.current !== null) {
+            window.clearTimeout(collapseTimerRef.current);
+            collapseTimerRef.current = null;
+          }
+        });
+        unlistenList.push(uCursorEntered);
 
         // Cross-window preferences sync broadcast
         const uPrefs = await listen<string>('pill://preferences-updated', (event) => {
