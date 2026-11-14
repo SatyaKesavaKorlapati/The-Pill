@@ -342,6 +342,44 @@ export const COMPLETE_STYLE_KITS: StyleKitPreset[] = [
   },
 ];
 
+export function getThemeIconUrl(themeId: string): string {
+  const supported: Record<string, string> = {
+    win11_cyan: '/assets/themes/icons/win11_cyan.png',
+    cyberpunk_neon: '/assets/themes/icons/cyberpunk_neon.png',
+    retro_synth_crt: '/assets/themes/icons/retro_synth_crt.png',
+    paper_editorial: '/assets/themes/icons/paper_editorial.png',
+    cozy_animals: '/assets/themes/icons/cozy_animals.png',
+    botanical_sakura: '/assets/themes/icons/botanical_sakura.png',
+    motorsport_gt: '/assets/themes/icons/motorsport_gt.png',
+    apple_indigo: '/assets/themes/icons/apple_indigo.png',
+    midnight_sapphire: '/assets/themes/icons/win11_cyan.png',
+    emerald_forest: '/assets/themes/icons/cozy_animals.png',
+    sunset_rose: '/assets/themes/icons/retro_synth_crt.png',
+    crimson_titanium: '/assets/themes/icons/motorsport_gt.png',
+    custom_hex: '/assets/themes/icons/win11_cyan.png',
+  };
+  return supported[themeId] || '/assets/themes/icons/win11_cyan.png';
+}
+
+export function getThemeMotifUrl(themeId: string): string {
+  const supported: Record<string, string> = {
+    win11_cyan: '/assets/themes/motifs/win11_cyan.png',
+    cyberpunk_neon: '/assets/themes/motifs/cyberpunk_neon.png',
+    retro_synth_crt: '/assets/themes/motifs/retro_synth_crt.png',
+    paper_editorial: '/assets/themes/motifs/paper_editorial.png',
+    cozy_animals: '/assets/themes/motifs/cozy_animals.png',
+    botanical_sakura: '/assets/themes/motifs/botanical_sakura.png',
+    motorsport_gt: '/assets/themes/motifs/motorsport_gt.png',
+    apple_indigo: '/assets/themes/motifs/apple_indigo.png',
+    midnight_sapphire: '/assets/themes/motifs/win11_cyan.png',
+    emerald_forest: '/assets/themes/motifs/cozy_animals.png',
+    sunset_rose: '/assets/themes/motifs/retro_synth_crt.png',
+    crimson_titanium: '/assets/themes/motifs/motorsport_gt.png',
+    custom_hex: '/assets/themes/motifs/win11_cyan.png',
+  };
+  return supported[themeId] || '/assets/themes/motifs/win11_cyan.png';
+}
+
 function sanitizeHexColor(input: string, fallback: string): string {
   const trimmed = (input || '').trim();
   if (/^#[0-9a-fA-F]{6}$/.test(trimmed)) return trimmed;

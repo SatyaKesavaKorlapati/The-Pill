@@ -72,6 +72,8 @@ import {
 import { formatDurationClock, playTactilePop } from '../utils/audioSynth';
 import { classifyClipboardPayload, moveOrderedItem } from '../utils/customizationLogic';
 import {
+  getThemeIconUrl,
+  getThemeMotifUrl,
   resolveIconPackMetrics,
   resolveInnerPillMetrics,
   resolveThemePalette,
@@ -2244,10 +2246,16 @@ export const PillExpandedContent: React.FC<PillExpandedContentProps> = ({
         }`}
       >
         <div
-          className="flex items-center gap-0.5 overflow-x-auto ledge-scroll"
+          className="flex items-center gap-1 overflow-x-auto ledge-scroll"
           role="tablist"
           aria-label="Dynamic Island sections"
         >
+          <img
+            src={getThemeIconUrl(preferences.themeId)}
+            alt="The Pill"
+            title="The Pill"
+            className="w-5 h-4.5 rounded-md object-contain shrink-0 ring-1 ring-white/20 mr-1 shadow-sm select-none"
+          />
           {visibleTabs.map((tabId) => {
             const isSelected = !isLauncherOpen && activeTab === tabId;
             const label = getTabDisplayLabel(tabId);

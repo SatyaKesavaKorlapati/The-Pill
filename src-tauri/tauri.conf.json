@@ -27,7 +27,7 @@
       },
       {
         "label": "settings-window",
-        "title": "Pill Settings",
+        "title": "The Pill Settings",
         "url": "index.html#settings",
         "width": 920,
         "height": 680,
@@ -44,5 +44,14 @@
     "security": {
       "csp": null
     }
+  },
+  "bundle": {
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.png",
+      "icons/icon.ico"
+    ]
   }
 }

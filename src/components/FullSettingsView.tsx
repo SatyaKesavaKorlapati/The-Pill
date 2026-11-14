@@ -64,6 +64,8 @@ import {
   COMPLETE_STYLE_KITS,
   ControlCenterLayoutMode,
   ControlSliderOrientation,
+  getThemeIconUrl,
+  getThemeMotifUrl,
   IconPackStyle,
   InnerCapsuleRadius,
   InnerPillScale,
@@ -562,13 +564,14 @@ export const FullSettingsView: React.FC<FullSettingsViewProps> = ({
         className="h-10 shrink-0 w-full bg-[#07090e]/95 backdrop-blur-md border-b border-white/10 flex items-center justify-between px-3 select-none z-50"
       >
         <div className="flex items-center gap-2.5 pointer-events-auto">
-          {/* Stylized Capsule Logo Icon */}
-          <div
-            style={{ backgroundColor: palette.primaryHex }}
-            className="w-5 h-2.5 rounded-full shadow-sm flex items-center justify-center shrink-0 ring-1 ring-white/20"
+          {/* Official Pill App Icon */}
+          <img
+            src={getThemeIconUrl(preferences.themeId)}
+            alt="The Pill"
+            className="w-5 h-5 rounded-md object-contain shrink-0 ring-1 ring-white/20 shadow-md"
           />
           <span className="text-xs font-semibold text-white tracking-tight flex items-center gap-1.5">
-            <span>Pill Settings</span>
+            <span>The Pill Settings</span>
             <span className="text-[10px] font-mono text-slate-400 bg-white/10 px-1.5 py-0.5 rounded">v3.0</span>
           </span>
 
@@ -823,21 +826,34 @@ export const FullSettingsView: React.FC<FullSettingsViewProps> = ({
                 >
                   {/* Dynamic Inner Content Based on Active Section */}
                   {section === 'themes_icons' && (
-                    <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-                      {/* Theme Palette Swatch & Pill Scale Sample */}
+                    <div className="flex flex-col lg:flex-row items-center justify-between gap-4">
+                      {/* Active Theme Icon & Landscape Motif */}
                       <div className="flex items-center gap-3">
-                        <div className="flex items-center gap-1.5 p-1 rounded-xl bg-white/5 border border-white/10">
-                          <span style={{ backgroundColor: palette.primaryHex }} className="w-5 h-5 rounded-lg shadow-sm" />
-                          <span style={{ backgroundColor: palette.secondaryHex }} className="w-5 h-5 rounded-lg shadow-sm" />
-                        </div>
-                        <div>
-                          <div className="text-xs font-semibold text-white">{palette.name}</div>
-                          <div className="text-[10px] text-slate-400 capitalize">{preferences.material} · {preferences.innerPillScale} scale</div>
+                        <img
+                          src={getThemeIconUrl(preferences.themeId)}
+                          alt={`${palette.name} Icon`}
+                          className="w-12 h-11 rounded-xl object-contain ring-1 ring-white/20 shadow-lg shrink-0"
+                        />
+                        <img
+                          src={getThemeMotifUrl(preferences.themeId)}
+                          alt={`${palette.name} Motif`}
+                          className="h-11 w-32 rounded-full object-cover ring-1 ring-white/20 shadow-lg shrink-0"
+                        />
+                        <div className="min-w-0">
+                          <div className="text-xs font-semibold text-white flex items-center gap-1.5">
+                            <span className="truncate">{palette.name}</span>
+                            <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-white/10 text-cyan-300 shrink-0">
+                              {palette.motifName || 'Motif'}
+                            </span>
+                          </div>
+                          <div className="text-[10px] text-slate-400 capitalize truncate">
+                            {preferences.material} · {preferences.innerPillScale} scale
+                          </div>
                         </div>
                       </div>
 
                       {/* Live Icon Pack Showcase */}
-                      <div className="flex items-center gap-3 px-3 py-1.5 rounded-xl bg-white/5 border border-white/10">
+                      <div className="flex items-center gap-2.5 px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 shrink-0">
                         <span className="text-[10px] text-slate-400 uppercase font-mono mr-1">Icons:</span>
                         <Wifi className="w-4 h-4 text-sky-400" strokeWidth={iconMetrics.strokeWidth} />
                         <Bluetooth className="w-4 h-4 text-indigo-400" strokeWidth={iconMetrics.strokeWidth} />
@@ -849,7 +865,7 @@ export const FullSettingsView: React.FC<FullSettingsViewProps> = ({
                       {/* Active Pill Tile Preview */}
                       <div
                         style={{ backgroundColor: palette.primaryHex }}
-                        className={`${pillMetrics.tileHeightClass} ${pillMetrics.radiusClass} px-3.5 flex items-center gap-2 text-xs font-semibold shadow-md ${palette.onPrimaryTextClass}`}
+                        className={`${pillMetrics.tileHeightClass} ${pillMetrics.radiusClass} px-3.5 flex items-center gap-2 text-xs font-semibold shadow-md ${palette.onPrimaryTextClass} shrink-0`}
                       >
                         <Sparkles className="w-3.5 h-3.5" />
                         <span>Active State</span>
@@ -1262,7 +1278,7 @@ export const FullSettingsView: React.FC<FullSettingsViewProps> = ({
                   </p>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-3">
                   {COMPLETE_STYLE_KITS.map((kit) => {
                     const th = LEDGE_THEMES[kit.themeId];
                     const active =
@@ -1289,15 +1305,27 @@ export const FullSettingsView: React.FC<FullSettingsViewProps> = ({
                             },
                           });
                         }}
-                        style={active ? { borderColor: th.primaryHex } : undefined}
-                        className={`p-3.5 rounded-xl border text-left transition-colors space-y-1.5 ${
+                        style={
                           active
-                            ? 'bg-white/[0.09] text-white'
+                            ? { borderColor: th.primaryHex, boxShadow: `0 0 24px ${th.primaryHex}28` }
+                            : undefined
+                        }
+                        className={`p-3 rounded-2xl border text-left transition-all flex items-center gap-3 ${
+                          active
+                            ? 'bg-white/[0.09] text-white ring-1 ring-white/20'
                             : 'bg-white/[0.02] border-white/10 text-slate-300 hover:bg-white/[0.05]'
                         }`}
                       >
-                        <div className="flex items-center justify-between gap-2">
-                          <div className="flex items-center gap-2 min-w-0">
+                        {/* Theme App Icon with Pill Typography */}
+                        <img
+                          src={getThemeIconUrl(kit.themeId)}
+                          alt={kit.title}
+                          className="w-14 h-12 rounded-xl object-contain shrink-0 ring-1 ring-white/20 shadow-lg"
+                        />
+
+                        {/* Title, Badge, Summary, Dots */}
+                        <div className="flex-1 min-w-0 space-y-1">
+                          <div className="flex items-center justify-between gap-1.5">
                             <span className="text-xs font-semibold text-white truncate">
                               {kit.title}
                             </span>
@@ -1305,18 +1333,25 @@ export const FullSettingsView: React.FC<FullSettingsViewProps> = ({
                               {kit.genre}
                             </span>
                           </div>
-                          <div className="flex items-center gap-1 shrink-0">
+                          <p className="text-[11px] text-slate-400 leading-snug line-clamp-2">{kit.summary}</p>
+                          <div className="flex items-center gap-1.5 pt-0.5">
                             <span
                               style={{ backgroundColor: th.primaryHex }}
-                              className="w-4 h-4 rounded-full ring-1 ring-white/25"
+                              className="w-3.5 h-3.5 rounded-full ring-1 ring-white/25"
                             />
                             <span
                               style={{ backgroundColor: th.secondaryHex }}
-                              className="w-3.5 h-3.5 rounded-full ring-1 ring-white/20"
+                              className="w-3 h-3 rounded-full ring-1 ring-white/20"
                             />
                           </div>
                         </div>
-                        <p className="text-[11px] text-slate-400 leading-snug">{kit.summary}</p>
+
+                        {/* Theme Landscape Motif Capsule */}
+                        <img
+                          src={getThemeMotifUrl(kit.themeId)}
+                          alt={`${kit.title} motif`}
+                          className="h-10 w-24 rounded-full object-cover shrink-0 ring-1 ring-white/20 shadow-md hidden sm:block"
+                        />
                       </button>
                     );
                   })}
@@ -1347,26 +1382,33 @@ export const FullSettingsView: React.FC<FullSettingsViewProps> = ({
                           style={
                             selected ? { borderColor: th.primaryHex } : undefined
                           }
-                          className={`flex items-center justify-between gap-3 p-3.5 rounded-xl border text-left transition-colors ${
+                          className={`flex items-center justify-between gap-3 p-3 rounded-xl border text-left transition-colors ${
                             selected
-                              ? 'bg-white/[0.08] text-white'
+                              ? 'bg-white/[0.08] text-white ring-1 ring-white/20'
                               : 'bg-white/[0.02] border-white/10 text-slate-300 hover:bg-white/[0.05]'
                           }`}
                         >
-                          <div className="min-w-0">
-                            <div className="text-xs font-semibold truncate">{th.name}</div>
-                            <div className="text-[11px] text-slate-400 mt-0.5 line-clamp-1">
-                              {th.subtitle}
+                          <div className="flex items-center gap-3 min-w-0">
+                            <img
+                              src={getThemeIconUrl(id)}
+                              alt={th.name}
+                              className="w-9 h-8 rounded-lg object-contain shrink-0 ring-1 ring-white/20 shadow-md"
+                            />
+                            <div className="min-w-0">
+                              <div className="text-xs font-semibold truncate">{th.name}</div>
+                              <div className="text-[11px] text-slate-400 mt-0.5 line-clamp-1">
+                                {th.subtitle}
+                              </div>
                             </div>
                           </div>
                           <div className="flex items-center gap-1 shrink-0">
                             <span
                               style={{ backgroundColor: th.primaryHex }}
-                              className="w-5 h-5 rounded-full ring-1 ring-white/25"
+                              className="w-4 h-4 rounded-full ring-1 ring-white/25"
                             />
                             <span
                               style={{ backgroundColor: th.secondaryHex }}
-                              className="w-4 h-4 rounded-full ring-1 ring-white/20"
+                              className="w-3.5 h-3.5 rounded-full ring-1 ring-white/20"
                             />
                           </div>
                         </button>
