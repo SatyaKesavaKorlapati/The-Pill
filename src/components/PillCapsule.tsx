@@ -45,7 +45,12 @@ import {
   SpringState1D,
   stepSpring1D,
 } from '../utils/springPhysics';
-import { resolveEdgeGlowCss, resolveThemePalette } from '../utils/themeAndSliders';
+import {
+  getThemeIconUrl,
+  getThemeMotifUrl,
+  resolveEdgeGlowCss,
+  resolveThemePalette,
+} from '../utils/themeAndSliders';
 import { AnimatedBatterySymbol } from './AnimatedBatterySymbol';
 import { FluidEffectSlider } from './FluidEffectSlider';
 import { ThemedIcon } from './ThemedIcon';
@@ -220,12 +225,12 @@ export const PillCapsule: React.FC<PillCapsuleProps> = ({
 
   const effectiveAstraActive = Boolean(isAstraOpen && preferences.aiEnabled && !isExpanded);
 
-  const musicVisible = preferences.featureFlags.nowPlaying && isPlaying;
+  const musicVisible = preferences.featureFlags.nowPlaying && Boolean(currentTrack);
   const timerVisible = preferences.featureFlags.quickTimers && timerRemainingSec !== null;
 
   const hasPrimaryActivity =
     musicVisible ||
-    (!musicVisible && timerVisible) ||
+    timerVisible ||
     preferences.showCompactStats ||
     keepAwake;
 
@@ -1372,17 +1377,35 @@ export const PillCapsule: React.FC<PillCapsuleProps> = ({
                     <Coffee className="w-3.5 h-3.5 text-emerald-300" />
                   </>
                 ) : (
-                  <div className="w-full flex items-center justify-between px-1">
-                    <span className="text-[11px] text-slate-400 transition-opacity duration-150">
-                      {isHovered ? 'Open Island' : ''}
-                    </span>
-                    <span
-                      aria-hidden="true"
-                      className="w-2.5 h-2.5 rounded-full bg-[#0c1018] ring-1 ring-white/15 mx-auto"
-                    />
-                    <span className="text-[11px] font-mono text-slate-500 tabular-nums">
-                      {isHovered ? preferences.toggleShortcut : ''}
-                    </span>
+                  <div className="w-full h-full flex items-center justify-between px-3 select-none">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <img
+                        src={getThemeIconUrl(preferences.themeId)}
+                        alt="The Pill"
+                        className="w-5 h-5 rounded-md object-contain shrink-0 ring-1 ring-white/20"
+                      />
+                      <span
+                        className={`text-xs font-semibold truncate ${
+                          isLightPaper ? 'text-stone-900' : 'text-slate-100'
+                        }`}
+                      >
+                        {palette.name}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <span
+                        aria-hidden="true"
+                        className={`w-2.5 h-2.5 rounded-full ${
+                          isLightPaper
+                            ? 'bg-stone-800/80 ring-1 ring-stone-900/20'
+                            : 'bg-[#0c1018] ring-1 ring-white/10'
+                        }`}
+                      />
+                      <span
+                        className="w-2 h-2 rounded-full animate-pulse"
+                        style={{ backgroundColor: palette.primaryHex }}
+                      />
+                    </div>
                   </div>
                 )}
               </button>
